@@ -1,0 +1,187 @@
+<app-navbar></app-navbar>
+
+<div class="inventario-container">
+  <!-- Header con estadísticas -->
+  <div class="header-section">
+    <div class="header-title">
+      <h1><i class="fa-solid fa-chair"></i> Inventario de Mobiliario</h1>
+      <p class="subtitle">Gestión de muebles y equipamiento de oficina</p>
+    </div>
+    
+    <div class="header-actions">
+      <button class="btn-agregar" (click)="irAAgregar()">
+        <i class="fa-solid fa-plus"></i> Agregar Mueble
+      </button>
+      <button class="btn-entrega" (click)="irAEntrega()">
+        <i class="fa-solid fa-file-signature"></i> Crear Acta de Entrega
+      </button>
+    </div>
+  </div>
+
+  <!-- Tarjetas de estadísticas -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon"><i class="fa-solid fa-couch"></i></div>
+      <div class="stat-info">
+        <span class="stat-number">{{ mobiliario.length }}</span>
+        <span class="stat-label">Total Muebles</span>
+      </div>
+    </div>
+    
+    <div class="stat-card stat-disponible">
+      <div class="stat-icon"><i class="fa-solid fa-check-circle"></i></div>
+      <div class="stat-info">
+        <span class="stat-number">{{ contarPorEstado('disponible') }}</span>
+        <span class="stat-label">Disponibles</span>
+      </div>
+    </div>
+    
+    <div class="stat-card stat-asignado">
+      <div class="stat-icon"><i class="fa-solid fa-user-check"></i></div>
+      <div class="stat-info">
+        <span class="stat-number">{{ contarPorEstado('asignado') }}</span>
+        <span class="stat-label">Asignados</span>
+      </div>
+    </div>
+    
+    <div class="stat-card stat-danado">
+      <div class="stat-icon"><i class="fa-solid fa-exclamation-triangle"></i></div>
+      <div class="stat-info">
+        <span class="stat-number">{{ contarPorEstado('dañado') }}</span>
+        <span class="stat-label">Dañados</span>
+      </div>
+    </div>
+    
+    <div class="stat-card stat-baja">
+      <div class="stat-icon"><i class="fa-solid fa-ban"></i></div>
+      <div class="stat-info">
+        <span class="stat-number">{{ contarPorEstado('dado_de_baja') }}</span>
+        <span class="stat-label">Dados de Baja</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros-section">
+    <div class="filtro-grupo">
+      <label>Estado:</label>
+      <select [(ngModel)]="filtroEstado" (change)="aplicarFiltros()">
+        <option value="todos">Todos los estados</option>
+        <option *ngFor="let estado of estados" [value]="estado">
+          {{ estado | titlecase }}
+        </option>
+      </select>
+    </div>
+    
+    <div class="filtro-grupo">
+      <label>Categoría:</label>
+      <select [(ngModel)]="filtroCategoria" (change)="aplicarFiltros()">
+        <option value="todas">Todas las categorías</option>
+        <option *ngFor="let cat of categorias" [value]="cat">
+          {{ cat | titlecase }}
+        </option>
+      </select>
+    </div>
+    
+    <div class="filtro-grupo filtro-busqueda">
+      <label>Buscar:</label>
+      <input 
+        type="text" 
+        [(ngModel)]="filtroBusqueda" 
+        (input)="aplicarFiltros()"
+        placeholder="Nombre, marca, ubicación, área..."
+      />
+      <i class="fa-solid fa-search"></i>
+    </div>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div class="error-message" *ngIf="error">
+    <i class="fa-solid fa-exclamation-circle"></i> {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    <i class="fa-solid fa-spinner fa-spin"></i> Cargando mobiliario...
+  </div>
+
+  <!-- Tabla de mobiliario -->
+  <div class="tabla-container" *ngIf="!loading">
+    <table class="tabla-mobiliario">
+      <thead>
+        <tr>
+          <th>Categoría</th>
+          <th>Nombre</th>
+          <th>Marca</th>
+          <th>Dimensiones</th>
+          <th>Ubicación</th>
+          <th>Estado</th>
+          <th>Condición</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let mueble of mobiliarioPaginado" [class]="'row-' + mueble.estado">
+          <td class="td-categoria">
+            <span class="categoria-badge">
+              <i class="fa-solid" [ngClass]="getCategoriaIcon(mueble.categoria)"></i>
+              {{ mueble.categoria | titlecase }}
+            </span>
+          </td>
+          <td class="td-nombre">
+            <strong>{{ mueble.nombre }}</strong>
+          </td>
+          <td class="td-marca">
+            <span *ngIf="mueble.marca">{{ mueble.marca }}</span>
+            <span *ngIf="!mueble.marca" class="sin-datos">-</span>
+          </td>
+          <td class="td-dimensiones">
+            <span *ngIf="mueble.dimensiones">{{ mueble.dimensiones }}</span>
+            <span *ngIf="!mueble.dimensiones" class="sin-datos">-</span>
+          </td>
+          <td class="td-ubicacion">
+            <span *ngIf="mueble.ubicacion">
+              <i class="fa-solid fa-map-marker-alt"></i> {{ mueble.ubicacion }}
+            </span>
+            <span *ngIf="mueble.area" class="area-tag">{{ mueble.area }}</span>
+          </td>
+          <td class="td-estado">
+            <span class="estado-badge" [ngClass]="getEstadoClass(mueble.estado)">
+              {{ mueble.estado | titlecase }}
+            </span>
+          </td>
+          <td class="td-condicion">
+            <span class="condicion-badge condicion-{{ mueble.condicion }}">
+              {{ mueble.condicion | titlecase }}
+            </span>
+          </td>
+          <td class="td-acciones">
+            <button class="btn-accion btn-ver" (click)="verDetalle(mueble.id!)" title="Ver detalle">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+            <button class="btn-accion btn-historial" (click)="verTrazabilidad(mueble.id!)" title="Ver historial">
+              <i class="fa-solid fa-history"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Sin resultados -->
+    <div class="sin-resultados" *ngIf="mobiliarioFiltrado.length === 0 && !loading">
+      <i class="fa-solid fa-inbox"></i>
+      <p>No se encontraron muebles con los filtros seleccionados</p>
+    </div>
+
+    <!-- Paginación -->
+    <div class="paginacion" *ngIf="totalPaginas > 1">
+      <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
+      <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

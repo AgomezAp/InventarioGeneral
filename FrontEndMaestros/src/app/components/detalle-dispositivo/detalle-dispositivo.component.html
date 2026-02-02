@@ -1,0 +1,325 @@
+<app-navbar></app-navbar>
+
+<div class="detalle-container">
+  <!-- Loading -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="spinner">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <span>Cargando dispositivo...</span>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-container" *ngIf="error">
+    <i class="fa-solid fa-exclamation-triangle"></i>
+    <p>{{ error }}</p>
+    <button class="btn-volver" (click)="volver()">Volver al Inventario</button>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="content" *ngIf="dispositivo && !loading">
+    <!-- Header -->
+    <div class="page-header">
+      <button class="btn-back" (click)="volver()">
+        <i class="fa-solid fa-arrow-left"></i> Volver al Inventario
+      </button>
+      
+      <div class="header-actions">
+        <button class="btn-historial" (click)="verTrazabilidad()">
+          <i class="fa-solid fa-history"></i> Ver Historial
+        </button>
+        
+        <button 
+          class="btn-estado" 
+          (click)="abrirModalEstado()"
+          *ngIf="dispositivo.estado !== 'entregado'"
+        >
+          <i class="fa-solid fa-exchange-alt"></i> Cambiar Estado
+        </button>
+        
+        <button 
+          class="btn-editar" 
+          (click)="activarEdicion()" 
+          *ngIf="!modoEdicion"
+        >
+          <i class="fa-solid fa-edit"></i> Editar Dispositivo
+        </button>
+        
+        <ng-container *ngIf="modoEdicion">
+          <button class="btn-cancelar" (click)="cancelarEdicion()">
+            <i class="fa-solid fa-times"></i> Cancelar
+          </button>
+          <button class="btn-guardar" (click)="guardarCambios()" [disabled]="guardando">
+            <i class="fa-solid" [ngClass]="guardando ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+            {{ guardando ? 'Guardando...' : 'Guardar Cambios' }}
+          </button>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Título del dispositivo -->
+    <div class="dispositivo-header">
+      <div class="categoria-icon" [ngClass]="'cat-' + dispositivo.categoria">
+        <i class="fa-solid" [ngClass]="getCategoriaIcon(dispositivo.categoria)"></i>
+      </div>
+      
+      <div class="dispositivo-titulo">
+        <h1 *ngIf="!modoEdicion">{{ dispositivo.nombre }}</h1>
+        <input 
+          *ngIf="modoEdicion" 
+          type="text" 
+          [(ngModel)]="dispositivo.nombre" 
+          class="input-titulo"
+          placeholder="Nombre del dispositivo"
+        />
+        
+        <div class="badges-row">
+          <span class="estado-badge" [ngClass]="getEstadoClass(dispositivo.estado)">
+            {{ dispositivo.estado | uppercase }}
+          </span>
+          <span class="condicion-badge" [ngClass]="getCondicionClass(dispositivo.condicion)">
+            {{ dispositivo.condicion | titlecase }}
+          </span>
+          <span class="categoria-badge">
+            <i class="fa-solid" [ngClass]="getCategoriaIcon(dispositivo.categoria)"></i>
+            {{ dispositivo.categoria | titlecase }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid de información -->
+    <div class="info-grid">
+      <!-- Información básica -->
+      <div class="info-card">
+        <h3><i class="fa-solid fa-info-circle"></i> Información Básica</h3>
+        
+        <div class="info-row">
+          <label>Categoría:</label>
+          <span *ngIf="!modoEdicion">{{ dispositivo.categoria | titlecase }}</span>
+          <select *ngIf="modoEdicion" [(ngModel)]="dispositivo.categoria">
+            <option *ngFor="let cat of categorias" [value]="cat">{{ cat | titlecase }}</option>
+          </select>
+        </div>
+        
+        <div class="info-row">
+          <label>Marca:</label>
+          <span *ngIf="!modoEdicion">{{ dispositivo.marca || 'No especificada' }}</span>
+          <input *ngIf="modoEdicion" type="text" [(ngModel)]="dispositivo.marca" placeholder="Marca" />
+        </div>
+        
+        <div class="info-row">
+          <label>Modelo:</label>
+          <span *ngIf="!modoEdicion">{{ dispositivo.modelo || 'No especificado' }}</span>
+          <input *ngIf="modoEdicion" type="text" [(ngModel)]="dispositivo.modelo" placeholder="Modelo" />
+        </div>
+        
+        <div class="info-row">
+          <label>Color:</label>
+          <span *ngIf="!modoEdicion">{{ dispositivo.color || 'No especificado' }}</span>
+          <input *ngIf="modoEdicion" type="text" [(ngModel)]="dispositivo.color" placeholder="Color" />
+        </div>
+      </div>
+
+      <!-- Identificadores -->
+      <div class="info-card">
+        <h3><i class="fa-solid fa-barcode"></i> Identificadores</h3>
+        
+        <div class="info-row">
+          <label>Número de Serie:</label>
+          <span *ngIf="!modoEdicion" class="codigo">{{ dispositivo.serial || 'No especificado' }}</span>
+          <input *ngIf="modoEdicion" type="text" [(ngModel)]="dispositivo.serial" placeholder="Número de serie" />
+        </div>
+        
+        <div class="info-row">
+          <label>IMEI:</label>
+          <span *ngIf="!modoEdicion" class="codigo">{{ dispositivo.imei || 'No especificado' }}</span>
+          <input *ngIf="modoEdicion" type="text" [(ngModel)]="dispositivo.imei" placeholder="IMEI" />
+        </div>
+      </div>
+
+      <!-- Estado y condición -->
+      <div class="info-card">
+        <h3><i class="fa-solid fa-clipboard-check"></i> Estado y Condición</h3>
+        
+        <div class="info-row">
+          <label>Estado actual:</label>
+          <span class="estado-badge large" [ngClass]="getEstadoClass(dispositivo.estado)">
+            {{ dispositivo.estado | uppercase }}
+          </span>
+        </div>
+        
+        <div class="info-row">
+          <label>Condición:</label>
+          <span *ngIf="!modoEdicion" class="condicion-badge large" [ngClass]="getCondicionClass(dispositivo.condicion)">
+            {{ dispositivo.condicion | titlecase }}
+          </span>
+          <select *ngIf="modoEdicion" [(ngModel)]="dispositivo.condicion">
+            <option *ngFor="let cond of condiciones" [value]="cond">{{ cond | titlecase }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Ubicación -->
+      <div class="info-card">
+        <h3><i class="fa-solid fa-location-dot"></i> Ubicación</h3>
+        
+        <div class="info-row">
+          <label>Ubicación actual:</label>
+          <span *ngIf="!modoEdicion">
+            <i class="fa-solid fa-map-marker-alt"></i>
+            {{ dispositivo.ubicacion || 'No especificada' }}
+          </span>
+          <input *ngIf="modoEdicion" type="text" [(ngModel)]="dispositivo.ubicacion" placeholder="Ubicación" />
+        </div>
+      </div>
+
+      <!-- Fechas -->
+      <div class="info-card">
+        <h3><i class="fa-solid fa-calendar"></i> Fechas</h3>
+        
+        <div class="info-row">
+          <label>Fecha de ingreso:</label>
+          <span>{{ formatFecha(dispositivo.fechaIngreso) }}</span>
+        </div>
+        
+        <div class="info-row">
+          <label>Última actualización:</label>
+          <span>{{ formatFecha(dispositivo.updatedAt) }}</span>
+        </div>
+        
+        <div class="info-row">
+          <label>Creado el:</label>
+          <span>{{ formatFecha(dispositivo.createdAt) }}</span>
+        </div>
+      </div>
+
+      <!-- Descripción -->
+      <div class="info-card full-width">
+        <h3><i class="fa-solid fa-align-left"></i> Descripción</h3>
+        
+        <div class="info-row">
+          <p *ngIf="!modoEdicion" class="descripcion-text">
+            {{ dispositivo.descripcion || 'Sin descripción' }}
+          </p>
+          <textarea 
+            *ngIf="modoEdicion" 
+            [(ngModel)]="dispositivo.descripcion" 
+            placeholder="Descripción del dispositivo"
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="info-card full-width">
+        <h3><i class="fa-solid fa-sticky-note"></i> Observaciones</h3>
+        
+        <div class="info-row">
+          <p *ngIf="!modoEdicion" class="descripcion-text">
+            {{ dispositivo.observaciones || 'Sin observaciones' }}
+          </p>
+          <textarea 
+            *ngIf="modoEdicion" 
+            [(ngModel)]="dispositivo.observaciones" 
+            placeholder="Observaciones adicionales"
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Galería de fotos -->
+    <div class="fotos-section" *ngIf="getFotos().length > 0">
+      <h3><i class="fa-solid fa-images"></i> Fotografías del Dispositivo</h3>
+      
+      <div class="fotos-grid">
+        <div 
+          class="foto-item" 
+          *ngFor="let foto of getFotos(); let i = index"
+          (click)="abrirFoto(foto)"
+        >
+          <img [src]="getPhotoUrl(foto)" [alt]="'Foto ' + (i + 1)" />
+          <div class="foto-overlay">
+            <i class="fa-solid fa-search-plus"></i>
+            <span>Ver foto</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fotos-section empty" *ngIf="getFotos().length === 0">
+      <h3><i class="fa-solid fa-images"></i> Fotografías del Dispositivo</h3>
+      <div class="no-fotos">
+        <i class="fa-solid fa-camera-slash"></i>
+        <p>No hay fotografías registradas para este dispositivo</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de foto ampliada -->
+<div class="modal-overlay" *ngIf="fotoSeleccionada" (click)="cerrarFoto()">
+  <div class="modal-foto" (click)="$event.stopPropagation()">
+    <button class="btn-cerrar-foto" (click)="cerrarFoto()">
+      <i class="fa-solid fa-times"></i>
+    </button>
+    <img [src]="fotoSeleccionada" alt="Foto ampliada" />
+  </div>
+</div>
+
+<!-- Modal de cambio de estado -->
+<div class="modal-overlay" *ngIf="mostrarModalEstado" (click)="cerrarModalEstado()">
+  <div class="modal-estado" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-exchange-alt"></i> Cambiar Estado</h3>
+      <button class="btn-cerrar" (click)="cerrarModalEstado()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Estado actual:</label>
+        <span class="estado-badge" [ngClass]="getEstadoClass(dispositivo?.estado || '')">
+          {{ dispositivo?.estado | uppercase }}
+        </span>
+      </div>
+      
+      <div class="form-group">
+        <label>Nuevo estado:</label>
+        <select [(ngModel)]="nuevoEstado">
+          <option value="" disabled>Seleccionar estado</option>
+          <option 
+            *ngFor="let estado of estados" 
+            [value]="estado"
+            [disabled]="estado === dispositivo?.estado || estado === 'prestado'"
+          >
+            {{ estado | titlecase }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Motivo del cambio:</label>
+        <textarea 
+          [(ngModel)]="motivoCambio" 
+          placeholder="Describe el motivo del cambio de estado..."
+          rows="3"
+        ></textarea>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="cerrarModalEstado()">Cancelar</button>
+      <button 
+        class="btn-confirmar" 
+        (click)="confirmarCambioEstado()"
+        [disabled]="!nuevoEstado || guardando"
+      >
+        <i class="fa-solid" [ngClass]="guardando ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+        {{ guardando ? 'Guardando...' : 'Confirmar Cambio' }}
+      </button>
+    </div>
+  </div>
+</div>

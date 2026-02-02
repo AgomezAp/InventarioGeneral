@@ -1,0 +1,488 @@
+/* ========================================
+   REGISTER COMPONENT - IDENTIDAD DE MARCA
+   ======================================== */
+
+.register-page {
+  min-height: 100vh;
+  background-color: var(--color-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  font-family: var(--font-family);
+  position: relative;
+}
+
+/* Patrón de fondo decorativo */
+.register-page::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(
+      circle at 20% 80%,
+      rgba(255, 214, 0, 0.05) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(255, 214, 0, 0.05) 0%,
+      transparent 50%
+    );
+  pointer-events: none;
+}
+
+/* ========================================
+   LOGO
+   ======================================== */
+.logo-container {
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.logo-container img {
+  max-width: 180px;
+  height: auto;
+  filter: brightness(0) invert(1);
+  transition: transform var(--transition-normal);
+}
+
+.logo-container img:hover {
+  transform: scale(1.05);
+}
+
+/* Si el logo tiene colores y no quieres invertirlo */
+.logo-container img.logo-color {
+  filter: none;
+}
+
+/* ========================================
+   REGISTER CONTAINER (Card)
+   ======================================== */
+.register-container {
+  width: 100%;
+  max-width: 480px;
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   REGISTER HEADER
+   ======================================== */
+.register-header {
+  background-color: var(--color-primary);
+  padding: var(--spacing-xl) var(--spacing-2xl);
+  text-align: center;
+  border-bottom: 3px solid var(--color-secondary);
+}
+
+.register-header h2 {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.register-subtitle {
+  color: var(--color-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ========================================
+   FORMULARIO
+   ======================================== */
+.register-container form {
+  padding: var(--spacing-xl) var(--spacing-2xl);
+}
+
+/* Fila de inputs (2 columnas) */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Grupo de formulario individual */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-row .form-group {
+  margin-bottom: 0;
+}
+
+/* Labels */
+.form-group label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+/* Inputs */
+.form-group input {
+  padding: var(--spacing-md);
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 0.9375rem;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.form-group input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: var(--shadow-accent);
+}
+
+.form-group input:hover:not(:focus) {
+  border-color: var(--color-gray-400);
+}
+
+/* Validación visual (opcional) */
+.form-group input.ng-invalid.ng-touched {
+  border-color: var(--color-danger);
+}
+
+.form-group input.ng-valid.ng-touched {
+  border-color: var(--color-success);
+}
+
+/* ========================================
+   BOTÓN DE REGISTRO
+   ======================================== */
+.btn-register {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-xl);
+  background-color: var(--color-secondary);
+  color: var(--color-primary);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-family);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-lg);
+}
+
+.btn-register:hover:not(:disabled) {
+  background-color: var(--color-secondary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 214, 0, 0.4);
+}
+
+.btn-register:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-register:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Input submit alternativo (si usas input en vez de button) */
+input[type="submit"] {
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-xl);
+  background-color: var(--color-secondary);
+  color: var(--color-primary);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-family);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-top: var(--spacing-lg);
+}
+
+input[type="submit"]:hover {
+  background-color: var(--color-secondary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 214, 0, 0.4);
+}
+
+/* ========================================
+   FOOTER (Link a Login)
+   ======================================== */
+.register-footer,
+.link {
+  padding: var(--spacing-lg) var(--spacing-2xl);
+  background-color: var(--bg-secondary);
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+}
+
+.register-footer p,
+.link p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.register-footer a,
+.link a {
+  color: var(--color-secondary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.register-footer a::after,
+.link a::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--color-secondary);
+  transition: width var(--transition-fast);
+}
+
+.register-footer a:hover::after,
+.link a:hover::after {
+  width: 100%;
+}
+
+.register-footer a:hover,
+.link a:hover {
+  color: var(--color-secondary-hover);
+}
+
+/* ========================================
+   CLASES LEGACY (Bootstrap-like del HTML original)
+   ======================================== */
+.row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.row.g-3 {
+  gap: var(--spacing-md);
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.col label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.col input {
+  padding: var(--spacing-md);
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 0.9375rem;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.col input:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: var(--shadow-accent);
+}
+
+.col input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.form-control {
+  padding: var(--spacing-md);
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 0.9375rem;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--color-secondary);
+  box-shadow: var(--shadow-accent);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 576px) {
+  .register-page {
+    padding: var(--spacing-md);
+  }
+
+  .logo-container img {
+    max-width: 140px;
+  }
+
+  .register-container {
+    border-radius: var(--border-radius-lg);
+  }
+
+  .register-header {
+    padding: var(--spacing-lg);
+  }
+
+  .register-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .register-container form {
+    padding: var(--spacing-lg);
+  }
+
+  .form-row,
+  .row {
+    grid-template-columns: 1fr;
+  }
+
+  .register-footer,
+  .link {
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+}
+
+@media (max-width: 380px) {
+  .register-header h2 {
+    font-size: 1.125rem;
+  }
+
+  .form-group input,
+  .col input,
+  .form-control {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.875rem;
+  }
+
+  .btn-register,
+  input[type="submit"] {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: 0.9375rem;
+  }
+}
+
+/* ========================================
+   SPINNER OVERLAY (si usas app-spinner)
+   ======================================== */
+:host ::ng-deep app-spinner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+}
+
+/* ========================================
+   ANIMACIONES ADICIONALES
+   ======================================== */
+.form-group,
+.col {
+  animation: fadeIn 0.3s ease-out;
+  animation-fill-mode: both;
+}
+
+.form-group:nth-child(1),
+.col:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.form-group:nth-child(2),
+.col:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.form-group:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.form-group:nth-child(4) {
+  animation-delay: 0.25s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   DARK MODE ADJUSTMENTS
+   ======================================== */
+body.dark-mode .register-page {
+  background-color: #0a0a0a;
+}
+
+body.dark-mode .register-page::before {
+  background-image:
+    radial-gradient(
+      circle at 20% 80%,
+      rgba(255, 214, 0, 0.03) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      rgba(255, 214, 0, 0.03) 0%,
+      transparent 50%
+    );
+}

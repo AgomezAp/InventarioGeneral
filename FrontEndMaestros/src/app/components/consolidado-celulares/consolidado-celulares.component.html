@@ -1,0 +1,235 @@
+<app-navbar></app-navbar>
+
+<div class="consolidado-container" @fadeInOut>
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1><i class="pi pi-mobile"></i> Consolidado de Celulares</h1>
+        <p class="subtitle">Inventario completo de dispositivos móviles</p>
+      </div>
+      <div class="header-actions">
+        <div class="header-badge">
+          <i class="pi pi-mobile"></i>
+          <span>{{ celularesFiltrados.length }} celulares</span>
+        </div>
+        <button class="btn btn-accent" type="button" (click)="agregarCelular()">
+          <i class="pi pi-plus"></i>
+          Agregar Celular
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filtros -->
+  <section class="filtros-section">
+    <div class="section-card">
+      <div class="section-card-header">
+        <h3><i class="pi pi-filter"></i> Filtros</h3>
+      </div>
+      <div class="section-card-body">
+        <div class="filtros-grid">
+          <div class="filtro-group">
+            <label for="filtroEstado">Estado</label>
+            <div class="custom-select-wrapper">
+              <select
+                id="filtroEstado"
+                class="custom-select"
+                [(ngModel)]="filtroEstado"
+                (change)="aplicarFiltros()"
+              >
+                <option value="todos">Todos los estados</option>
+                <option *ngFor="let estado of estados" [value]="estado">
+                  {{ estado | titlecase }}
+                </option>
+              </select>
+              <i class="pi pi-chevron-down select-arrow"></i>
+            </div>
+          </div>
+
+          <div class="filtro-group">
+            <label for="filtroAlmacen">Almacén</label>
+            <div class="custom-select-wrapper">
+              <select
+                id="filtroAlmacen"
+                class="custom-select"
+                [(ngModel)]="filtroAlmacen"
+                (change)="aplicarFiltros()"
+              >
+                <option value="todos">Todos los almacenes</option>
+                <option *ngFor="let almacen of almacenes" [value]="almacen">
+                  {{ almacen }}
+                </option>
+              </select>
+              <i class="pi pi-chevron-down select-arrow"></i>
+            </div>
+          </div>
+
+          <div class="filtro-group">
+            <label for="filtroMarca">Marca</label>
+            <div class="custom-select-wrapper">
+              <select
+                id="filtroMarca"
+                class="custom-select"
+                [(ngModel)]="filtroMarca"
+                (change)="aplicarFiltros()"
+              >
+                <option value="todos">Todas las marcas</option>
+                <option *ngFor="let marca of marcas" [value]="marca">
+                  {{ marca }}
+                </option>
+              </select>
+              <i class="pi pi-chevron-down select-arrow"></i>
+            </div>
+          </div>
+
+          <div class="filtro-group filtro-actions">
+            <label>&nbsp;</label>
+            <button class="btn btn-outline" (click)="limpiarFiltros()">
+              <i class="pi pi-eraser"></i>
+              Limpiar Filtros
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando celulares...</p>
+  </div>
+
+  <!-- Tabla -->
+  <section *ngIf="!loading" class="table-section">
+    <div class="section-card">
+      <div class="section-card-header">
+        <h3><i class="pi pi-list"></i> Listado de Celulares</h3>
+        <span class="results-count">{{ celularesFiltrados.length }} resultado(s)</span>
+      </div>
+      <div class="section-card-body no-padding">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Identificador</th>
+                <th>Tipo</th>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>IMEI</th>
+                <th>Estado</th>
+                <th>Almacén</th>
+                <th>Stock Mín.</th>
+                <th>Fecha Ingreso</th>
+                <th>Descripción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let celular of paginatedCelulares"
+                class="table-row"
+                [class.row-disponible]="celular.estado === 'disponible'"
+                [class.row-en-uso]="celular.estado === 'en_uso'"
+                [class.row-danado]="celular.estado === 'dañado'"
+              >
+                <td data-label="Identificador">
+                  <div class="cell-identificador">
+                    <i class="pi pi-tag"></i>
+                    <span>{{ celular.nombre }}</span>
+                  </div>
+                </td>
+                <td data-label="Tipo">
+                  <span class="cell-text">{{ celular.tipo }}</span>
+                </td>
+                <td data-label="Marca">
+                  <span class="cell-text cell-marca">{{ celular.marca }}</span>
+                </td>
+                <td data-label="Modelo">
+                  <span class="cell-text">{{ celular.modelo }}</span>
+                </td>
+                <td data-label="IMEI">
+                  <span class="cell-imei">{{ celular.imei }}</span>
+                </td>
+                <td data-label="Estado">
+                  <span class="badge" [ngClass]="getEstadoClass(celular.estado)">
+                    <i class="pi" [ngClass]="getEstadoIcon(celular.estado)"></i>
+                    {{ celular.estado | titlecase }}
+                  </span>
+                </td>
+                <td data-label="Almacén">
+                  <div class="cell-almacen">
+                    <i class="pi pi-building"></i>
+                    <span>{{ celular.almacen }}</span>
+                  </div>
+                </td>
+                <td data-label="Stock Mín.">
+                  <span class="cell-stock">{{ celular.stockMinimo }}</span>
+                </td>
+                <td data-label="Fecha Ingreso">
+                  <span class="cell-fecha">{{ celular.fechaIngreso | date: 'dd/MM/yyyy' }}</span>
+                </td>
+                <td data-label="Descripción" class="td-descripcion">
+                  <span class="cell-descripcion" [title]="celular.descripcionEntrega">
+                    {{ celular.descripcionEntrega || 'N/A' }}
+                  </span>
+                </td>
+              </tr>
+
+              <!-- Fila vacía -->
+              <tr *ngIf="paginatedCelulares.length === 0" class="empty-row">
+                <td colspan="10">
+                  <div class="empty-state">
+                    <div class="empty-icon">
+                      <i class="pi pi-mobile"></i>
+                    </div>
+                    <h3>No hay celulares</h3>
+                    <p>No se encontraron celulares que coincidan con los filtros aplicados</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Paginación -->
+  <div *ngIf="!loading && celularesFiltrados.length > 0" class="pagination-section">
+    <div class="pagination-wrapper">
+      <button
+        class="btn-pagina"
+        (click)="previousPage()"
+        [disabled]="currentPage === 1"
+        aria-label="Página anterior"
+      >
+        <i class="pi pi-chevron-left"></i>
+      </button>
+
+      <div class="pagination-numbers">
+        <button 
+          *ngFor="let page of getVisiblePages()"
+          class="btn-pagina-num"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+      </div>
+
+      <button
+        class="btn-pagina"
+        (click)="nextPage()"
+        [disabled]="currentPage === totalPages"
+        aria-label="Página siguiente"
+      >
+        <i class="pi pi-chevron-right"></i>
+      </button>
+
+      <span class="pagination-info">
+        Página {{ currentPage }} de {{ totalPages }}
+      </span>
+    </div>
+  </div>
+</div>

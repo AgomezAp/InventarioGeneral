@@ -1,0 +1,448 @@
+<app-navbar></app-navbar>
+
+<div class="devolucion-container">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <button class="btn-back" (click)="volver()" aria-label="Volver">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div class="header-info">
+        <h1><i class="pi pi-replay"></i> Acta de Devolución</h1>
+        <p class="subtitle">
+          Registre la devolución de dispositivos entregados
+        </p>
+      </div>
+    </div>
+
+    <!-- Indicador de pasos -->
+    <div class="steps-indicator">
+      <div
+        class="step"
+        [class.active]="pasoActual >= 1"
+        [class.completed]="pasoActual > 1"
+      >
+        <span class="step-number">1</span>
+        <span class="step-label">Seleccionar Acta</span>
+      </div>
+      <div class="step-line" [class.active]="pasoActual > 1"></div>
+      <div
+        class="step"
+        [class.active]="pasoActual >= 2"
+        [class.completed]="pasoActual > 2"
+      >
+        <span class="step-number">2</span>
+        <span class="step-label">Dispositivos</span>
+      </div>
+      <div class="step-line" [class.active]="pasoActual > 2"></div>
+      <div class="step" [class.active]="pasoActual >= 3">
+        <span class="step-number">3</span>
+        <span class="step-label">Firma y Confirmación</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando...</p>
+  </div>
+
+  <!-- PASO 1: Seleccionar Acta -->
+  <section *ngIf="!loading && pasoActual === 1" class="paso-container fade-in">
+    <div class="section-card">
+      <div class="section-card-header">
+        <h2><i class="pi pi-file"></i> Actas con Dispositivos Pendientes</h2>
+      </div>
+
+      <div class="section-card-body">
+        <!-- Empty State -->
+        <div *ngIf="actasPendientes.length === 0" class="empty-state">
+          <div class="empty-icon">
+            <i class="pi pi-check-circle"></i>
+          </div>
+          <h3>Sin dispositivos pendientes</h3>
+          <p>No hay dispositivos pendientes de devolución</p>
+          <button class="btn btn-accent" routerLink="/actas">
+            <i class="pi pi-list"></i> Ver todas las actas
+          </button>
+        </div>
+
+        <!-- Grid de Actas -->
+        <div *ngIf="actasPendientes.length > 0" class="actas-grid">
+          <div
+            *ngFor="let acta of actasPendientes"
+            class="acta-card"
+            (click)="seleccionarActa(acta)"
+            tabindex="0"
+            (keydown.enter)="seleccionarActa(acta)"
+          >
+            <div class="acta-card-header">
+              <span class="acta-numero">{{ acta.numeroActa }}</span>
+              <span class="badge" [ngClass]="getEstadoActaClass(acta.estado)">
+                {{ acta.estado === "activa" ? "Activa" : "Devolución Parcial" }}
+              </span>
+            </div>
+
+            <div class="acta-card-body">
+              <div class="receptor-info">
+                <div class="receptor-avatar">
+                  <i class="pi pi-user"></i>
+                </div>
+                <div class="receptor-details">
+                  <strong>{{ acta.nombreReceptor }}</strong>
+                  <span>{{ acta.cargoReceptor }}</span>
+                </div>
+              </div>
+
+              <div class="acta-meta">
+                <div class="meta-item">
+                  <i class="pi pi-calendar"></i>
+                  <span>{{ formatFecha(acta.fechaEntrega) }}</span>
+                </div>
+                <div class="meta-item meta-highlight">
+                  <i class="pi pi-mobile"></i>
+                  <span
+                    >{{ contarDispositivosPendientes(acta) }} dispositivo(s)
+                    pendiente(s)</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="acta-card-footer">
+              <span class="select-hint">
+                <i class="pi pi-hand-point-up"></i> Click para seleccionar
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PASO 2: Seleccionar Dispositivos -->
+  <section
+    *ngIf="!loading && pasoActual === 2 && actaSeleccionada"
+    class="paso-container fade-in"
+  >
+    <div class="section-card">
+      <div class="section-card-header">
+        <div class="header-with-actions">
+          <h2><i class="pi pi-mobile"></i> Dispositivos a Devolver</h2>
+          <div class="selection-actions">
+            <button
+              class="btn btn-sm btn-secondary"
+              (click)="seleccionarTodos()"
+            >
+              <i class="pi pi-check-square"></i> Seleccionar todos
+            </button>
+            <button
+              class="btn btn-sm btn-outline"
+              (click)="deseleccionarTodos()"
+            >
+              <i class="pi pi-stop"></i> Deseleccionar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card-body">
+        <!-- Info del acta -->
+        <div class="acta-info-banner">
+          <div class="info-item">
+            <span class="label">Acta:</span>
+            <span class="value">{{ actaSeleccionada.numeroActa }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Receptor:</span>
+            <span class="value">{{ actaSeleccionada.nombreReceptor }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Fecha entrega:</span>
+            <span class="value">{{
+              formatFecha(actaSeleccionada.fechaEntrega)
+            }}</span>
+          </div>
+        </div>
+
+        <!-- Lista de dispositivos -->
+        <div class="dispositivos-list">
+          <div
+            *ngFor="let item of itemsDevolucion"
+            class="dispositivo-item"
+            [class.selected]="item.seleccionado"
+          >
+            <div class="item-checkbox" (click)="toggleSeleccion(item)">
+              <i
+                class="pi"
+                [class.pi-check-square]="item.seleccionado"
+                [class.pi-stop]="!item.seleccionado"
+              ></i>
+            </div>
+
+            <div class="item-info">
+              <div class="item-header">
+                <div class="item-icon">
+                  <i
+                    class="pi"
+                    [ngClass]="getCategoriaIcon(item.dispositivo.categoria)"
+                  ></i>
+                </div>
+                <div class="item-title">
+                  <strong>{{ item.dispositivo.nombre }}</strong>
+                  <span class="item-details"
+                    >{{ item.dispositivo.marca }}
+                    {{ item.dispositivo.modelo }}</span
+                  >
+                </div>
+              </div>
+
+              <div class="item-identifiers">
+                <span *ngIf="item.dispositivo.imei" class="identifier">
+                  <i class="pi pi-qrcode"></i> IMEI: {{ item.dispositivo.imei }}
+                </span>
+                <span *ngIf="item.dispositivo.serial" class="identifier">
+                  <i class="pi pi-hashtag"></i> Serial:
+                  {{ item.dispositivo.serial }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Condición de devolución -->
+            <div class="item-condition" *ngIf="item.seleccionado">
+              <label>Condición al devolver:</label>
+              <div class="custom-select-wrapper">
+                <select
+                  [(ngModel)]="item.condicionDevolucion"
+                  class="custom-select"
+                >
+                  <option *ngFor="let cond of condiciones" [value]="cond">
+                    {{ cond | titlecase }}
+                  </option>
+                </select>
+                <i class="pi pi-chevron-down select-arrow"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen de selección -->
+        <div class="selection-summary">
+          <i class="pi pi-info-circle"></i>
+          <span
+            >{{ getItemsSeleccionados().length }} de
+            {{ itemsDevolucion.length }} dispositivos seleccionados</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de navegación -->
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" (click)="pasoAnterior()">
+        <i class="pi pi-arrow-left"></i> Anterior
+      </button>
+      <button
+        class="btn btn-accent"
+        (click)="siguientePaso()"
+        [disabled]="getItemsSeleccionados().length === 0"
+      >
+        Siguiente <i class="pi pi-arrow-right"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- PASO 3: Detalles, Fotos y Firma -->
+  <section *ngIf="!loading && pasoActual === 3" class="paso-container fade-in">
+    <!-- Detalles adicionales por dispositivo -->
+    <div class="section-card">
+      <div class="section-card-header">
+        <h2><i class="pi pi-list"></i> Detalles de Devolución</h2>
+      </div>
+
+      <div class="section-card-body">
+        <div
+          *ngFor="let item of getItemsSeleccionados()"
+          class="detalle-item-card"
+        >
+          <div class="detalle-header">
+            <div class="detalle-icon">
+              <i
+                class="pi"
+                [ngClass]="getCategoriaIcon(item.dispositivo.categoria)"
+              ></i>
+            </div>
+            <div class="detalle-title">
+              <strong>{{ item.dispositivo.nombre }}</strong>
+              <span
+                class="badge"
+                [ngClass]="getCondicionClass(item.condicionDevolucion)"
+              >
+                {{ item.condicionDevolucion | titlecase }}
+              </span>
+            </div>
+          </div>
+
+          <div class="detalle-identifiers">
+            <span *ngIf="item.dispositivo.imei" class="identifier"
+              >IMEI: {{ item.dispositivo.imei }}</span
+            >
+            <span *ngIf="item.dispositivo.serial" class="identifier"
+              >Serial: {{ item.dispositivo.serial }}</span
+            >
+          </div>
+
+          <div class="detalle-observaciones">
+            <label>Observaciones específicas:</label>
+            <textarea
+              [(ngModel)]="item.observaciones"
+              placeholder="Ingrese observaciones sobre el estado del dispositivo al momento de la devolución..."
+              rows="2"
+              class="custom-textarea"
+            ></textarea>
+          </div>
+
+          <!-- Fotos de devolución -->
+          <div class="detalle-fotos">
+            <label>Fotos del dispositivo (opcional):</label>
+            <div class="fotos-upload">
+              <input
+                type="file"
+                [id]="'fotos_' + item.dispositivoId"
+                accept="image/*"
+                multiple
+                (change)="onFotosSelected($event, item)"
+                hidden
+              />
+              <label
+                [for]="'fotos_' + item.dispositivoId"
+                class="btn btn-sm btn-outline upload-btn"
+              >
+                <i class="pi pi-camera"></i> Agregar fotos
+              </label>
+
+              <div class="fotos-preview" *ngIf="item.fotosPreview.length > 0">
+                <div
+                  *ngFor="let foto of item.fotosPreview; let i = index"
+                  class="foto-thumb"
+                >
+                  <img [src]="foto" alt="Foto del dispositivo" />
+                  <button
+                    class="btn-remove"
+                    (click)="eliminarFoto(item, i)"
+                    aria-label="Eliminar foto"
+                  >
+                    <i class="pi pi-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Observaciones generales -->
+    <div class="section-card">
+      <div class="section-card-header">
+        <h2><i class="pi pi-comment"></i> Observaciones Generales</h2>
+      </div>
+      <div class="section-card-body">
+        <textarea
+          [(ngModel)]="observacionesGenerales"
+          placeholder="Observaciones generales sobre la devolución..."
+          rows="3"
+          class="custom-textarea textarea-full"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Firma -->
+    <div class="section-card">
+      <div class="section-card-header">
+        <h2><i class="pi pi-pencil"></i> Firma de Confirmación</h2>
+      </div>
+      <div class="section-card-body">
+        <p class="firma-hint">
+          Firme para confirmar la recepción de los dispositivos
+        </p>
+
+        <div class="firma-container">
+          <canvas #firmaCanvas class="firma-canvas"></canvas>
+          <button
+            class="btn btn-sm btn-outline btn-clear-firma"
+            (click)="limpiarFirma()"
+          >
+            <i class="pi pi-eraser"></i> Limpiar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen final -->
+    <div class="section-card resumen-card">
+      <div class="section-card-header resumen-header">
+        <h2><i class="pi pi-check-square"></i> Resumen de Devolución</h2>
+      </div>
+      <div class="section-card-body">
+        <div class="resumen-grid">
+          <div class="resumen-item">
+            <span class="label">Acta original:</span>
+            <span class="value">{{ actaSeleccionada?.numeroActa }}</span>
+          </div>
+          <div class="resumen-item">
+            <span class="label">Persona que entregó:</span>
+            <span class="value">{{ actaSeleccionada?.nombreReceptor }}</span>
+          </div>
+          <div class="resumen-item">
+            <span class="label">Dispositivos a devolver:</span>
+            <span class="value value-accent">{{
+              getItemsSeleccionados().length
+            }}</span>
+          </div>
+          <div class="resumen-item">
+            <span class="label">Fecha de devolución:</span>
+            <span class="value">{{ fechaHoy }}</span>
+          </div>
+        </div>
+
+        <ul class="dispositivos-resumen">
+          <li *ngFor="let item of getItemsSeleccionados()">
+            <i
+              class="pi"
+              [ngClass]="getCategoriaIcon(item.dispositivo.categoria)"
+            ></i>
+            <span class="dispositivo-nombre">{{
+              item.dispositivo.nombre
+            }}</span>
+            <span *ngIf="item.dispositivo.imei" class="dispositivo-imei"
+              >(IMEI: {{ item.dispositivo.imei }})</span
+            >
+            <span class="dispositivo-condicion"
+              >- Condición: {{ item.condicionDevolucion | titlecase }}</span
+            >
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Botones de navegación -->
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" (click)="pasoAnterior()">
+        <i class="pi pi-arrow-left"></i> Anterior
+      </button>
+      <button
+        class="btn btn-success"
+        (click)="registrarDevolucion()"
+        [disabled]="guardando"
+      >
+        <i
+          class="pi"
+          [ngClass]="guardando ? 'pi-spin pi-spinner' : 'pi-check'"
+        ></i>
+        {{ guardando ? "Registrando..." : "Confirmar Devolución" }}
+      </button>
+    </div>
+  </section>
+</div>

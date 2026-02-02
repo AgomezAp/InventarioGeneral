@@ -1,0 +1,281 @@
+<app-navbar></app-navbar>
+
+<div class="entrega-container">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <button
+        class="btn-back"
+        (click)="navigateToDashboard()"
+        aria-label="Volver"
+      >
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div class="header-info">
+        <div class="header-badge">
+          <i class="pi pi-mobile"></i>
+          <span>Nueva Entrega</span>
+        </div>
+        <h1><i class="pi pi-send"></i> Entrega de Celular</h1>
+        <p class="subtitle">
+          Complete los datos para registrar la entrega del dispositivo
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mensajes -->
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <i class="pi pi-exclamation-circle"></i>
+    <span>{{ errorMessage }}</span>
+    <button class="alert-close" (click)="errorMessage = ''">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMessage">
+    <i class="pi pi-check-circle"></i>
+    <span>{{ successMessage }}</span>
+    <button class="alert-close" (click)="successMessage = ''">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+
+  <!-- Formulario -->
+  <form (ngSubmit)="onSubmit()" class="form-content">
+    <!-- Sección: Selección de Celular -->
+    <section class="section-card">
+      <div class="section-card-header">
+        <h3><i class="pi pi-mobile"></i> Selección de Dispositivo</h3>
+      </div>
+      <div class="section-card-body">
+        <div class="form-group">
+          <label for="celular"
+            >Celular a entregar <span class="required">*</span></label
+          >
+          <div class="custom-select-wrapper">
+            <select
+              id="celular"
+              (change)="onCelularChange($event)"
+              name="celular"
+              class="custom-select"
+              required
+            >
+              <option value="" disabled selected>
+                Seleccione un celular disponible
+              </option>
+              <option
+                *ngFor="let celular of celularesDisponibles"
+                [value]="celular.Mid"
+              >
+                {{ celular.marca }} {{ celular.modelo }} - IMEI:
+                {{ celular.imei }}
+              </option>
+            </select>
+            <i class="pi pi-chevron-down select-arrow"></i>
+          </div>
+          <div class="help-text" *ngIf="celularesDisponibles.length === 0">
+            <i class="pi pi-info-circle"></i>
+            <span>No hay celulares disponibles para entregar</span>
+          </div>
+        </div>
+
+        <!-- Info del celular seleccionado -->
+        <div class="celular-info-card" *ngIf="celularSeleccionado">
+          <div class="celular-info-header">
+            <div class="celular-icon">
+              <i class="pi pi-mobile"></i>
+            </div>
+            <div class="celular-titulo">
+              <strong
+                >{{ celularSeleccionado.marca }}
+                {{ celularSeleccionado.modelo }}</strong
+              >
+              <span class="celular-badge">Disponible</span>
+            </div>
+          </div>
+          <div class="celular-info-body">
+            <div class="info-item">
+              <label>Marca</label>
+              <span>{{ celularSeleccionado.marca }}</span>
+            </div>
+            <div class="info-item">
+              <label>Modelo</label>
+              <span>{{ celularSeleccionado.modelo }}</span>
+            </div>
+            <div class="info-item full-width">
+              <label>IMEI</label>
+              <span class="imei-value">
+                <i class="pi pi-qrcode"></i>
+                {{ celularSeleccionado.imei }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección: Datos del Receptor -->
+    <section class="section-card">
+      <div class="section-card-header">
+        <h3><i class="pi pi-user"></i> Datos del Receptor</h3>
+      </div>
+      <div class="section-card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="analista"
+              >Nombre de la Analista <span class="required">*</span></label
+            >
+            <div class="custom-select-wrapper">
+              <select
+                id="analista"
+                (change)="onAnalistaChange($event)"
+                name="analista"
+                class="custom-select"
+                required
+              >
+                <option value="" disabled selected>
+                  Seleccione una analista
+                </option>
+                <option
+                  *ngFor="let analista of analistas"
+                  [value]="analista.nombre"
+                >
+                  {{ analista.nombre }}
+                </option>
+              </select>
+              <i class="pi pi-chevron-down select-arrow"></i>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="almacen"
+              >Región de Operación <span class="required">*</span></label
+            >
+            <div class="custom-select-wrapper">
+              <select
+                id="almacen"
+                [(ngModel)]="maestro.almacen"
+                name="almacen"
+                class="custom-select"
+                required
+              >
+                <option value="" disabled>Seleccione una región</option>
+                <option value="Principal">Principal</option>
+                <option value="Secundario">Secundario</option>
+                <option value="Norte">Norte</option>
+                <option value="Sur">Sur</option>
+                <option value="Oriente">Oriente</option>
+                <option value="Occidente">Occidente</option>
+              </select>
+              <i class="pi pi-chevron-down select-arrow"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección: Descripción -->
+    <section class="section-card">
+      <div class="section-card-header">
+        <h3><i class="pi pi-align-left"></i> Descripción de la Entrega</h3>
+      </div>
+      <div class="section-card-body">
+        <div class="form-group">
+          <label for="descripcionEntrega"
+            >Observaciones <span class="required">*</span></label
+          >
+          <textarea
+            id="descripcionEntrega"
+            [(ngModel)]="maestro.descripcionEntrega"
+            name="descripcionEntrega"
+            class="custom-textarea"
+            placeholder="Describa el estado del celular, accesorios incluidos o información adicional..."
+            rows="4"
+            required
+          >
+          </textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección: Firma -->
+    <section class="section-card">
+      <div class="section-card-header">
+        <h3><i class="pi pi-pencil"></i> Firma de Entrega</h3>
+      </div>
+      <div class="section-card-body">
+        <div class="form-group">
+          <label>Firma del receptor <span class="required">*</span></label>
+          <div class="signature-container">
+            <canvas #signaturePad class="signature-canvas"></canvas>
+            <div class="signature-placeholder" *ngIf="!hasFirma">
+              <i class="pi pi-pencil"></i>
+              <span>Firme dentro del recuadro</span>
+            </div>
+          </div>
+          <button type="button" class="btn-limpiar-firma" (click)="undo()">
+            <i class="pi pi-trash"></i> Limpiar firma
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Resumen -->
+    <div class="resumen-card" *ngIf="celularSeleccionado && maestro.nombre">
+      <div class="resumen-header">
+        <i class="pi pi-list"></i>
+        <h4>Resumen de la entrega</h4>
+      </div>
+      <div class="resumen-body">
+        <div class="resumen-item">
+          <span class="resumen-label">Dispositivo:</span>
+          <span class="resumen-value"
+            >{{ celularSeleccionado.marca }}
+            {{ celularSeleccionado.modelo }}</span
+          >
+        </div>
+        <div class="resumen-item">
+          <span class="resumen-label">IMEI:</span>
+          <span class="resumen-value imei">{{ celularSeleccionado.imei }}</span>
+        </div>
+        <div class="resumen-item">
+          <span class="resumen-label">Receptor:</span>
+          <span class="resumen-value">{{ maestro.nombre || "-" }}</span>
+        </div>
+        <div class="resumen-item">
+          <span class="resumen-label">Región:</span>
+          <span class="resumen-value">{{ maestro.almacen || "-" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        (click)="navigateToDashboard()"
+      >
+        <i class="pi pi-times"></i> Cancelar
+      </button>
+      <button
+        type="submit"
+        class="btn btn-accent"
+        [disabled]="loading || !celularSeleccionado"
+      >
+        <i
+          class="pi"
+          [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-send'"
+        ></i>
+        {{ loading ? "Procesando..." : "Entregar Celular" }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" *ngIf="loading">
+  <div class="spinner"></div>
+  <span>Procesando entrega...</span>
+</div>

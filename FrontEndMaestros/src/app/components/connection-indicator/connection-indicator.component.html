@@ -1,0 +1,105 @@
+<div 
+  class="connection-indicator" 
+  [ngClass]="[getStatusClass(), compact ? 'compact' : '']"
+  [title]="getStatusTooltip()"
+  (click)="toggleDetails()"
+>
+  <!-- Indicador principal -->
+  <div class="indicator-main">
+    <span class="indicator-dot">
+      <i class="pi" [ngClass]="getStatusIcon()" *ngIf="!status.reconnecting"></i>
+      <i class="pi pi-spin pi-sync" *ngIf="status.reconnecting"></i>
+    </span>
+    <span class="indicator-text" *ngIf="showDetails && !compact">
+      {{ getStatusText() }}
+    </span>
+    <i class="pi pi-chevron-down expand-icon" 
+       *ngIf="showDetails && !compact"
+       [class.expanded]="detailsExpanded">
+    </i>
+  </div>
+  
+  <!-- Panel de detalles expandido -->
+  <div class="details-panel" *ngIf="showDetails && detailsExpanded" (click)="$event.stopPropagation()">
+    <div class="details-header">
+      <div class="details-title">
+        <i class="pi" [ngClass]="getStatusIcon()"></i>
+        <span>Estado de Conexión</span>
+      </div>
+      <button class="btn-close-details" (click)="closeDetails()" aria-label="Cerrar">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="details-body">
+      <!-- Estado actual -->
+      <div class="detail-row">
+        <span class="detail-label">Estado</span>
+        <span class="detail-value status-badge" [ngClass]="getStatusClass()">
+          {{ getStatusText() }}
+        </span>
+      </div>
+
+      <!-- Última conexión -->
+      <div class="detail-row" *ngIf="status.lastConnectedAt">
+        <span class="detail-label">Última conexión</span>
+        <span class="detail-value">
+          <i class="pi pi-clock"></i>
+          {{ formatDate(status.lastConnectedAt) }}
+        </span>
+      </div>
+
+      <!-- Tiempo conectado -->
+      <div class="detail-row" *ngIf="status.connected && status.lastConnectedAt">
+        <span class="detail-label">Conectado desde</span>
+        <span class="detail-value highlight">
+          {{ getTimeSince(status.lastConnectedAt) }}
+        </span>
+      </div>
+
+      <!-- Desconectado desde -->
+      <div class="detail-row" *ngIf="status.lastDisconnectedAt && !status.connected">
+        <span class="detail-label">Desconectado</span>
+        <span class="detail-value">
+          <i class="pi pi-clock"></i>
+          {{ formatDate(status.lastDisconnectedAt) }}
+        </span>
+      </div>
+
+      <!-- Intentos de reconexión -->
+      <div class="detail-row" *ngIf="status.reconnecting">
+        <span class="detail-label">Intento de reconexión</span>
+        <span class="detail-value reconnect-attempt">
+          <span class="attempt-number">{{ status.reconnectAttempt }}</span>
+          <span class="attempt-max">/ 5</span>
+        </span>
+      </div>
+
+      <!-- Barra de progreso de reconexión -->
+      <div class="reconnect-progress" *ngIf="status.reconnecting">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="(status.reconnectAttempt / 5) * 100"></div>
+        </div>
+        <span class="progress-text">Intentando reconectar...</span>
+      </div>
+
+      <!-- Error -->
+      <div class="detail-row error" *ngIf="status.error">
+        <span class="detail-label">Error</span>
+        <span class="detail-value error-text">
+          <i class="pi pi-exclamation-triangle"></i>
+          {{ status.error }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Footer con información -->
+    <div class="details-footer">
+      <i class="pi pi-info-circle"></i>
+      <span>Las actualizaciones se reciben en tiempo real</span>
+    </div>
+  </div>
+
+  <!-- Overlay para cerrar al hacer clic fuera -->
+  <div class="details-overlay" *ngIf="detailsExpanded" (click)="closeDetails()"></div>
+</div>

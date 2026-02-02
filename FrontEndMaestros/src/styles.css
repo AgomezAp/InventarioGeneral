@@ -1,0 +1,546 @@
+/* ========================================
+   IMPORTACIÓN DE FUENTE FIRA SANS
+   ======================================== */
+@import url("https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap");
+
+/* ========================================
+   VARIABLES GLOBALES - IDENTIDAD DE MARCA
+   ======================================== */
+:root {
+  /* Colores de marca (fijos en ambos modos) */
+  --color-primary: #141414;
+  --color-secondary: #ffd600;
+  --color-secondary-hover: #ffde33;
+  --color-secondary-light: rgba(255, 214, 0, 0.1);
+  --color-secondary-medium: rgba(255, 214, 0, 0.2);
+
+  /* Colores de estado */
+  --color-success: #4caf50;
+  --color-warning: #ff9800;
+  --color-danger: #f44336;
+  --color-info: #2196f3;
+
+  /* Estados de petición */
+  --color-pendiente: #2196f3;
+  --color-en-progreso: #4caf50;
+  --color-resuelta: #8bc34a;
+  --color-cancelada: #f44336;
+  --color-vencida: #d32f2f;
+
+  /* Grises */
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f5f5f5;
+  --color-gray-200: #eeeeee;
+  --color-gray-300: #e0e0e0;
+  --color-gray-400: #bdbdbd;
+  --color-gray-500: #9e9e9e;
+  --color-gray-600: #757575;
+  --color-gray-700: #616161;
+  --color-gray-800: #424242;
+  --color-gray-900: #212121;
+
+  /* Modo claro (por defecto) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-card: #ffffff;
+  --text-primary: #141414;
+  --text-secondary: #616161;
+  --border-color: #e0e0e0;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px rgba(20, 20, 20, 0.05);
+  --shadow-md: 0 4px 6px rgba(20, 20, 20, 0.1);
+  --shadow-lg: 0 10px 15px rgba(20, 20, 20, 0.1);
+  --shadow-xl: 0 20px 25px rgba(20, 20, 20, 0.15);
+  --shadow-accent: 0 0 0 3px rgba(255, 214, 0, 0.25);
+
+  /* Transiciones */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 300ms ease-in-out;
+  --transition-slow: 500ms ease-in-out;
+
+  /* Espaciados compactos */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.875rem;
+  --spacing-lg: 1.25rem;
+  --spacing-xl: 1.75rem;
+  --spacing-2xl: 2.5rem;
+
+  /* Bordes */
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --border-radius-lg: 10px;
+  --border-radius-xl: 14px;
+  --border-radius-full: 9999px;
+
+  /* Tipografía */
+  --font-family:
+    "Fira Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ========================================
+   MODO OSCURO
+   ======================================== */
+body.dark-mode {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #141414;
+  --bg-card: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --border-color: #2a2a2a;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* ========================================
+   RESET Y BASE
+   ======================================== */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  transition:
+    background-color var(--transition-normal),
+    color var(--transition-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Compensar el navbar fixed-top */
+  padding-top: 80px;
+}
+
+/* Contenedores principales de componentes */
+.inventario-container,
+.dashboard-container,
+.actas-container,
+.maestros-container,
+.form-container,
+.detalle-container {
+  padding-top: 20px;
+}
+
+/* ========================================
+   TIPOGRAFÍA
+   ======================================== */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-family);
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: var(--spacing-md);
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+}
+h2 {
+  font-size: 1.875rem;
+  font-weight: 600;
+}
+h3 {
+  font-size: 1.5rem;
+}
+h4 {
+  font-size: 1.25rem;
+}
+h5 {
+  font-size: 1.125rem;
+}
+h6 {
+  font-size: 1rem;
+}
+
+p {
+  margin-bottom: var(--spacing-md);
+  font-family: var(--font-family);
+}
+
+a {
+  color: var(--color-secondary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-secondary-hover);
+}
+
+/* ========================================
+   SCROLLBAR PERSONALIZADO
+   ======================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-400);
+  border-radius: var(--border-radius-full);
+  transition: background var(--transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+/* ========================================
+   SELECCIÓN DE TEXTO
+   ======================================== */
+::selection {
+  background-color: var(--color-secondary);
+  color: var(--color-primary);
+}
+
+::-moz-selection {
+  background-color: var(--color-secondary);
+  color: var(--color-primary);
+}
+
+/* ========================================
+   CLASES UTILITARIAS - FLEX
+   ======================================== */
+.flex {
+  display: flex;
+}
+.flex-col {
+  flex-direction: column;
+}
+.flex-wrap {
+  flex-wrap: wrap;
+}
+.items-center {
+  align-items: center;
+}
+.items-start {
+  align-items: flex-start;
+}
+.items-end {
+  align-items: flex-end;
+}
+.justify-center {
+  justify-content: center;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.justify-around {
+  justify-content: space-around;
+}
+.justify-end {
+  justify-content: flex-end;
+}
+.gap-xs {
+  gap: var(--spacing-xs);
+}
+.gap-sm {
+  gap: var(--spacing-sm);
+}
+.gap-md {
+  gap: var(--spacing-md);
+}
+.gap-lg {
+  gap: var(--spacing-lg);
+}
+
+/* ========================================
+   CLASES UTILITARIAS - GRID
+   ======================================== */
+.grid {
+  display: grid;
+}
+.grid-cols-1 {
+  grid-template-columns: repeat(1, 1fr);
+}
+.grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+.grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* ========================================
+   CLASES UTILITARIAS - SPACING
+   ======================================== */
+.m-0 {
+  margin: 0;
+}
+.mt-1 {
+  margin-top: var(--spacing-xs);
+}
+.mt-2 {
+  margin-top: var(--spacing-sm);
+}
+.mt-3 {
+  margin-top: var(--spacing-md);
+}
+.mt-4 {
+  margin-top: var(--spacing-lg);
+}
+.mb-1 {
+  margin-bottom: var(--spacing-xs);
+}
+.mb-2 {
+  margin-bottom: var(--spacing-sm);
+}
+.mb-3 {
+  margin-bottom: var(--spacing-md);
+}
+.mb-4 {
+  margin-bottom: var(--spacing-lg);
+}
+
+.p-0 {
+  padding: 0;
+}
+.p-1 {
+  padding: var(--spacing-xs);
+}
+.p-2 {
+  padding: var(--spacing-sm);
+}
+.p-3 {
+  padding: var(--spacing-md);
+}
+.p-4 {
+  padding: var(--spacing-lg);
+}
+
+/* ========================================
+   CLASES UTILITARIAS - TEXTO
+   ======================================== */
+.text-center {
+  text-align: center;
+}
+.text-left {
+  text-align: left;
+}
+.text-right {
+  text-align: right;
+}
+.text-bold {
+  font-weight: 600;
+}
+.text-semibold {
+  font-weight: 500;
+}
+.text-normal {
+  font-weight: 400;
+}
+
+.text-primary {
+  color: var(--text-primary);
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
+.text-accent {
+  color: var(--color-secondary);
+}
+.text-success {
+  color: var(--color-success);
+}
+.text-warning {
+  color: var(--color-warning);
+}
+.text-danger {
+  color: var(--color-danger);
+}
+
+/* ========================================
+   CLASES UTILITARIAS - FONDOS
+   ======================================== */
+.bg-primary {
+  background-color: var(--bg-primary);
+}
+.bg-secondary {
+  background-color: var(--bg-secondary);
+}
+.bg-dark {
+  background-color: var(--color-primary);
+}
+.bg-accent {
+  background-color: var(--color-secondary);
+}
+.bg-accent-light {
+  background-color: var(--color-secondary-light);
+}
+
+/* ========================================
+   BADGES
+   ======================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 3px 10px;
+  border-radius: var(--border-radius-full);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: var(--font-family);
+}
+
+.badge-accent {
+  background-color: var(--color-secondary);
+  color: var(--color-primary);
+}
+
+.badge-dark {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.badge-pendiente {
+  background-color: rgba(33, 150, 243, 0.1);
+  color: var(--color-pendiente);
+}
+
+.badge-en-progreso {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: var(--color-en-progreso);
+}
+
+.badge-resuelta {
+  background-color: rgba(139, 195, 74, 0.1);
+  color: var(--color-resuelta);
+}
+
+.badge-cancelada {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: var(--color-cancelada);
+}
+
+.badge-vencida {
+  background-color: rgba(211, 47, 47, 0.1);
+  color: var(--color-vencida);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ========================================
+   ANIMACIONES
+   ======================================== */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ========================================
+   LOADING SPINNER
+   ======================================== */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(20, 20, 20, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+  backdrop-filter: blur(4px);
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--color-secondary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 1024px) {
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+
+  .grid-cols-2,
+  .grid-cols-3,
+  .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+
+  h1 {
+    font-size: 1.875rem;
+  }
+  h2 {
+    font-size: 1.5rem;
+  }
+  h3 {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+}

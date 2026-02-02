@@ -1,0 +1,215 @@
+<app-navbar></app-navbar>
+
+<div class="activos-page">
+  <div class="activos-container" @fadeInOut>
+    <!-- Header -->
+    <div class="activos-header">
+      <div class="header-content">
+        <div class="header-info">
+          <h1 class="activos-title">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+            Celulares Activos
+          </h1>
+          <p class="activos-subtitle">
+            Gestión y seguimiento de dispositivos móviles
+          </p>
+        </div>
+        <div class="header-badge">
+          <span class="activos-badge">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <span class="badge-count">{{ maestrosActivos.length }}</span>
+            <span class="badge-label">activos</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-card">
+      <div class="loading-content">
+        <div class="loading-spinner">
+          <i class="fa-solid fa-spinner fa-spin"></i>
+        </div>
+        <p class="loading-text">Cargando datos...</p>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <div *ngIf="!loading" class="table-card">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead class="table-head">
+            <tr>
+              <th class="th-cell">
+                <span class="th-content">
+                  <i class="fa-solid fa-tag"></i>
+                  Nombre
+                </span>
+              </th>
+              <th class="th-cell">
+                <span class="th-content">
+                  <i class="fa-solid fa-id-card"></i>
+                  Nombre Maestro
+                </span>
+              </th>
+              <th class="th-cell">
+                <span class="th-content">
+                  <i class="fa-solid fa-signature"></i>
+                  Firma
+                </span>
+              </th>
+              <th class="th-cell">
+                <span class="th-content">
+                  <i class="fa-solid fa-align-left"></i>
+                  Descripción
+                </span>
+              </th>
+              <th class="th-cell">
+                <span class="th-content">
+                  <i class="fa-solid fa-circle-info"></i>
+                  Estado
+                </span>
+              </th>
+              <th class="th-cell">
+                <span class="th-content">
+                  <i class="fa-solid fa-map-marker-alt"></i>
+                  Región
+                </span>
+              </th>
+              <th class="th-cell">
+                <span class="th-content">
+                  <i class="fa-solid fa-user"></i>
+                  Persona a cargo
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody class="table-body">
+            <tr
+              class="table-row"
+              *ngFor="let maestro of paginatedMaestros; let i = index"
+              [class.row-activo]="maestro.estado === 'activo'"
+              [class.row-inactivo]="maestro.estado === 'INACTIVO'"
+              [style.animation-delay]="i * 0.05 + 's'"
+            >
+              <td class="td-cell" data-label="Nombre">
+                <span class="cell-text cell-nombre">{{ maestro.nombre }}</span>
+              </td>
+              <td class="td-cell" data-label="Nombre Maestro">
+                <span class="cell-text">{{ maestro.NombreMaestro }}</span>
+              </td>
+              <td class="td-cell td-firma" data-label="Firma">
+                <div class="firma-container">
+                  <img
+                    class="firma-img"
+                    [src]="maestro.firmaEntrega"
+                    alt="Firma de {{ maestro.NombreMaestro }}"
+                    loading="lazy"
+                  />
+                </div>
+              </td>
+              <td class="td-cell td-descripcion" data-label="Descripción">
+                <span
+                  class="cell-text cell-descripcion"
+                  [title]="maestro.descripcionEntrega"
+                >
+                  {{ maestro.descripcionEntrega }}
+                </span>
+              </td>
+              <td class="td-cell" data-label="Estado">
+                <span
+                  class="estado-badge"
+                  [class.estado-activo]="maestro.estado === 'activo'"
+                  [class.estado-inactivo]="maestro.estado === 'INACTIVO'"
+                >
+                  <i
+                    class="fa-solid"
+                    [class.fa-circle-check]="maestro.estado === 'activo'"
+                    [class.fa-circle-xmark]="maestro.estado === 'INACTIVO'"
+                  ></i>
+                  {{ maestro.estado | titlecase }}
+                </span>
+              </td>
+              <td class="td-cell" data-label="Región">
+                <span class="cell-text cell-region">
+                  <i class="fa-solid fa-location-dot"></i>
+                  {{ maestro.region }}
+                </span>
+              </td>
+              <td class="td-cell" data-label="Persona a cargo">
+                <span class="cell-text cell-persona">
+                  <div class="persona-avatar">
+                    {{ maestro.usuarios.nombre.charAt(0)
+                    }}{{ maestro.usuarios.apellido.charAt(0) }}
+                  </div>
+                  <span class="persona-nombre">
+                    {{ maestro.usuarios.nombre }}
+                    {{ maestro.usuarios.apellido }}
+                  </span>
+                </span>
+              </td>
+            </tr>
+
+            <!-- Fila vacía -->
+            <tr
+              class="table-row empty-row"
+              *ngIf="paginatedMaestros.length === 0"
+            >
+              <td class="td-cell" colspan="7">
+                <div class="empty-state">
+                  <div class="empty-icon">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                  </div>
+                  <h3 class="empty-title">No hay celulares activos</h3>
+                  <p class="empty-text">
+                    No se encontraron dispositivos que coincidan con los
+                    criterios
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Paginación -->
+    <div
+      *ngIf="!loading && paginatedMaestros.length > 0"
+      class="pagination-card"
+    >
+      <div class="pagination-info">
+        <span class="pagination-text">
+          Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} -
+          {{ Math.min(currentPage * itemsPerPage, maestrosActivos.length) }}
+          de {{ maestrosActivos.length }}
+        </span>
+      </div>
+      <div class="pagination-controls">
+        <button
+          class="btn-page"
+          (click)="previousPage()"
+          [disabled]="currentPage === 1"
+          title="Página anterior"
+        >
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <span class="page-indicator">
+          <span class="page-current">{{ currentPage }}</span>
+          <span class="page-separator">/</span>
+          <span class="page-total">{{
+            Math.ceil(maestrosActivos.length / itemsPerPage)
+          }}</span>
+        </span>
+        <button
+          class="btn-page"
+          (click)="nextPage()"
+          [disabled]="currentPage * itemsPerPage >= maestrosActivos.length"
+          title="Página siguiente"
+        >
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

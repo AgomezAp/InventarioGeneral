@@ -1,0 +1,281 @@
+<app-navbar></app-navbar>
+
+<div class="agregar-container">
+  <div class="form-wrapper">
+    <!-- Header -->
+    <header class="page-header">
+      <div class="header-content">
+        <button
+          class="btn-back"
+          (click)="navigateToDashboard()"
+          aria-label="Volver"
+        >
+          <i class="pi pi-arrow-left"></i>
+        </button>
+        <div class="header-info">
+          <div class="header-badge">
+            <i class="pi pi-mobile"></i>
+            <span>Celulares</span>
+          </div>
+          <h1>Agregar Celular al Inventario</h1>
+          <p class="subtitle">
+            Complete los datos para registrar un nuevo dispositivo
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mensajes de alerta -->
+    <div class="alert alert-error" *ngIf="errorMessage">
+      <i class="pi pi-exclamation-circle"></i>
+      <span>{{ errorMessage }}</span>
+      <button class="alert-close" (click)="errorMessage = ''">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="alert alert-success" *ngIf="successMessage">
+      <i class="pi pi-check-circle"></i>
+      <span>{{ successMessage }}</span>
+      <button class="alert-close" (click)="successMessage = ''">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <!-- Formulario -->
+    <form (ngSubmit)="onSubmit()" class="form-content">
+      <!-- Sección: Identificación del Dispositivo -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <h3><i class="pi pi-id-card"></i> Identificación del Dispositivo</h3>
+        </div>
+        <div class="section-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nombre">
+                <i class="pi pi-tag"></i>
+                Identificador / Nombre <span class="required">*</span>
+              </label>
+              <input
+                type="text"
+                id="nombre"
+                class="custom-input"
+                placeholder="Ej: Samsung-A54-001"
+                [(ngModel)]="celular.nombre"
+                name="nombre"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="imei">
+                <i class="pi pi-qrcode"></i>
+                IMEI <span class="required">*</span>
+              </label>
+              <input
+                type="text"
+                id="imei"
+                class="custom-input"
+                placeholder="Número IMEI del dispositivo"
+                [(ngModel)]="celular.imei"
+                name="imei"
+                required
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Información del Dispositivo -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <h3><i class="pi pi-mobile"></i> Información del Dispositivo</h3>
+        </div>
+        <div class="section-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="marca">
+                <i class="pi pi-bookmark"></i>
+                Marca <span class="required">*</span>
+              </label>
+              <input
+                type="text"
+                id="marca"
+                class="custom-input"
+                placeholder="Ej: Samsung, Apple, Motorola"
+                [(ngModel)]="celular.marca"
+                name="marca"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="modelo">
+                <i class="pi pi-tablet"></i>
+                Modelo <span class="required">*</span>
+              </label>
+              <input
+                type="text"
+                id="modelo"
+                class="custom-input"
+                placeholder="Ej: Galaxy A54, iPhone 14"
+                [(ngModel)]="celular.modelo"
+                name="modelo"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipo">
+                <i class="pi pi-sitemap"></i>
+                Tipo de Dispositivo <span class="required">*</span>
+              </label>
+              <div class="custom-select-wrapper">
+                <select
+                  id="tipo"
+                  class="custom-select"
+                  [(ngModel)]="celular.tipo"
+                  name="tipo"
+                  required
+                >
+                  <option value="" disabled>Seleccione un tipo</option>
+                  <option *ngFor="let tipo of tipos" [value]="tipo">
+                    {{ tipo }}
+                  </option>
+                </select>
+                <i class="pi pi-chevron-down select-arrow"></i>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="estado">
+                <i class="pi pi-info-circle"></i>
+                Estado <span class="required">*</span>
+              </label>
+              <div class="custom-select-wrapper">
+                <select
+                  id="estado"
+                  class="custom-select"
+                  [(ngModel)]="celular.estado"
+                  name="estado"
+                  required
+                >
+                  <option value="disponible">Disponible</option>
+                  <option value="en_uso">En Uso</option>
+                  <option value="dañado">Dañado</option>
+                </select>
+                <i class="pi pi-chevron-down select-arrow"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Ubicación e Inventario -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <h3><i class="pi pi-map-marker"></i> Ubicación e Inventario</h3>
+        </div>
+        <div class="section-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="almacen">
+                <i class="pi pi-building"></i>
+                Almacén / Ubicación <span class="required">*</span>
+              </label>
+              <div class="custom-select-wrapper">
+                <select
+                  id="almacen"
+                  class="custom-select"
+                  [(ngModel)]="celular.almacen"
+                  name="almacen"
+                  required
+                >
+                  <option value="" disabled>Seleccione un almacén</option>
+                  <option *ngFor="let almacen of almacenes" [value]="almacen">
+                    {{ almacen }}
+                  </option>
+                </select>
+                <i class="pi pi-chevron-down select-arrow"></i>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="stockMinimo">
+                <i class="pi pi-box"></i>
+                Stock Mínimo <span class="required">*</span>
+              </label>
+              <input
+                type="number"
+                id="stockMinimo"
+                class="custom-input"
+                min="1"
+                placeholder="Cantidad mínima en inventario"
+                [(ngModel)]="celular.stockMinimo"
+                name="stockMinimo"
+                required
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Descripción -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <h3><i class="pi pi-align-left"></i> Descripción / Observaciones</h3>
+        </div>
+        <div class="section-card-body">
+          <div class="form-group">
+            <label for="descripcionEntrega">
+              Información adicional del dispositivo
+            </label>
+            <textarea
+              id="descripcionEntrega"
+              class="custom-textarea"
+              rows="4"
+              placeholder="Describa el estado, características o información adicional del dispositivo..."
+              [(ngModel)]="celular.descripcionEntrega"
+              name="descripcionEntrega"
+            ></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Botones de acción -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn-outline"
+          (click)="limpiarFormulario()"
+        >
+          <i class="pi pi-eraser"></i> Limpiar Formulario
+        </button>
+        <div class="form-actions-right">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="navigateToDashboard()"
+          >
+            <i class="pi pi-times"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-accent" [disabled]="loading">
+            <i
+              class="pi"
+              [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-plus'"
+            ></i>
+            {{ loading ? "Guardando..." : "Agregar Celular" }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Guardando dispositivo...</p>
+  </div>
+</div>

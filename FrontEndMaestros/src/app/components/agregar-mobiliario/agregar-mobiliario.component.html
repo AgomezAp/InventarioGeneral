@@ -1,0 +1,320 @@
+<app-navbar></app-navbar>
+
+<div class="mobiliario-container">
+  <div class="form-wrapper">
+    <!-- Header -->
+    <header class="page-header">
+      <div class="header-content">
+        <button class="btn-back" (click)="cancelar()" aria-label="Volver">
+          <i class="pi pi-arrow-left"></i>
+        </button>
+        <div class="header-info">
+          <div class="header-badge">
+            <i class="pi pi-building"></i>
+            <span>Mobiliario</span>
+          </div>
+          <h1>Agregar Mobiliario</h1>
+          <p class="subtitle">Complete la información del nuevo mobiliario</p>
+        </div>
+      </div>
+    </header>
+
+    <form [formGroup]="mobiliarioForm" (ngSubmit)="onSubmit()">
+      <!-- Sección: Información Básica -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <h3><i class="pi pi-info-circle"></i> Información Básica</h3>
+        </div>
+        <div class="section-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nombre">
+                Nombre / Descripción <span class="required">*</span>
+              </label>
+              <input
+                type="text"
+                id="nombre"
+                formControlName="nombre"
+                placeholder="Ej: Escritorio ejecutivo en L"
+                class="custom-input"
+                [class.invalid]="isFieldInvalid('nombre')"
+              />
+              <span class="error-message" *ngIf="isFieldInvalid('nombre')">
+                <i class="pi pi-exclamation-circle"></i>
+                {{ getFieldError("nombre") }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="categoria">
+                Categoría <span class="required">*</span>
+              </label>
+              <div class="custom-select-wrapper">
+                <select
+                  id="categoria"
+                  formControlName="categoria"
+                  class="custom-select"
+                  [class.invalid]="isFieldInvalid('categoria')"
+                >
+                  <option value="">Seleccione una categoría</option>
+                  <option *ngFor="let cat of categorias" [value]="cat">
+                    {{ cat }}
+                  </option>
+                </select>
+                <i class="pi pi-chevron-down select-arrow"></i>
+              </div>
+              <span class="error-message" *ngIf="isFieldInvalid('categoria')">
+                <i class="pi pi-exclamation-circle"></i>
+                {{ getFieldError("categoria") }}
+              </span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="marca">Marca</label>
+              <input
+                type="text"
+                id="marca"
+                formControlName="marca"
+                placeholder="Ej: IKEA, Herman Miller, etc."
+                class="custom-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="material">Material</label>
+              <input
+                type="text"
+                id="material"
+                formControlName="material"
+                placeholder="Ej: Madera, Metal, Plástico"
+                class="custom-input"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="dimensiones">
+                <i class="pi pi-arrows-alt label-icon"></i>
+                Dimensiones
+              </label>
+              <input
+                type="text"
+                id="dimensiones"
+                formControlName="dimensiones"
+                placeholder="Ej: 150x80x75 cm"
+                class="custom-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="color">
+                <i class="pi pi-palette label-icon"></i>
+                Color
+              </label>
+              <input
+                type="text"
+                id="color"
+                formControlName="color"
+                placeholder="Ej: Negro, Blanco, Café"
+                class="custom-input"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Estado y Condición -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <h3><i class="pi pi-check-square"></i> Estado y Condición</h3>
+        </div>
+        <div class="section-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="estado">
+                Estado <span class="required">*</span>
+              </label>
+              <div class="custom-select-wrapper">
+                <select
+                  id="estado"
+                  formControlName="estado"
+                  class="custom-select"
+                  [class.invalid]="isFieldInvalid('estado')"
+                >
+                  <option *ngFor="let est of estados" [value]="est.value">
+                    {{ est.label }}
+                  </option>
+                </select>
+                <i class="pi pi-chevron-down select-arrow"></i>
+              </div>
+              <span class="error-message" *ngIf="isFieldInvalid('estado')">
+                <i class="pi pi-exclamation-circle"></i>
+                {{ getFieldError("estado") }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="condicion">
+                Condición <span class="required">*</span>
+              </label>
+              <div class="custom-select-wrapper">
+                <select
+                  id="condicion"
+                  formControlName="condicion"
+                  class="custom-select"
+                  [class.invalid]="isFieldInvalid('condicion')"
+                >
+                  <option *ngFor="let cond of condiciones" [value]="cond.value">
+                    {{ cond.label }}
+                  </option>
+                </select>
+                <i class="pi pi-chevron-down select-arrow"></i>
+              </div>
+              <span class="error-message" *ngIf="isFieldInvalid('condicion')">
+                <i class="pi pi-exclamation-circle"></i>
+                {{ getFieldError("condicion") }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Ubicación -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <h3><i class="pi pi-map-marker"></i> Ubicación</h3>
+        </div>
+        <div class="section-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ubicacion">
+                Ubicación Física <span class="required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="pi pi-map-marker input-icon"></i>
+                <input
+                  type="text"
+                  id="ubicacion"
+                  formControlName="ubicacion"
+                  placeholder="Ej: Piso 3, Oficina 301"
+                  class="custom-input with-icon"
+                  [class.invalid]="isFieldInvalid('ubicacion')"
+                />
+              </div>
+              <span class="error-message" *ngIf="isFieldInvalid('ubicacion')">
+                <i class="pi pi-exclamation-circle"></i>
+                {{ getFieldError("ubicacion") }}
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="area">
+                Área / Departamento <span class="required">*</span>
+              </label>
+              <div class="custom-select-wrapper">
+                <select
+                  id="area"
+                  formControlName="area"
+                  class="custom-select"
+                  [class.invalid]="isFieldInvalid('area')"
+                >
+                  <option value="">Seleccione un área</option>
+                  <option *ngFor="let a of areas" [value]="a">{{ a }}</option>
+                </select>
+                <i class="pi pi-chevron-down select-arrow"></i>
+              </div>
+              <span class="error-message" *ngIf="isFieldInvalid('area')">
+                <i class="pi pi-exclamation-circle"></i>
+                {{ getFieldError("area") }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Imagen -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <h3><i class="pi pi-camera"></i> Imagen (Opcional)</h3>
+        </div>
+        <div class="section-card-body">
+          <div class="image-upload-container">
+            <!-- Preview de imagen -->
+            <div class="image-preview" *ngIf="imagenPreview">
+              <img [src]="imagenPreview" alt="Preview del mobiliario" />
+              <button
+                type="button"
+                class="btn-remove-image"
+                (click)="removeImage()"
+                aria-label="Eliminar imagen"
+              >
+                <i class="pi pi-times"></i>
+              </button>
+              <div class="image-overlay">
+                <span>Click para cambiar</span>
+              </div>
+            </div>
+
+            <!-- Área de carga -->
+            <label class="upload-area" for="imagen" *ngIf="!imagenPreview">
+              <input
+                type="file"
+                id="imagen"
+                (change)="onFileSelected($event)"
+                accept="image/jpeg,image/jpg,image/png,image/gif"
+                hidden
+              />
+              <div class="upload-content">
+                <div class="upload-icon">
+                  <i class="pi pi-cloud-upload"></i>
+                </div>
+                <span class="upload-text">Haga clic o arrastre una imagen</span>
+                <span class="upload-hint">JPG, PNG, GIF (máx. 5MB)</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Observaciones -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <h3><i class="pi pi-bookmark"></i> Observaciones</h3>
+        </div>
+        <div class="section-card-body">
+          <div class="form-group">
+            <label for="observaciones">Notas adicionales</label>
+            <textarea
+              id="observaciones"
+              formControlName="observaciones"
+              rows="4"
+              placeholder="Notas adicionales sobre el mobiliario..."
+              class="custom-textarea"
+            ></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Botones de acción -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelar()">
+          <i class="pi pi-times"></i> Cancelar
+        </button>
+        <button
+          type="submit"
+          class="btn btn-accent"
+          [disabled]="loading || mobiliarioForm.invalid"
+        >
+          <i
+            class="pi"
+            [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-save'"
+          ></i>
+          {{ loading ? "Guardando..." : "Guardar Mobiliario" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

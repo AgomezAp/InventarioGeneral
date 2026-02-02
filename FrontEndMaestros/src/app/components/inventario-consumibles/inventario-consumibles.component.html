@@ -1,0 +1,262 @@
+<app-navbar></app-navbar>
+
+<div class="inventario-container" [style.--color-principal]="colorPrincipal">
+  <!-- Header con estadísticas -->
+  <div class="header-section">
+    <div class="header-title">
+      <h1><i class="fa-solid" [ngClass]="iconoInventario"></i> {{ tituloInventario }}</h1>
+      <p class="subtitle">Gestión de stock y control de inventario</p>
+    </div>
+    
+    <div class="header-actions">
+      <button class="btn-agregar" (click)="irAAgregar()">
+        <i class="fa-solid fa-plus"></i> Agregar Producto
+      </button>
+      <button class="btn-entrega" (click)="irAEntrega()">
+        <i class="fa-solid fa-file-signature"></i> Crear Acta de Entrega
+      </button>
+    </div>
+  </div>
+
+  <!-- Alertas de stock bajo -->
+  <div class="alertas-container" *ngIf="alertasStock.length > 0">
+    <div class="alerta-header">
+      <i class="fa-solid fa-exclamation-triangle"></i>
+      <span>{{ alertasStock.length }} producto(s) con stock bajo</span>
+    </div>
+    <div class="alertas-lista">
+      <span *ngFor="let alerta of alertasStock.slice(0, 5)" class="alerta-item">
+        {{ alerta.nombre }} ({{ alerta.stockActual }}/{{ alerta.stockMinimo }})
+      </span>
+      <span *ngIf="alertasStock.length > 5" class="alerta-mas">
+        +{{ alertasStock.length - 5 }} más...
+      </span>
+    </div>
+  </div>
+
+  <!-- Tarjetas de estadísticas -->
+  <div class="stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+      <div class="stat-info">
+        <span class="stat-number">{{ estadisticas?.total || 0 }}</span>
+        <span class="stat-label">Total Productos</span>
+      </div>
+    </div>
+    
+    <div class="stat-card stat-stock-bajo">
+      <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="stat-info">
+        <span class="stat-number">{{ estadisticas?.stockBajo || 0 }}</span>
+        <span class="stat-label">Stock Bajo</span>
+      </div>
+    </div>
+    
+    <div class="stat-card stat-sin-stock">
+      <div class="stat-icon"><i class="fa-solid fa-ban"></i></div>
+      <div class="stat-info">
+        <span class="stat-number">{{ estadisticas?.sinStock || 0 }}</span>
+        <span class="stat-label">Sin Stock</span>
+      </div>
+    </div>
+    
+    <div class="stat-card stat-valor">
+      <div class="stat-icon"><i class="fa-solid fa-dollar-sign"></i></div>
+      <div class="stat-info">
+        <span class="stat-number">{{ formatearPrecio(estadisticas?.valorTotal) }}</span>
+        <span class="stat-label">Valor Total</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros-section">
+    <div class="filtro-grupo">
+      <label>Categoría:</label>
+      <select [(ngModel)]="filtroCategoria" (change)="aplicarFiltros()">
+        <option value="todas">Todas las categorías</option>
+        <option *ngFor="let cat of categorias" [value]="cat">
+          {{ cat | titlecase }}
+        </option>
+      </select>
+    </div>
+    
+    <div class="filtro-grupo filtro-check">
+      <label>
+        <input type="checkbox" [(ngModel)]="filtroStockBajo" (change)="aplicarFiltros()">
+        Solo stock bajo
+      </label>
+    </div>
+    
+    <div class="filtro-grupo filtro-busqueda">
+      <label>Buscar:</label>
+      <input 
+        type="text" 
+        [ngModel]="filtroBusqueda" 
+        (ngModelChange)="onBusquedaChange($event)"
+        placeholder="Nombre, código, proveedor..."
+      />
+      <i class="fa-solid fa-search"></i>
+    </div>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div class="error-message" *ngIf="error">
+    <i class="fa-solid fa-exclamation-circle"></i> {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    <i class="fa-solid fa-spinner fa-spin"></i> Cargando productos...
+  </div>
+
+  <!-- Tabla de consumibles -->
+  <div class="tabla-container" *ngIf="!loading">
+    <table class="tabla-consumibles">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Producto</th>
+          <th>Categoría</th>
+          <th>Stock</th>
+          <th>Unidad</th>
+          <th>Proveedor</th>
+          <th>Precio Unit.</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let consumible of consumiblesPaginados" [class]="getStockClass(consumible)">
+          <td class="td-codigo">
+            <span *ngIf="consumible.codigoInterno" class="codigo">{{ consumible.codigoInterno }}</span>
+            <span *ngIf="!consumible.codigoInterno" class="sin-codigo">-</span>
+          </td>
+          <td class="td-nombre">
+            <strong>{{ consumible.nombre }}</strong>
+            <span *ngIf="consumible.descripcion" class="descripcion">{{ consumible.descripcion }}</span>
+          </td>
+          <td class="td-categoria">
+            <span class="categoria-badge">{{ consumible.categoria | titlecase }}</span>
+          </td>
+          <td class="td-stock">
+            <div class="stock-info">
+              <span class="stock-actual" [ngClass]="{'stock-critico': esSinStock(consumible), 'stock-alerta': esStockBajo(consumible) && !esSinStock(consumible)}">
+                {{ consumible.stockActual }}
+              </span>
+              <span class="stock-minimo">/ mín: {{ consumible.stockMinimo }}</span>
+            </div>
+            <div class="stock-bar">
+              <div class="stock-fill" 
+                   [style.width.%]="calcularPorcentajeStock(consumible)"
+                   [ngClass]="{'fill-critico': esSinStock(consumible), 'fill-alerta': esStockBajo(consumible) && !esSinStock(consumible)}">
+              </div>
+            </div>
+          </td>
+          <td class="td-unidad">{{ consumible.unidadMedida }}</td>
+          <td class="td-proveedor">
+            <span *ngIf="consumible.proveedor">{{ consumible.proveedor }}</span>
+            <span *ngIf="!consumible.proveedor" class="sin-datos">-</span>
+          </td>
+          <td class="td-precio">{{ formatearPrecio(consumible.precioUnitario) }}</td>
+          <td class="td-acciones">
+            <button class="btn-accion btn-entrada" (click)="abrirModalStock(consumible, 'entrada')" title="Entrada de stock">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <button class="btn-accion btn-salida" (click)="abrirModalStock(consumible, 'salida')" title="Salida de stock" [disabled]="esSinStock(consumible)">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <button class="btn-accion btn-ajuste" (click)="abrirModalStock(consumible, 'ajuste')" title="Ajustar stock">
+              <i class="fa-solid fa-sliders"></i>
+            </button>
+            <button class="btn-accion btn-historial" (click)="verHistorial(consumible.id!)" title="Ver historial">
+              <i class="fa-solid fa-history"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Sin resultados -->
+    <div class="sin-resultados" *ngIf="consumiblesFiltrados.length === 0 && !loading">
+      <i class="fa-solid fa-inbox"></i>
+      <p>No se encontraron productos con los filtros seleccionados</p>
+    </div>
+
+    <!-- Paginación -->
+    <div class="paginacion" *ngIf="totalPaginas > 1">
+      <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
+      <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de gestión de stock -->
+<div class="modal-overlay" *ngIf="mostrarModalStock" (click)="cerrarModalStock()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>
+        <i class="fa-solid" [ngClass]="{
+          'fa-plus-circle': tipoOperacionStock === 'entrada',
+          'fa-minus-circle': tipoOperacionStock === 'salida',
+          'fa-sliders': tipoOperacionStock === 'ajuste'
+        }"></i>
+        {{ tipoOperacionStock === 'entrada' ? 'Entrada de Stock' : 
+           tipoOperacionStock === 'salida' ? 'Salida de Stock' : 'Ajuste de Stock' }}
+      </h3>
+      <button class="btn-cerrar" (click)="cerrarModalStock()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body" *ngIf="consumibleSeleccionado">
+      <div class="producto-info">
+        <strong>{{ consumibleSeleccionado.nombre }}</strong>
+        <span>Stock actual: {{ consumibleSeleccionado.stockActual }} {{ consumibleSeleccionado.unidadMedida }}(s)</span>
+      </div>
+      
+      <div class="form-grupo">
+        <label>{{ tipoOperacionStock === 'ajuste' ? 'Nuevo stock' : 'Cantidad' }}:</label>
+        <input type="number" [(ngModel)]="cantidadStock" min="0" 
+               [placeholder]="tipoOperacionStock === 'ajuste' ? 'Nuevo valor de stock' : 'Cantidad a ' + (tipoOperacionStock === 'entrada' ? 'agregar' : 'retirar')">
+      </div>
+      
+      <div class="form-grupo">
+        <label>Motivo:</label>
+        <select [(ngModel)]="motivoStock">
+          <option value="">Seleccionar motivo...</option>
+          <option *ngIf="tipoOperacionStock === 'entrada'" value="compra">Compra</option>
+          <option *ngIf="tipoOperacionStock === 'entrada'" value="donacion">Donación</option>
+          <option *ngIf="tipoOperacionStock === 'entrada'" value="devolucion">Devolución</option>
+          <option *ngIf="tipoOperacionStock === 'salida'" value="entrega">Entrega</option>
+          <option *ngIf="tipoOperacionStock === 'salida'" value="vencimiento">Vencimiento</option>
+          <option *ngIf="tipoOperacionStock === 'salida'" value="perdida">Pérdida</option>
+          <option *ngIf="tipoOperacionStock === 'ajuste'" value="ajuste_inventario">Ajuste de inventario</option>
+          <option *ngIf="tipoOperacionStock === 'ajuste'" value="correccion">Corrección</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      
+      <div class="form-grupo" *ngIf="tipoOperacionStock === 'entrada'">
+        <label>N° Documento (Factura/Orden):</label>
+        <input type="text" [(ngModel)]="numeroDocumentoStock" placeholder="Opcional">
+      </div>
+      
+      <div class="form-grupo">
+        <label>Descripción adicional:</label>
+        <textarea [(ngModel)]="descripcionStock" rows="2" placeholder="Opcional"></textarea>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="cerrarModalStock()">Cancelar</button>
+      <button class="btn-confirmar" (click)="ejecutarOperacionStock()" [disabled]="cantidadStock <= 0 && tipoOperacionStock !== 'ajuste'">
+        <i class="fa-solid fa-check"></i> Confirmar
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,316 @@
+<app-navbar></app-navbar>
+
+<div class="crear-acta-container" [class.aseo]="tipoInventario === 'aseo'" [class.papeleria]="tipoInventario === 'papeleria'">
+  <div class="form-wrapper">
+    <!-- Header -->
+    <header class="page-header" [style.background]="'linear-gradient(135deg, ' + colorTema + ' 0%, ' + colorTema + 'cc 100%)'">
+      <div class="header-content">
+        <button class="btn-back" (click)="cancelar()" aria-label="Volver">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="header-info">
+          <div class="header-badge">
+            <i class="fas" [ngClass]="iconoTipo"></i>
+            <span>Nueva Acta</span>
+          </div>
+          <h1><i class="fas fa-file-alt"></i> Acta de Entrega - {{ tituloTipo }}</h1>
+          <p class="subtitle">
+            Registra la entrega de artículos con firma digital
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mensajes -->
+    <div class="alert alert-error" *ngIf="errorMessage">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>{{ errorMessage }}</span>
+      <button class="alert-close" (click)="errorMessage = ''">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="alert alert-success" *ngIf="successMessage">
+      <i class="fas fa-check-circle"></i>
+      <span>{{ successMessage }}</span>
+      <button class="alert-close" (click)="successMessage = ''">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <form (ngSubmit)="crearActa()" class="form-content">
+      <!-- Sección: Datos del receptor -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <h3><i class="fas fa-user"></i> Datos del receptor</h3>
+        </div>
+        <div class="section-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nombre">Nombre completo <span class="required">*</span></label>
+              <input
+                type="text"
+                id="nombre"
+                [(ngModel)]="receptor.nombre"
+                name="nombre"
+                placeholder="Nombre de quien recibe"
+                class="custom-input"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="cargo">Cargo <span class="required">*</span></label>
+              <input
+                type="text"
+                id="cargo"
+                [(ngModel)]="receptor.cargo"
+                name="cargo"
+                placeholder="Cargo o posición"
+                class="custom-input"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="area">Área / Departamento</label>
+              <select
+                id="area"
+                [(ngModel)]="receptor.area"
+                name="area"
+                class="custom-select"
+              >
+                <option value="">Seleccione un área</option>
+                <option *ngFor="let a of areas" [value]="a">{{ a }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="correo">Correo electrónico <span class="required">*</span></label>
+              <div class="input-with-icon">
+                <i class="fas fa-envelope input-icon"></i>
+                <input
+                  type="email"
+                  id="correo"
+                  [(ngModel)]="receptor.correo"
+                  name="correo"
+                  placeholder="correo@ejemplo.com"
+                  class="custom-input with-icon"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="help-text">
+            <i class="fas fa-info-circle"></i>
+            <span>Se enviará un enlace a este correo para que el receptor firme digitalmente.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Selección de artículos -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <h3><i class="fas fa-boxes"></i> Artículos a entregar</h3>
+        </div>
+        <div class="section-card-body">
+          <!-- Artículos disponibles -->
+          <div class="articulos-disponibles">
+            <label class="subsection-label">Seleccionar artículos disponibles:</label>
+
+            <!-- Loading -->
+            <div class="loading-inline" *ngIf="loadingArticulos">
+              <div class="spinner-sm"></div>
+              <span>Cargando artículos...</span>
+            </div>
+
+            <!-- Lista de disponibles -->
+            <div class="lista-disponibles" *ngIf="!loadingArticulos && articulosDisponibles.length > 0">
+              <div
+                class="articulo-disponible"
+                *ngFor="let art of articulosDisponibles"
+                (click)="agregarArticulo(art)"
+                tabindex="0"
+                (keydown.enter)="agregarArticulo(art)"
+              >
+                <div class="art-icon">
+                  <i class="fas" [ngClass]="getCategoriaIcon(art.categoria)"></i>
+                </div>
+                <div class="art-info">
+                  <strong>{{ art.nombre }}</strong>
+                  <span class="art-categoria">{{ art.categoria || 'Sin categoría' }}</span>
+                  <span class="art-stock">
+                    <i class="fas fa-cubes"></i> {{ art.stockActual }} {{ art.unidadMedida }}s disponibles
+                  </span>
+                </div>
+                <button type="button" class="btn-agregar" aria-label="Agregar artículo">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sin disponibles -->
+            <div class="empty-disponibles" *ngIf="!loadingArticulos && articulosDisponibles.length === 0">
+              <div class="empty-icon">
+                <i class="fas fa-inbox"></i>
+              </div>
+              <p>No hay artículos disponibles con stock</p>
+            </div>
+          </div>
+
+          <!-- Artículos seleccionados -->
+          <div class="articulos-seleccionados" *ngIf="articulosSeleccionados.length > 0">
+            <label class="subsection-label">
+              <i class="fas fa-check-circle"></i>
+              Artículos seleccionados ({{ articulosSeleccionados.length }}):
+            </label>
+
+            <div class="lista-seleccionados">
+              <div class="articulo-seleccionado" *ngFor="let item of articulosSeleccionados; let i = index">
+                <div class="art-header">
+                  <div class="art-titulo">
+                    <div class="art-icon selected">
+                      <i class="fas" [ngClass]="getCategoriaIcon(item.consumible.categoria)"></i>
+                    </div>
+                    <div class="art-info">
+                      <strong>{{ item.consumible.nombre }}</strong>
+                      <span class="art-categoria">{{ item.consumible.categoria || 'Sin categoría' }}</span>
+                    </div>
+                  </div>
+                  <button type="button" class="btn-quitar" (click)="quitarArticulo(i)" aria-label="Quitar artículo">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+
+                <div class="art-detalles">
+                  <div class="form-row">
+                    <div class="form-group cantidad-group">
+                      <label>Cantidad a entregar</label>
+                      <div class="cantidad-input">
+                        <button type="button" class="btn-cantidad" (click)="item.cantidad = item.cantidad > 1 ? item.cantidad - 1 : 1">
+                          <i class="fas fa-minus"></i>
+                        </button>
+                        <input
+                          type="number"
+                          [(ngModel)]="item.cantidad"
+                          [name]="'cantidad_' + i"
+                          min="1"
+                          [max]="item.consumible.stockActual"
+                          (change)="validarCantidad(i)"
+                          class="input-cantidad"
+                        />
+                        <button type="button" class="btn-cantidad" (click)="item.cantidad = item.cantidad < item.consumible.stockActual ? item.cantidad + 1 : item.consumible.stockActual">
+                          <i class="fas fa-plus"></i>
+                        </button>
+                      </div>
+                      <span class="stock-disponible">de {{ item.consumible.stockActual }} {{ item.consumible.unidadMedida }}s disponibles</span>
+                    </div>
+
+                    <div class="form-group">
+                      <label>Observaciones</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="item.observaciones"
+                        [name]="'obs_' + i"
+                        placeholder="Observaciones del artículo"
+                        class="custom-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Observaciones generales -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <h3><i class="fas fa-comment"></i> Observaciones de la entrega</h3>
+        </div>
+        <div class="section-card-body">
+          <div class="form-group">
+            <label for="observaciones">Notas adicionales</label>
+            <textarea
+              id="observaciones"
+              [(ngModel)]="observacionesEntrega"
+              name="observaciones"
+              rows="3"
+              placeholder="Observaciones generales sobre la entrega..."
+              class="custom-textarea"
+            ></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Info de firma digital -->
+      <section class="section-card info-card">
+        <div class="section-card-header info-header">
+          <h3><i class="fas fa-envelope"></i> Firma Digital por Correo</h3>
+        </div>
+        <div class="section-card-body">
+          <div class="info-box">
+            <div class="info-icon">
+              <i class="fas fa-pencil-alt"></i>
+            </div>
+            <div class="info-contenido">
+              <p class="info-titulo">¿Cómo funciona?</p>
+              <ol class="info-pasos">
+                <li>Se creará el acta con los artículos y cantidades seleccionados</li>
+                <li>El receptor recibirá un correo con un enlace único</li>
+                <li>Al abrir el enlace, podrá revisar los artículos y firmar digitalmente</li>
+                <li>Una vez firmada, el acta quedará completada</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Resumen -->
+      <div class="resumen-card" *ngIf="articulosSeleccionados.length > 0">
+        <div class="resumen-header">
+          <i class="fas fa-list"></i>
+          <h4>Resumen de la entrega</h4>
+        </div>
+        <div class="resumen-body">
+          <div class="resumen-item">
+            <span class="resumen-label">Receptor:</span>
+            <span class="resumen-value">{{ receptor.nombre || '-' }} ({{ receptor.cargo || '-' }})</span>
+          </div>
+          <div class="resumen-item">
+            <span class="resumen-label">Área:</span>
+            <span class="resumen-value">{{ receptor.area || '-' }}</span>
+          </div>
+          <div class="resumen-item">
+            <span class="resumen-label">Correo:</span>
+            <span class="resumen-value">{{ receptor.correo || '-' }}</span>
+          </div>
+          <div class="resumen-item highlight">
+            <span class="resumen-label">Total artículos:</span>
+            <span class="resumen-value">{{ getTotalArticulos() }} unidades ({{ articulosSeleccionados.length }} productos)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelar()">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+        <button
+          type="submit"
+          class="btn btn-accent"
+          [style.background]="'linear-gradient(135deg, ' + colorTema + ' 0%, ' + colorTema + 'cc 100%)'"
+          [disabled]="loading || enviandoCorreo || articulosSeleccionados.length === 0"
+        >
+          <i class="fas" [ngClass]="loading || enviandoCorreo ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+          {{ loading ? 'Creando acta...' : enviandoCorreo ? 'Enviando correo...' : 'Crear y Enviar para Firma' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

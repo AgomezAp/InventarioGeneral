@@ -1,0 +1,231 @@
+<app-navbar></app-navbar>
+<div class="historico-container fade-enter-active" @fadeInOut>
+  <div class="historico-header">
+    <h2 class="historico-title">Histórico de celulares</h2>
+    <p class="historico-total">
+      Total de celulares: <strong>{{ totalMaestrosFiltrados }}</strong>
+    </p>
+  </div>
+
+  <div class="filter-card">
+    <div class="filter-grid">
+      <div class="filter-group">
+        <label class="filter-label" for="filtroEstado"
+          >Filtrar por Estado:</label
+        >
+        <input
+          type="text"
+          id="filtroEstado"
+          [(ngModel)]="filtroEstado"
+          class="filter-input"
+          placeholder="Buscar estado..."
+          (ngModelChange)="actualizarTotalMaestrosFiltrados()"
+        />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filtroPersona"
+          >Filtrar por Persona a cargo:</label
+        >
+        <input
+          type="text"
+          id="filtroPersona"
+          [(ngModel)]="filtroPersona"
+          class="filter-input"
+          placeholder="Buscar persona..."
+          (ngModelChange)="actualizarTotalMaestrosFiltrados()"
+        />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filtroRegion"
+          >Filtrar por Región:</label
+        >
+        <input
+          type="text"
+          id="filtroRegion"
+          [(ngModel)]="filtroRegion"
+          class="filter-input"
+          placeholder="Buscar región..."
+          (ngModelChange)="actualizarTotalMaestrosFiltrados()"
+        />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filtroImei">Filtrar por IMEI:</label>
+        <input
+          type="text"
+          id="filtroImei"
+          [(ngModel)]="filtroImei"
+          class="filter-input"
+          placeholder="Buscar IMEI..."
+          (ngModelChange)="actualizarTotalMaestrosFiltrados()"
+        />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filtroFechaRecibido"
+          >Fecha de entrega:</label
+        >
+        <input
+          type="date"
+          id="filtroFechaRecibido"
+          [(ngModel)]="filtroFechaRecibido"
+          class="filter-input"
+          (ngModelChange)="actualizarTotalMaestrosFiltrados()"
+        />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filtroFechaEntrega"
+          >Fecha de Recibido:</label
+        >
+        <input
+          type="date"
+          id="filtroFechaEntrega"
+          [(ngModel)]="filtroFechaEntrega"
+          class="filter-input"
+          (ngModelChange)="actualizarTotalMaestrosFiltrados()"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead class="table-head">
+          <tr>
+            <th class="th-cell">Fecha entregado</th>
+            <th class="th-cell">Fecha recibido</th>
+            <th class="th-cell">Monitor</th>
+            <th class="th-cell">Quien recibe</th>
+            <th class="th-cell">Quien entrega</th>
+            <th class="th-cell">Región</th>
+            <th class="th-cell">Desc. Entregado</th>
+            <th class="th-cell">Desc. Recibido</th>
+            <th class="th-cell">Estado</th>
+            <th class="th-cell">Marca</th>
+            <th class="th-cell">Modelo</th>
+            <th class="th-cell">IMEI</th>
+            <th class="th-cell">Persona a cargo</th>
+            <th class="th-cell">Persona recibió</th>
+            <th class="th-cell">Firma Entrega</th>
+            <th class="th-cell">Firma Recibe</th>
+            <th class="th-cell th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="table-body">
+          <tr class="table-row" *ngFor="let maestro of paginatedMaestros">
+            <td class="td-cell">
+              <span class="cell-text">{{ maestro.fechaIngreso }}</span>
+            </td>
+            <td class="td-cell">
+              <span class="cell-text">{{ maestro.fechaSalida }}</span>
+            </td>
+            <td class="td-cell">
+              <span class="cell-text">{{ maestro.nombre }}</span>
+            </td>
+            <td class="td-cell">
+              <span class="cell-text">{{ maestro.analistaAsignado }}</span>
+            </td>
+            <td class="td-cell">
+              <span class="cell-text">{{ maestro.maestroRecibido }}</span>
+            </td>
+            <td class="td-cell">
+              <span class="cell-text">{{ maestro.almacen }}</span>
+            </td>
+            <td class="td-cell td-descripcion">
+              <span class="cell-text" [title]="maestro.descripcionEntrega">{{
+                maestro.descripcionEntrega
+              }}</span>
+            </td>
+            <td class="td-cell td-descripcion">
+              <span class="cell-text" [title]="maestro.descripcionRecibe">{{
+                maestro.descripcionRecibe
+              }}</span>
+            </td>
+            <td class="td-cell">
+              <span
+                class="estado-badge"
+                [class.estado-activo]="maestro.estado === 'activo'"
+                [class.estado-inactivo]="maestro.estado === 'INACTIVO'"
+              >
+                {{ maestro.estado }}
+              </span>
+            </td>
+            <td class="td-cell">
+              <span class="cell-text">{{ maestro.marca }}</span>
+            </td>
+            <td class="td-cell">
+              <span class="cell-text">{{ maestro.modelo }}</span>
+            </td>
+            <td class="td-cell">
+              <span class="cell-text cell-imei">{{ maestro.imei }}</span>
+            </td>
+            <td class="td-cell">
+              <span class="cell-text"
+                >{{ maestro.usuarios.nombre }}
+                {{ maestro.usuarios.apellido }}</span
+              >
+            </td>
+            <td class="td-cell">
+              <span class="cell-text">{{ maestro.nombreCompletoRecibe }}</span>
+            </td>
+            <td class="td-cell td-firma">
+              <img
+                class="firma-img"
+                [src]="maestro.firmaEntrega"
+                alt="Firma Entrega"
+              />
+            </td>
+            <td class="td-cell td-firma">
+              <img
+                class="firma-img"
+                [src]="maestro.firmaRecibe"
+                alt="Firma Recibe"
+              />
+            </td>
+            <td class="td-cell td-actions">
+              <button
+                *ngIf="maestro.estado === 'activo'"
+                class="btn-recibir"
+                (click)="deleteMaestro(maestro.Mid)"
+              >
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Recibir</span>
+              </button>
+              <span *ngIf="maestro.estado !== 'activo'" class="no-action"
+                >—</span
+              >
+            </td>
+          </tr>
+          <!-- Fila vacía si no hay datos -->
+          <tr
+            class="table-row empty-row"
+            *ngIf="paginatedMaestros.length === 0"
+          >
+            <td class="td-cell" colspan="17">
+              <span class="empty-text">No hay registros en el histórico</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-spinner *ngIf="loading"></app-spinner>
+
+  <div class="pagination-card">
+    <button
+      class="btn-page"
+      (click)="previousPage()"
+      [disabled]="currentPage === 1"
+    >
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <span class="page-info">Página {{ currentPage }}</span>
+    <button
+      class="btn-page"
+      (click)="nextPage()"
+      [disabled]="currentPage * itemsPerPage >= totalMaestrosFiltrados"
+    >
+      <i class="fa-solid fa-arrow-right"></i>
+    </button>
+  </div>
+</div>

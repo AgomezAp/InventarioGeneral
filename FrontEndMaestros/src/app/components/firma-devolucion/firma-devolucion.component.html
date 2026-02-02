@@ -1,0 +1,216 @@
+<div class="firma-container">
+  <!-- Loading -->
+  @if (loading) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Cargando información del acta...</p>
+    </div>
+  }
+  
+  <!-- Enlace inválido -->
+  @if (!loading && enlaceInvalido) {
+    <div class="estado-container error-estado">
+      <div class="estado-icon">
+        <i class="fa fa-exclamation-triangle"></i>
+      </div>
+      <h1>Enlace Inválido</h1>
+      <p>El enlace que está intentando acceder no es válido o ha expirado.</p>
+      <p class="sub-text">Si cree que esto es un error, por favor contacte al área de sistemas.</p>
+    </div>
+  }
+  
+  <!-- Acta ya firmada -->
+  @if (!loading && actaYaFirmada) {
+    <div class="estado-container success-estado">
+      <div class="estado-icon">
+        <i class="fa fa-check-circle"></i>
+      </div>
+      <h1>Acta Ya Firmada</h1>
+      <p>Esta acta de devolución ya fue firmada anteriormente.</p>
+      <p class="sub-text">No es necesario realizar ninguna acción adicional.</p>
+    </div>
+  }
+  
+  <!-- Acta rechazada -->
+  @if (!loading && actaRechazada) {
+    <div class="estado-container rejected-estado">
+      <div class="estado-icon">
+        <i class="fa fa-times-circle"></i>
+      </div>
+      <h1>Acta Rechazada</h1>
+      <p>Esta acta de devolución ha sido rechazada.</p>
+      <p class="sub-text">Si tiene alguna duda, contacte al área de sistemas.</p>
+    </div>
+  }
+  
+  <!-- Firma exitosa -->
+  @if (!loading && firmaExitosa) {
+    <div class="estado-container success-estado">
+      <div class="estado-icon">
+        <i class="fa fa-check-circle"></i>
+      </div>
+      <h1>¡Devolución Completada!</h1>
+      <p>La acta de devolución ha sido firmada exitosamente.</p>
+      <p class="sub-text">Recibirá una copia del acta firmada en su correo electrónico.</p>
+      <p class="gracias">¡Gracias por completar el proceso de devolución!</p>
+    </div>
+  }
+  
+  <!-- Formulario de firma -->
+  @if (!loading && acta && !actaYaFirmada && !actaRechazada && !firmaExitosa) {
+    <div class="acta-container">
+      <!-- Header -->
+      <div class="acta-header">
+        <img src="/assets/logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
+        <div class="header-text">
+          <h1>Acta de Devolución de Equipos</h1>
+          <p class="numero-acta">{{ acta.numeroActa }}</p>
+        </div>
+      </div>
+      
+      <!-- Alertas -->
+      @if (error) {
+        <div class="alert alert-error">
+          <i class="fa fa-exclamation-circle"></i>
+          {{ error }}
+        </div>
+      }
+      
+      <!-- Información del proceso -->
+      <div class="info-proceso">
+        <p>
+          <i class="fa fa-undo"></i>
+          <strong>{{ acta.nombreEntrega }}</strong>, está devolviendo los siguientes equipos al área de sistemas
+        </p>
+      </div>
+      
+      <!-- Información de personas -->
+      <div class="personas-grid">
+        <div class="persona-card entrega">
+          <h3><i class="fa fa-user"></i> Quien Devuelve (Usted)</h3>
+          <div class="persona-info">
+            <p><strong>{{ acta.nombreEntrega }}</strong></p>
+            <p>{{ acta.cargoEntrega }}</p>
+            <p><i class="fa fa-envelope"></i> {{ acta.correoEntrega }}</p>
+          </div>
+        </div>
+        
+        <div class="persona-card receptor">
+          <h3><i class="fa fa-user-check"></i> Quien Recibe (Sistemas)</h3>
+          <div class="persona-info">
+            <p><strong>{{ acta.nombreReceptor }}</strong></p>
+            <p>{{ acta.cargoReceptor }}</p>
+            @if (acta.correoReceptor) {
+              <p><i class="fa fa-envelope"></i> {{ acta.correoReceptor }}</p>
+            }
+          </div>
+          @if (acta.firmaReceptor) {
+            <div class="firma-previa">
+              <p class="firma-label"><i class="fa fa-check-circle"></i> Firmado</p>
+              <img [src]="acta.firmaReceptor" alt="Firma de receptor" class="firma-img">
+            </div>
+          }
+        </div>
+      </div>
+      
+      <!-- Dispositivos -->
+      <div class="dispositivos-section">
+        <h3><i class="fa fa-laptop"></i> Equipos a Devolver</h3>
+        <div class="dispositivos-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Marca / Modelo</th>
+                <th>Serial</th>
+                <th>IMEI</th>
+                <th>Estado Devolución</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (detalle of acta.DetallesDevolucion; track detalle.id) {
+                <tr>
+                  <td>{{ detalle.Maestro?.tipo }}</td>
+                  <td>{{ detalle.Maestro?.marca }} {{ detalle.Maestro?.modelo }}</td>
+                  <td class="serial">{{ detalle.Maestro?.serial }}</td>
+                  <td class="serial">{{ detalle.Maestro?.imei || '-' }}</td>
+                  <td>
+                    <span class="estado-badge" [ngClass]="'estado-' + detalle.estadoDevolucion">
+                      {{ detalle.estadoDevolucion }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Observaciones -->
+      @if (acta.observaciones) {
+        <div class="observaciones-section">
+          <h3><i class="fa fa-comment"></i> Observaciones</h3>
+          <p>{{ acta.observaciones }}</p>
+        </div>
+      }
+      
+      <!-- Sección de firma -->
+      <div class="firma-section">
+        <h3><i class="fa fa-signature"></i> Su Firma</h3>
+        <p class="instrucciones">
+          <strong>{{ acta.nombreEntrega }}</strong>, por favor firme en el recuadro a continuación 
+          para confirmar la devolución de los equipos listados.
+        </p>
+        
+        <div class="signature-area">
+          <canvas #signatureCanvas class="signature-canvas"></canvas>
+        </div>
+        
+        <div class="firma-actions">
+          <button class="btn-limpiar" (click)="limpiarFirma()">
+            <i class="fa fa-eraser"></i> Limpiar
+          </button>
+        </div>
+      </div>
+      
+      <!-- Términos -->
+      <div class="terminos">
+        <p>
+          <i class="fa fa-info-circle"></i>
+          Al firmar este documento, confirmo que estoy devolviendo los equipos listados 
+          al área de sistemas en el estado indicado.
+        </p>
+      </div>
+      
+      <!-- Botones de acción -->
+      <div class="action-buttons">
+        <button 
+          class="btn-rechazar" 
+          (click)="rechazar()"
+          [disabled]="rechazando || firmando">
+          @if (rechazando) {
+            <i class="fa fa-spinner fa-spin"></i> Rechazando...
+          } @else {
+            <i class="fa fa-times"></i> Rechazar
+          }
+        </button>
+        
+        <button 
+          class="btn-firmar" 
+          (click)="firmar()"
+          [disabled]="firmando || rechazando">
+          @if (firmando) {
+            <i class="fa fa-spinner fa-spin"></i> Firmando...
+          } @else {
+            <i class="fa fa-check"></i> Firmar y Confirmar Devolución
+          }
+        </button>
+      </div>
+      
+      <!-- Footer -->
+      <div class="acta-footer">
+        <p>Fecha de generación: {{ formatFecha(acta.createdAt) }}</p>
+      </div>
+    </div>
+  }
+</div>

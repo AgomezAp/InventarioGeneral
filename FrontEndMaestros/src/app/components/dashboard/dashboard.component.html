@@ -1,0 +1,357 @@
+<app-navbar></app-navbar>
+
+<div class="dashboard-container" @fadeInOut>
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="header-badge">
+        <i class="pi pi-mobile"></i>
+        <span>Inventario</span>
+      </div>
+      <h1><i class="pi pi-list"></i> Lista de Celulares Activos</h1>
+      <p class="subtitle">Gestión y control de dispositivos entregados</p>
+    </div>
+    <button class="btn-accent" (click)="navigateToAddMaestro()">
+      <i class="pi pi-plus"></i>
+      <span>Hacer entrega de celular</span>
+    </button>
+  </header>
+
+  <!-- Filtros -->
+  <section class="filter-card">
+    <div class="filter-header">
+      <h3><i class="pi pi-filter"></i> Filtros de búsqueda</h3>
+      <button
+        class="btn-clear-filters"
+        (click)="clearFilters()"
+        *ngIf="hasActiveFilters()"
+      >
+        <i class="pi pi-times"></i> Limpiar filtros
+      </button>
+    </div>
+    <div class="filter-grid">
+      <div class="filter-group">
+        <label class="filter-label" for="filterFecha">
+          <i class="pi pi-calendar"></i> Fecha
+        </label>
+        <input
+          type="date"
+          id="filterFecha"
+          [(ngModel)]="filterFecha"
+          class="filter-input"
+          (ngModelChange)="applyFilters()"
+        />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filterImei">
+          <i class="pi pi-qrcode"></i> IMEI
+        </label>
+        <input
+          type="text"
+          id="filterImei"
+          [(ngModel)]="filterImei"
+          class="filter-input"
+          placeholder="Buscar IMEI..."
+          (ngModelChange)="applyFilters()"
+        />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filterMonitor">
+          <i class="pi pi-user"></i> Monitor
+        </label>
+        <input
+          type="text"
+          id="filterMonitor"
+          [(ngModel)]="filterMonitor"
+          class="filter-input"
+          placeholder="Buscar monitor..."
+          (ngModelChange)="applyFilters()"
+        />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filterRegion">
+          <i class="pi pi-map-marker"></i> Región
+        </label>
+        <input
+          type="text"
+          id="filterRegion"
+          [(ngModel)]="filterRegion"
+          class="filter-input"
+          placeholder="Buscar región..."
+          (ngModelChange)="applyFilters()"
+        />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label" for="filterMarca">
+          <i class="pi pi-tag"></i> Marca
+        </label>
+        <input
+          type="text"
+          id="filterMarca"
+          [(ngModel)]="filterMarca"
+          class="filter-input"
+          placeholder="Buscar marca..."
+          (ngModelChange)="applyFilters()"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- Contador de resultados -->
+  <div class="results-info" *ngIf="!loading">
+    <span class="results-count">
+      <i class="pi pi-mobile"></i>
+      <strong>{{ filteredMaestros.length }}</strong> celulares encontrados
+    </span>
+    <span class="results-showing" *ngIf="filteredMaestros.length > 0">
+      Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} -
+      {{ Math.min(currentPage * itemsPerPage, filteredMaestros.length) }}
+    </span>
+  </div>
+
+  <!-- Tabla -->
+  <section class="table-card">
+    <!-- Loading -->
+    <div class="table-loading" *ngIf="loading">
+      <div class="spinner"></div>
+      <span>Cargando celulares...</span>
+    </div>
+
+    <div class="table-wrapper" *ngIf="!loading">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Fecha entrega</th>
+            <th>Monitor</th>
+            <th>Nombre Maestro</th>
+            <th>Región</th>
+            <th>Descripción</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>IMEI</th>
+            <th>Firma</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let maestro of paginatedMaestros; let i = index"
+            class="table-row"
+            [class.editing]="maestro.editing"
+          >
+            <!-- Fecha entrega -->
+            <td data-label="Fecha entrega">
+              <span class="cell-text" *ngIf="!maestro.editing">
+                <i class="pi pi-calendar cell-icon"></i>
+                {{ maestro.fechaRecibe | date: "dd/MM/yyyy" }}
+              </span>
+              <input
+                *ngIf="maestro.editing"
+                type="date"
+                [(ngModel)]="maestro.fechaRecibe"
+                class="cell-input"
+              />
+            </td>
+
+            <!-- Monitor -->
+            <td data-label="Monitor">
+              <span class="cell-text" *ngIf="!maestro.editing">
+                {{ maestro.nombre }}
+              </span>
+              <input
+                *ngIf="maestro.editing"
+                [(ngModel)]="maestro.nombre"
+                class="cell-input"
+              />
+            </td>
+
+            <!-- Nombre Maestro -->
+            <td data-label="Nombre Maestro">
+              <span class="cell-text cell-bold" *ngIf="!maestro.editing">
+                {{ maestro.NombreMaestro }}
+              </span>
+              <input
+                *ngIf="maestro.editing"
+                [(ngModel)]="maestro.NombreMaestro"
+                class="cell-input"
+              />
+            </td>
+
+            <!-- Región -->
+            <td data-label="Región">
+              <span class="badge badge-region" *ngIf="!maestro.editing">
+                {{ maestro.region }}
+              </span>
+              <input
+                *ngIf="maestro.editing"
+                [(ngModel)]="maestro.region"
+                class="cell-input"
+              />
+            </td>
+
+            <!-- Descripción -->
+            <td data-label="Descripción" class="td-descripcion">
+              <span
+                class="cell-text cell-truncate"
+                *ngIf="!maestro.editing"
+                [title]="maestro.descripcionEntrega"
+              >
+                {{ maestro.descripcionEntrega || "N/A" }}
+              </span>
+              <input
+                *ngIf="maestro.editing"
+                [(ngModel)]="maestro.descripcionEntrega"
+                class="cell-input"
+              />
+            </td>
+
+            <!-- Marca -->
+            <td data-label="Marca">
+              <span class="cell-text" *ngIf="!maestro.editing">
+                {{ maestro.marca }}
+              </span>
+              <input
+                *ngIf="maestro.editing"
+                [(ngModel)]="maestro.marca"
+                class="cell-input"
+              />
+            </td>
+
+            <!-- Modelo -->
+            <td data-label="Modelo">
+              <span class="cell-text cell-muted" *ngIf="!maestro.editing">
+                {{ maestro.modelo }}
+              </span>
+              <input
+                *ngIf="maestro.editing"
+                [(ngModel)]="maestro.modelo"
+                class="cell-input"
+              />
+            </td>
+
+            <!-- IMEI -->
+            <td data-label="IMEI">
+              <span class="cell-imei" *ngIf="!maestro.editing">
+                <i class="pi pi-qrcode"></i>
+                {{ maestro.imei }}
+              </span>
+              <input
+                *ngIf="maestro.editing"
+                [(ngModel)]="maestro.imei"
+                class="cell-input"
+              />
+            </td>
+
+            <!-- Firma -->
+            <td data-label="Firma" class="td-firma">
+              <div
+                class="firma-container"
+                (click)="viewFirma(maestro.firmaEntrega)"
+                *ngIf="maestro.firmaEntrega"
+              >
+                <img
+                  class="firma-img"
+                  [src]="maestro.firmaEntrega"
+                  alt="Firma"
+                />
+                <div class="firma-overlay">
+                  <i class="pi pi-search-plus"></i>
+                </div>
+              </div>
+              <span class="cell-text cell-muted" *ngIf="!maestro.firmaEntrega">
+                Sin firma
+              </span>
+            </td>
+
+            <!-- Acciones -->
+            <td data-label="Acciones" class="td-actions">
+              <div class="actions-group">
+                <button
+                  class="btn-action btn-recibir"
+                  (click)="deleteMaestro(maestro.Mid)"
+                  title="Recibir dispositivo"
+                >
+                  <i class="pi pi-sign-in"></i>
+                  <span>Recibir</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Empty state -->
+          <tr class="empty-row" *ngIf="paginatedMaestros.length === 0">
+            <td colspan="10">
+              <div class="empty-state">
+                <div class="empty-icon">
+                  <i class="pi pi-mobile"></i>
+                </div>
+                <h4>No hay celulares registrados</h4>
+                <p>No se encontraron dispositivos con los filtros aplicados</p>
+                <button
+                  class="btn-secondary"
+                  (click)="clearFilters()"
+                  *ngIf="hasActiveFilters()"
+                >
+                  <i class="pi pi-filter-slash"></i> Limpiar filtros
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Paginación -->
+  <div class="pagination-card" *ngIf="filteredMaestros.length > itemsPerPage">
+    <div class="pagination-info">
+      Página {{ currentPage }} de {{ totalPages }}
+    </div>
+    <div class="pagination-controls">
+      <button
+        class="btn-page"
+        (click)="firstPage()"
+        [disabled]="currentPage === 1"
+        title="Primera página"
+      >
+        <i class="pi pi-angle-double-left"></i>
+      </button>
+      <button
+        class="btn-page"
+        (click)="previousPage()"
+        [disabled]="currentPage === 1"
+        title="Página anterior"
+      >
+        <i class="pi pi-angle-left"></i>
+      </button>
+
+      <div class="page-numbers">
+        <button
+          *ngFor="let page of visiblePages"
+          class="btn-page-number"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+      </div>
+
+      <button
+        class="btn-page"
+        (click)="nextPage()"
+        [disabled]="currentPage >= totalPages"
+        title="Página siguiente"
+      >
+        <i class="pi pi-angle-right"></i>
+      </button>
+      <button
+        class="btn-page"
+        (click)="lastPage()"
+        [disabled]="currentPage >= totalPages"
+        title="Última página"
+      >
+        <i class="pi pi-angle-double-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

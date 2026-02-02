@@ -1,0 +1,103 @@
+<div class="login-page">
+  <!-- Fondo decorativo -->
+  <div class="login-background">
+    <div class="bg-shape bg-shape-1"></div>
+    <div class="bg-shape bg-shape-2"></div>
+  </div>
+
+  <!-- Contenedor principal -->
+  <div class="login-wrapper">
+    <!-- Logo -->
+    <div class="logo-container">
+      <img
+        src="/LogoAP.png"
+        alt="Logo de Andrés Publicidad"
+        class="logo-image"
+      />
+    </div>
+
+    <!-- Card de Login -->
+    <div class="login-container">
+      <!-- Header del card -->
+      <div class="login-header">
+        <h2>Iniciar Sesión</h2>
+        <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
+      </div>
+
+      <!-- Formulario -->
+      <form (ngSubmit)="logIn()" class="login-form">
+        <!-- Campo Correo -->
+        <div class="form-group">
+          <label for="correo">
+            <i class="pi pi-envelope"></i>
+            Correo electrónico
+          </label>
+          <input
+            type="email"
+            id="correo"
+            name="correo"
+            placeholder="ejemplo@correo.com"
+            [(ngModel)]="correo"
+            required
+            autocomplete="email"
+          />
+        </div>
+
+        <!-- Campo Contraseña -->
+        <div class="form-group">
+          <label for="contrasena">
+            <i class="pi pi-lock"></i>
+            Contraseña
+          </label>
+          <div class="password-wrapper">
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="contrasena"
+              name="contrasena"
+              placeholder="Ingresa tu contraseña"
+              [(ngModel)]="contrasena"
+              required
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              (click)="showPassword = !showPassword"
+              [attr.aria-label]="
+                showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
+              "
+            >
+              <i [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Botón Submit -->
+        <button type="submit" class="btn-submit" [disabled]="loading">
+          <span *ngIf="!loading">
+            <i class="pi pi-sign-in"></i>
+            Ingresar
+          </span>
+          <span *ngIf="loading" class="loading-text">
+            <i class="pi pi-spinner pi-spin"></i>
+            Ingresando...
+          </span>
+        </button>
+      </form>
+
+      <!-- Links -->
+      <div class="login-links">
+        <p>¿No tienes una cuenta? <a routerLink="/signup">Regístrate</a></p>
+        <p>
+          ¿Olvidaste tu contraseña?
+          <a routerLink="/reestablecerContraseña">Restablecer</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p>© 2024 Andrés Publicidad. Todos los derechos reservados.</p>
+    </div>
+  </div>
+</div>

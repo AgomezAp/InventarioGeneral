@@ -1,0 +1,240 @@
+<div class="firma-container" [class.aseo]="tipoInventario === 'aseo'" [class.papeleria]="tipoInventario === 'papeleria'">
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="cargando">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <h3>Cargando datos del acta...</h3>
+      <p>Por favor espere</p>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-container" *ngIf="error && !cargando">
+    <div class="error-card">
+      <div class="error-icon" *ngIf="!yaFirmada && !rechazada">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div class="success-icon" *ngIf="yaFirmada">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="rejected-icon" *ngIf="rechazada">
+        <i class="fas fa-times-circle"></i>
+      </div>
+      
+      <h2 *ngIf="!yaFirmada && !rechazada">Enlace no disponible</h2>
+      <h2 *ngIf="yaFirmada">Acta ya firmada</h2>
+      <h2 *ngIf="rechazada">Acta rechazada</h2>
+      
+      <p class="error-msg">{{ error }}</p>
+      
+      <p class="error-date" *ngIf="yaFirmada && fechaFirmaExistente">
+        <i class="fas fa-calendar"></i>
+        Firmada el {{ formatearFecha(fechaFirmaExistente) }}
+      </p>
+      
+      <p class="error-motivo" *ngIf="rechazada && motivoRechazoExistente">
+        <strong>Motivo:</strong> {{ motivoRechazoExistente }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="content-container" *ngIf="datosActa && !cargando && !error">
+    <!-- Header -->
+    <header class="page-header" [style.background]="'linear-gradient(135deg, ' + colorTema + ' 0%, ' + colorTema + 'cc 100%)'">
+      <div class="header-content">
+        <div class="company-logo">
+          <i class="fas" [ngClass]="iconoTipo"></i>
+        </div>
+        <div class="header-info">
+          <span class="header-badge">{{ tituloTipo }}</span>
+          <h1>Acta de Entrega de Artículos</h1>
+          <span class="acta-numero">{{ datosActa.numeroActa }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tarjeta de información -->
+    <div class="info-card">
+      <div class="info-section">
+        <h3><i class="fas fa-user"></i> Datos del Receptor</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Nombre</span>
+            <span class="value">{{ datosActa.nombreReceptor }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Cargo</span>
+            <span class="value">{{ datosActa.cargoReceptor }}</span>
+          </div>
+          <div class="info-item" *ngIf="datosActa.areaReceptor">
+            <span class="label">Área</span>
+            <span class="value">{{ datosActa.areaReceptor }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Correo</span>
+            <span class="value email">{{ datosActa.correoReceptor }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3><i class="fas fa-calendar"></i> Fecha de Entrega</h3>
+        <p class="fecha-entrega">{{ formatearFecha(datosActa.fechaEntrega) }}</p>
+      </div>
+    </div>
+
+    <!-- Artículos -->
+    <div class="articulos-card">
+      <div class="articulos-header">
+        <h3><i class="fas fa-boxes"></i> Artículos a Recibir</h3>
+        <span class="total-badge">
+          <i class="fas fa-cubes"></i>
+          {{ getTotalArticulos() }} unidades totales
+        </span>
+      </div>
+
+      <div class="articulos-lista">
+        <div class="articulo-item" *ngFor="let articulo of datosActa.articulos">
+          <div class="articulo-icon">
+            <i class="fas" [ngClass]="getCategoriaIcon(articulo.categoria)"></i>
+          </div>
+          <div class="articulo-info">
+            <strong>{{ articulo.nombre }}</strong>
+            <span class="articulo-categoria" *ngIf="articulo.categoria">{{ articulo.categoria }}</span>
+            <span class="articulo-obs" *ngIf="articulo.observaciones">{{ articulo.observaciones }}</span>
+          </div>
+          <div class="articulo-cantidad">
+            <span class="cantidad-numero">{{ articulo.cantidad }}</span>
+            <span class="cantidad-unidad">{{ articulo.unidadMedida }}s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Observaciones -->
+    <div class="observaciones-card" *ngIf="datosActa.observaciones">
+      <h3><i class="fas fa-comment-alt"></i> Observaciones</h3>
+      <p>{{ datosActa.observaciones }}</p>
+    </div>
+
+    <!-- Acciones iniciales -->
+    <div class="actions-card" *ngIf="!mostrarFirma && !mostrarRechazo && !firmaExitosa && !rechazoExitoso">
+      <div class="actions-info">
+        <i class="fas fa-info-circle"></i>
+        <p>Al firmar este documento, confirma que recibe los artículos descritos en el estado indicado.</p>
+      </div>
+      
+      <div class="actions-buttons">
+        <button class="btn btn-firmar" (click)="mostrarPanelFirma()" [style.background]="'linear-gradient(135deg, ' + colorTema + ' 0%, ' + colorTema + 'cc 100%)'">
+          <i class="fas fa-signature"></i>
+          Firmar Acta
+        </button>
+        <button class="btn btn-rechazar" (click)="mostrarPanelRechazo()">
+          <i class="fas fa-times"></i>
+          Rechazar
+        </button>
+      </div>
+    </div>
+
+    <!-- Panel de firma -->
+    <div class="firma-card" *ngIf="mostrarFirma">
+      <h3><i class="fas fa-signature"></i> Dibuje su firma</h3>
+      <p class="firma-instrucciones">Use el ratón o el dedo (en dispositivos táctiles) para dibujar su firma en el recuadro.</p>
+      
+      <div class="signature-container">
+        <canvas #signatureCanvas class="signature-canvas"></canvas>
+        <button class="btn-limpiar" (click)="limpiarFirma()" title="Limpiar firma">
+          <i class="fas fa-eraser"></i>
+        </button>
+      </div>
+
+      <div class="firma-actions">
+        <button class="btn btn-cancelar" (click)="cancelar()">
+          <i class="fas fa-arrow-left"></i>
+          Volver
+        </button>
+        <button 
+          class="btn btn-confirmar" 
+          (click)="confirmarFirma()" 
+          [disabled]="firmando"
+          [style.background]="'linear-gradient(135deg, ' + colorTema + ' 0%, ' + colorTema + 'cc 100%)'"
+        >
+          <i class="fas" [ngClass]="firmando ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+          {{ firmando ? 'Procesando...' : 'Confirmar Firma' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Panel de rechazo -->
+    <div class="rechazo-card" *ngIf="mostrarRechazo">
+      <h3><i class="fas fa-ban"></i> Rechazar acta</h3>
+      <p class="rechazo-instrucciones">Por favor, indique el motivo por el cual rechaza esta acta de entrega.</p>
+      
+      <div class="form-group">
+        <label for="motivo">Motivo del rechazo <span class="required">*</span></label>
+        <textarea
+          id="motivo"
+          [(ngModel)]="motivoRechazo"
+          rows="4"
+          placeholder="Explique brevemente por qué rechaza esta acta..."
+          class="custom-textarea"
+        ></textarea>
+      </div>
+
+      <div class="rechazo-actions">
+        <button class="btn btn-cancelar" (click)="cancelar()">
+          <i class="fas fa-arrow-left"></i>
+          Volver
+        </button>
+        <button 
+          class="btn btn-confirmar-rechazo" 
+          (click)="confirmarRechazo()" 
+          [disabled]="rechazando || !motivoRechazo.trim()"
+        >
+          <i class="fas" [ngClass]="rechazando ? 'fa-spinner fa-spin' : 'fa-times'"></i>
+          {{ rechazando ? 'Procesando...' : 'Confirmar Rechazo' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Confirmación de firma exitosa -->
+    <div class="success-card" *ngIf="firmaExitosa">
+      <div class="success-icon-lg">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h2>¡Acta firmada exitosamente!</h2>
+      <p>El acta <strong>{{ datosActa.numeroActa }}</strong> ha sido firmada correctamente.</p>
+      <p class="success-date">
+        <i class="fas fa-calendar-check"></i>
+        {{ fechaActual }}
+      </p>
+      <div class="success-info">
+        <i class="fas fa-info-circle"></i>
+        <span>Se ha notificado al área responsable. Puede cerrar esta ventana.</span>
+      </div>
+    </div>
+
+    <!-- Confirmación de rechazo -->
+    <div class="rejected-card" *ngIf="rechazoExitoso">
+      <div class="rejected-icon-lg">
+        <i class="fas fa-times-circle"></i>
+      </div>
+      <h2>Acta rechazada</h2>
+      <p>El acta <strong>{{ datosActa.numeroActa }}</strong> ha sido rechazada.</p>
+      <p class="rejected-motivo">
+        <strong>Motivo:</strong> {{ motivoRechazo }}
+      </p>
+      <div class="rejected-info">
+        <i class="fas fa-info-circle"></i>
+        <span>Se ha notificado al área responsable. Puede cerrar esta ventana.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="page-footer">
+    <p>Sistema de Inventario General</p>
+    <p class="footer-small">Este es un documento oficial de entrega de artículos</p>
+  </footer>
+</div>

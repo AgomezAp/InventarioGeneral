@@ -1,0 +1,188 @@
+<app-navbar></app-navbar>
+
+<div class="trazabilidad-page">
+  <div class="trazabilidad-container">
+    <!-- Header -->
+    <div class="header-section">
+      <button class="btn-volver" (click)="volver()">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Volver al Inventario</span>
+      </button>
+
+      <div class="header-title">
+        <h1>
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          Trazabilidad del Dispositivo
+        </h1>
+        <p class="header-subtitle">
+          Historial completo de movimientos y cambios
+        </p>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="loading-spinner">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+      </div>
+      <p>Cargando historial...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" *ngIf="error">
+      <div class="error-icon">
+        <i class="fa-solid fa-exclamation-triangle"></i>
+      </div>
+      <p>{{ error }}</p>
+      <button class="btn-retry" (click)="reintentar()">
+        <i class="fa-solid fa-rotate-right"></i>
+        Reintentar
+      </button>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="content-wrapper" *ngIf="!loading && !error">
+      <!-- Card del Dispositivo -->
+      <div class="dispositivo-card" *ngIf="dispositivo">
+        <div class="card-accent-line"></div>
+
+        <div class="dispositivo-content">
+          <!-- Icono de categoría -->
+          <div class="dispositivo-icon">
+            <i
+              class="fa-solid"
+              [ngClass]="getCategoriaIcon(dispositivo.categoria)"
+            ></i>
+          </div>
+
+          <!-- Información principal -->
+          <div class="dispositivo-info">
+            <h2 class="dispositivo-nombre">{{ dispositivo.nombre }}</h2>
+
+            <div class="dispositivo-detalles">
+              <span class="detalle-item" *ngIf="dispositivo.marca">
+                <i class="fa-solid fa-tag"></i>
+                {{ dispositivo.marca }}
+              </span>
+              <span class="detalle-item" *ngIf="dispositivo.modelo">
+                <i class="fa-solid fa-cube"></i>
+                {{ dispositivo.modelo }}
+              </span>
+            </div>
+
+            <div class="dispositivo-identificadores">
+              <span class="identificador" *ngIf="dispositivo.serial">
+                <strong>S/N:</strong> {{ dispositivo.serial }}
+              </span>
+              <span class="identificador" *ngIf="dispositivo.imei">
+                <strong>IMEI:</strong> {{ dispositivo.imei }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Estado y ubicación -->
+          <div class="dispositivo-estado">
+            <span
+              class="estado-badge"
+              [ngClass]="getEstadoClass(dispositivo.estado)"
+            >
+              <i class="fa-solid fa-circle"></i>
+              {{ dispositivo.estado | uppercase }}
+            </span>
+            <span class="ubicacion-badge">
+              <i class="fa-solid fa-location-dot"></i>
+              {{ dispositivo.ubicacion }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección Timeline -->
+      <div class="timeline-section" *ngIf="movimientos.length > 0">
+        <div class="section-header">
+          <h3>
+            <i class="fa-solid fa-timeline"></i>
+            Historial de Movimientos
+          </h3>
+          <span class="movimientos-count">
+            {{ movimientos.length }}
+            {{ movimientos.length === 1 ? "registro" : "registros" }}
+          </span>
+        </div>
+
+        <div class="timeline">
+          <div
+            class="timeline-item"
+            *ngFor="let mov of movimientos; let first = first; let last = last"
+            [ngClass]="[
+              getMovimientoClass(mov.tipoMovimiento),
+              first ? 'first' : '',
+              last ? 'last' : '',
+            ]"
+          >
+            <!-- Marcador del timeline -->
+            <div class="timeline-marker">
+              <div class="marker-icon">
+                <i
+                  class="fa-solid"
+                  [ngClass]="getMovimientoIcon(mov.tipoMovimiento)"
+                ></i>
+              </div>
+              <div class="marker-line" *ngIf="!last"></div>
+            </div>
+
+            <!-- Contenido del movimiento -->
+            <div class="timeline-content">
+              <div class="content-header">
+                <span
+                  class="movimiento-tipo"
+                  [ngClass]="getMovimientoClass(mov.tipoMovimiento)"
+                >
+                  {{ getMovimientoLabel(mov.tipoMovimiento) }}
+                </span>
+                <span class="movimiento-fecha">
+                  <i class="fa-regular fa-calendar"></i>
+                  {{ mov.fecha | date: "dd/MM/yyyy" }}
+                  <span class="fecha-hora">{{
+                    mov.fecha | date: "HH:mm"
+                  }}</span>
+                </span>
+              </div>
+
+              <p class="movimiento-descripcion">{{ mov.descripcion }}</p>
+
+              <!-- Cambio de estados -->
+              <div
+                class="estados-cambio"
+                *ngIf="mov.estadoAnterior || mov.estadoNuevo"
+              >
+                <span
+                  class="estado-tag estado-anterior"
+                  *ngIf="mov.estadoAnterior"
+                >
+                  {{ mov.estadoAnterior }}
+                </span>
+                <i
+                  class="fa-solid fa-arrow-right-long"
+                  *ngIf="mov.estadoAnterior && mov.estadoNuevo"
+                ></i>
+                <span class="estado-tag estado-nuevo" *ngIf="mov.estadoNuevo">
+                  {{ mov.estadoNuevo }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado Vacío -->
+      <div class="empty-state" *ngIf="movimientos.length === 0">
+        <div class="empty-icon">
+          <i class="fa-solid fa-inbox"></i>
+        </div>
+        <h3>Sin movimientos registrados</h3>
+        <p>Este dispositivo aún no tiene historial de movimientos</p>
+      </div>
+    </div>
+  </div>
+</div>

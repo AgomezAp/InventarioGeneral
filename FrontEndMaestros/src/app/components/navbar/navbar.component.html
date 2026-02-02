@@ -1,0 +1,229 @@
+<nav class="navbar navbar-expand-lg fixed-top navbar-brand-custom">
+  <div class="container-fluid">
+    <!-- Logo -->
+    <div class="navbar-logo">
+      <img src="/LogoBlanco.png" alt="Logo de Andrés Publicidad" />
+    </div>
+
+    <!-- Brand -->
+    <a class="navbar-brand" (click)="irInventario()">
+      <span class="brand-text">Sistema de Inventario</span>
+    </a>
+
+    <!-- Toggler para mobile -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="offcanvas"
+      data-bs-target="#offcanvasNavbar"
+      aria-controls="offcanvasNavbar"
+      aria-label="Toggle navigation"
+    >
+      <span class="toggler-icon">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    </button>
+
+    <!-- Offcanvas Menu -->
+    <div
+      class="offcanvas offcanvas-end offcanvas-custom"
+      tabindex="-1"
+      id="offcanvasNavbar"
+      aria-labelledby="offcanvasNavbarLabel"
+    >
+      <!-- Offcanvas Header -->
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">
+          <i class="fa-solid fa-bars me-2"></i>Menú
+        </h5>
+        <button
+          type="button"
+          class="btn-close-custom"
+          data-bs-dismiss="offcanvas"
+          aria-label="Close"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Offcanvas Body -->
+      <div class="offcanvas-body">
+        <ul class="navbar-nav ms-auto justify-content-end flex-grow-1 pe-3">
+          <!-- Dropdown Tecnología -->
+          <li class="nav-item dropdown">
+            <button
+              class="nav-btn nav-btn-tech dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i class="fa-solid fa-laptop"></i>
+              <span>Tecnología</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-custom">
+              <li class="dropdown-header">Inventario</li>
+              <li>
+                <a class="dropdown-item" (click)="irInventario()">
+                  <i class="fa-solid fa-boxes-stacked"></i>Ver Inventario
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="agregarDispositivo()">
+                  <i class="fa-solid fa-plus"></i>Agregar Dispositivo
+                </a>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li class="dropdown-header">Actas de Entrega</li>
+              <li>
+                <a class="dropdown-item" (click)="crearActa()">
+                  <i class="fa-solid fa-file-signature"></i>Nueva Acta Entrega
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="verActas()">
+                  <i class="fa-solid fa-folder-open"></i>Ver Actas Entrega
+                </a>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li class="dropdown-header">Devoluciones</li>
+              <li>
+                <a class="dropdown-item" (click)="crearDevolucion()">
+                  <i class="fa-solid fa-undo-alt"></i>Nueva Devolución
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="verActasDevolucion()">
+                  <i class="fa-solid fa-folder-open"></i>Ver Devoluciones
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Dropdown Mobiliario -->
+          <li class="nav-item dropdown">
+            <button
+              class="nav-btn nav-btn-furniture dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i class="fa-solid fa-chair"></i>
+              <span>Mobiliario</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-custom">
+              <li class="dropdown-header">Inventario</li>
+              <li>
+                <a class="dropdown-item" (click)="irMobiliario()">
+                  <i class="fa-solid fa-couch"></i>Ver Inventario
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="agregarMobiliario()">
+                  <i class="fa-solid fa-plus"></i>Agregar Mueble
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Dropdown Aseo -->
+          <li class="nav-item dropdown">
+            <button
+              class="nav-btn nav-btn-cleaning dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i class="fa-solid fa-broom"></i>
+              <span>Aseo</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-custom">
+              <li class="dropdown-header">Inventario</li>
+              <li>
+                <a class="dropdown-item" (click)="irAseo()">
+                  <i class="fa-solid fa-boxes-stacked"></i>Ver Inventario
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="agregarAseo()">
+                  <i class="fa-solid fa-plus"></i>Agregar Producto
+                </a>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li class="dropdown-header">Actas de Entrega</li>
+              <li>
+                <a class="dropdown-item" (click)="crearActaAseo()">
+                  <i class="fa-solid fa-file-signature"></i>Nueva Acta Entrega
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="verActasAseo()">
+                  <i class="fa-solid fa-folder-open"></i>Ver Actas Entrega
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Dropdown Papelería -->
+          <li class="nav-item dropdown">
+            <button
+              class="nav-btn nav-btn-stationery dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i class="fa-solid fa-paperclip"></i>
+              <span>Papelería</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-custom">
+              <li class="dropdown-header">Inventario</li>
+              <li>
+                <a class="dropdown-item" (click)="irPapeleria()">
+                  <i class="fa-solid fa-boxes-stacked"></i>Ver Inventario
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="agregarPapeleria()">
+                  <i class="fa-solid fa-plus"></i>Agregar Producto
+                </a>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li class="dropdown-header">Actas de Entrega</li>
+              <li>
+                <a class="dropdown-item" (click)="crearActaPapeleria()">
+                  <i class="fa-solid fa-file-signature"></i>Nueva Acta Entrega
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="verActasPapeleria()">
+                  <i class="fa-solid fa-folder-open"></i>Ver Actas Entrega
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Separador visual -->
+          <li class="nav-divider"></li>
+
+          <!-- Botón Cerrar Sesión -->
+          <li class="nav-item">
+            <button
+              class="nav-btn nav-btn-logout"
+              type="button"
+              (click)="logOut()"
+            >
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              <span>Cerrar sesión</span>
+            </button>
+          </li>
+
+          <!-- Indicador de conexión WebSocket -->
+          <li class="nav-item nav-item-indicator">
+            <app-connection-indicator></app-connection-indicator>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>

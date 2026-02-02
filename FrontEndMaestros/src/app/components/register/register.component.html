@@ -1,0 +1,97 @@
+<div class="register-page">
+  <!-- Logo -->
+  <div class="logo-container">
+    <img src="/LogoAP.png" alt="Logo de Andrés Publicidad" />
+  </div>
+
+  <!-- Card de Registro -->
+  <div class="register-container">
+    <div class="register-header">
+      <h2>Crear una Cuenta</h2>
+      <p class="register-subtitle">Ingresa tus datos para registrarte</p>
+    </div>
+
+    <form (ngSubmit)="agregarUsuario()">
+      <!-- Nombre y Apellido -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nombre">Nombre</label>
+          <input
+            type="text"
+            id="nombre"
+            name="nombre"
+            placeholder="Ingresa tu nombre"
+            [(ngModel)]="nombre"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="apellido">Apellido</label>
+          <input
+            type="text"
+            id="apellido"
+            name="apellido"
+            placeholder="Ingresa tu apellido"
+            [(ngModel)]="apellido"
+            required
+          />
+        </div>
+      </div>
+
+      <!-- Correo -->
+      <div class="form-group">
+        <label for="correo">Correo Electrónico</label>
+        <input
+          type="email"
+          id="correo"
+          name="correo"
+          placeholder="Ingresa tu correo"
+          [(ngModel)]="correo"
+          required
+        />
+      </div>
+
+      <!-- Contraseñas -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="contrasena">Contraseña</label>
+          <input
+            type="password"
+            id="contrasena"
+            name="contrasena"
+            placeholder="Crea una contraseña"
+            [(ngModel)]="contrasena"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="repetirContrasena">Confirmar Contraseña</label>
+          <input
+            type="password"
+            id="repetirContrasena"
+            name="repetirContrasena"
+            placeholder="Confirma tu contraseña"
+            [(ngModel)]="repetirContrasena"
+            required
+          />
+        </div>
+      </div>
+
+      <!-- Botón Submit -->
+      <button type="submit" class="btn-register" [disabled]="loading">
+        <span *ngIf="!loading">Registrarse</span>
+        <span *ngIf="loading">
+          <i class="fa-solid fa-spinner fa-spin"></i> Registrando...
+        </span>
+      </button>
+    </form>
+
+    <!-- Link a Login -->
+    <div class="register-footer">
+      <p>¿Ya tienes una cuenta? <a routerLink="/logIn">Inicia sesión</a></p>
+    </div>
+  </div>
+
+  <!-- Spinner -->
+  <app-spinner *ngIf="loading"></app-spinner>
+</div>

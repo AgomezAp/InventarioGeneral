@@ -1,0 +1,145 @@
+# ========================================
+# GITIGNORE - PROYECTO INVENTARIO GENERAL
+# Backend (Node.js/Express/TypeScript)
+# Frontend (Angular 19)
+# ========================================
+
+# ==================== NODE_MODULES ====================
+node_modules/
+**/node_modules/
+
+# ==================== VARIABLES DE ENTORNO ====================
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+**/.env
+**/.env.*
+
+# ==================== BACKEND - COMPILADO ====================
+BackendMaestros/dist/
+BackendMaestros/build/
+BackendMaestros/*.tsbuildinfo
+
+# ==================== FRONTEND - COMPILADO ====================
+FrontEndMaestros/dist/
+FrontEndMaestros/.angular/
+FrontEndMaestros/out-tsc/
+FrontEndMaestros/tmp/
+FrontEndMaestros/build/
+
+# ==================== LOGS ====================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+logs/
+**/*.log
+
+# ==================== TYPESCRIPT ====================
+*.tsbuildinfo
+*.d.ts.map
+
+# ==================== COVERAGE & TESTS ====================
+coverage/
+*.lcov
+.nyc_output/
+**/coverage/
+BackendMaestros/coverage/
+FrontEndMaestros/coverage/
+
+# ==================== IDE - VISUAL STUDIO CODE ====================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# ==================== IDE - OTROS ====================
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ==================== SISTEMA OPERATIVO ====================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+
+# ==================== ARCHIVOS TEMPORALES ====================
+*.tmp
+*.temp
+*.bak
+*.cache
+.cache/
+
+# ==================== ARCHIVOS SUBIDOS ====================
+BackendMaestros/uploads/
+BackendMaestros/public/uploads/
+!BackendMaestros/uploads/.gitkeep
+
+# ==================== ANGULAR ESPECÍFICO ====================
+FrontEndMaestros/.angular/cache/
+FrontEndMaestros/bazel-out/
+
+# ==================== PACKAGE MANAGERS ====================
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
+# NPM
+package-lock.json.*.lock
+.npm/
+
+# PNPM
+.pnpm-debug.log
+pnpm-lock.yaml
+
+# ==================== CERTIFICADOS & CLAVES ====================
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+
+# ==================== BASE DE DATOS ====================
+*.sqlite
+*.sqlite3
+*.db
+
+# ==================== DOCUMENTACIÓN GENERADA ====================
+docs/generated/
+typedoc/
+
+# ==================== OTROS ====================
+.eslintcache
+.stylelintcache
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist
+.serverless/
+.fusebox/

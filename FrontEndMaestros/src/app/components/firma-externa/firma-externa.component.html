@@ -1,0 +1,201 @@
+<div class="firma-externa-container">
+  <!-- Encabezado -->
+  <header class="header">
+    <div class="logo">
+      <span class="icon">📋</span>
+      <h1>Acta de Entrega de Equipos</h1>
+    </div>
+  </header>
+
+  <!-- Estado: Cargando -->
+  <div *ngIf="cargando" class="estado-container cargando">
+    <div class="spinner"></div>
+    <p>Cargando información del acta...</p>
+  </div>
+
+  <!-- Estado: Error -->
+  <div *ngIf="error && !datosActa" class="estado-container error">
+    <div class="icono-estado">❌</div>
+    <h2>{{ error }}</h2>
+    
+    <div *ngIf="yaFirmada" class="info-adicional">
+      <p>Este acta fue firmada el:</p>
+      <p class="fecha-destacada">{{ formatearFecha(fechaFirmaExistente!) }}</p>
+    </div>
+    
+    <div *ngIf="rechazada" class="info-adicional">
+      <p>Este acta fue devuelta para corrección.</p>
+      <p class="motivo">Motivo: {{ motivoRechazoExistente }}</p>
+    </div>
+    
+    <p class="texto-ayuda">Si necesita acceso, contacte al área de sistemas.</p>
+  </div>
+
+  <!-- Estado: Firma exitosa -->
+  <div *ngIf="firmaExitosa" class="estado-container exito">
+    <div class="icono-estado">✅</div>
+    <h2>¡Firma registrada exitosamente!</h2>
+    <p>El acta de entrega ha sido firmada correctamente.</p>
+    <p>Recibirá una copia en su correo electrónico.</p>
+    <div class="info-adicional">
+      <p><strong>Acta:</strong> {{ datosActa?.numeroActa }}</p>
+      <p><strong>Fecha:</strong> {{ fechaActual }}</p>
+    </div>
+    <p class="texto-ayuda">Puede cerrar esta ventana.</p>
+  </div>
+
+  <!-- Estado: Rechazo exitoso -->
+  <div *ngIf="rechazoExitoso" class="estado-container advertencia">
+    <div class="icono-estado">↩️</div>
+    <h2>Acta devuelta para corrección</h2>
+    <p>Su solicitud ha sido registrada.</p>
+    <p>El área de sistemas revisará sus comentarios y le enviará un nuevo enlace.</p>
+    <div class="info-adicional">
+      <p><strong>Motivo:</strong></p>
+      <p class="motivo">{{ motivoRechazo }}</p>
+    </div>
+    <p class="texto-ayuda">Puede cerrar esta ventana.</p>
+  </div>
+
+  <!-- Contenido principal: Datos del acta -->
+  <div *ngIf="datosActa && !firmaExitosa && !rechazoExitoso" class="contenido-principal">
+    
+    <!-- Información del receptor -->
+    <section class="seccion datos-receptor">
+      <h2>📝 Información de la Entrega</h2>
+      <div class="grid-datos">
+        <div class="dato">
+          <label>Número de Acta</label>
+          <span class="valor destacado">{{ datosActa.numeroActa }}</span>
+        </div>
+        <div class="dato">
+          <label>Fecha de Entrega</label>
+          <span class="valor">{{ formatearFecha(datosActa.fechaEntrega) }}</span>
+        </div>
+        <div class="dato">
+          <label>Receptor</label>
+          <span class="valor">{{ datosActa.nombreReceptor }}</span>
+        </div>
+        <div class="dato">
+          <label>Cargo</label>
+          <span class="valor">{{ datosActa.cargoReceptor }}</span>
+        </div>
+        <div class="dato" *ngIf="datosActa.correoReceptor">
+          <label>Correo</label>
+          <span class="valor">{{ datosActa.correoReceptor }}</span>
+        </div>
+      </div>
+      
+      <div *ngIf="datosActa.observaciones" class="observaciones">
+        <label>📌 Observaciones:</label>
+        <p>{{ datosActa.observaciones }}</p>
+      </div>
+    </section>
+
+    <!-- Lista de dispositivos -->
+    <section class="seccion lista-dispositivos">
+      <h2>📦 Dispositivos a Recibir ({{ datosActa.dispositivos.length }})</h2>
+      
+      <div class="dispositivos-grid">
+        <div *ngFor="let dispositivo of datosActa.dispositivos" class="dispositivo-card">
+          <div class="dispositivo-icono">
+            <span *ngIf="dispositivo.categoria === 'Laptop'">💻</span>
+            <span *ngIf="dispositivo.categoria === 'Monitor'">🖥️</span>
+            <span *ngIf="dispositivo.categoria === 'Teclado'">⌨️</span>
+            <span *ngIf="dispositivo.categoria === 'Mouse'">🖱️</span>
+            <span *ngIf="dispositivo.categoria === 'Impresora'">🖨️</span>
+            <span *ngIf="dispositivo.categoria === 'Teléfono'">📱</span>
+            <span *ngIf="!['Laptop','Monitor','Teclado','Mouse','Impresora','Teléfono'].includes(dispositivo.categoria)">📟</span>
+          </div>
+          <div class="dispositivo-info">
+            <h3>{{ dispositivo.nombre || dispositivo.categoria }}</h3>
+            <p class="marca-modelo">{{ dispositivo.marca }} {{ dispositivo.modelo }}</p>
+            <p class="serial" *ngIf="dispositivo.serial">Serial: {{ dispositivo.serial }}</p>
+            <p class="condicion" *ngIf="dispositivo.condicion">Estado: {{ dispositivo.condicion }}</p>
+            <p class="descripcion" *ngIf="dispositivo.descripcion">{{ dispositivo.descripcion }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Advertencia legal -->
+    <section class="seccion advertencia-legal">
+      <div class="alerta">
+        <span class="alerta-icono">⚠️</span>
+        <div class="alerta-contenido">
+          <strong>Importante:</strong>
+          <p>Al firmar este documento, usted acepta la responsabilidad sobre los equipos listados arriba. Deberá mantenerlos en buen estado y devolverlos cuando le sean requeridos.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Acciones -->
+    <section class="seccion acciones" *ngIf="!mostrarFirma && !mostrarRechazo">
+      <button class="btn btn-primary btn-grande" (click)="mostrarPanelFirma()">
+        ✍️ Firmar y Aceptar
+      </button>
+      <button class="btn btn-secondary" (click)="mostrarPanelRechazo()">
+        ↩️ Devolver para Corrección
+      </button>
+    </section>
+
+    <!-- Panel de firma -->
+    <section *ngIf="mostrarFirma" class="seccion panel-firma">
+      <h2>✍️ Su Firma Digital</h2>
+      <p class="instruccion">Dibuje su firma en el recuadro usando el mouse o su dedo si está en un dispositivo táctil.</p>
+      
+      <div class="firma-container">
+        <canvas #signatureCanvas class="signature-canvas"></canvas>
+        <div class="firma-linea">
+          <span>Firma del Receptor</span>
+        </div>
+      </div>
+      
+      <div class="firma-acciones">
+        <button class="btn btn-outline" (click)="limpiarFirma()">
+          🗑️ Limpiar
+        </button>
+        <button class="btn btn-secondary" (click)="cancelar()">
+          ← Cancelar
+        </button>
+        <button class="btn btn-primary" (click)="confirmarFirma()" [disabled]="firmando || firmaVacia">
+          <span *ngIf="!firmando">✅ Confirmar Firma</span>
+          <span *ngIf="firmando">Procesando...</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Panel de rechazo -->
+    <section *ngIf="mostrarRechazo" class="seccion panel-rechazo">
+      <h2>↩️ Devolver para Corrección</h2>
+      <p class="instruccion">Indique el motivo por el cual no puede firmar el acta en su estado actual.</p>
+      
+      <div class="form-group">
+        <label for="motivo">Motivo del rechazo / Correcciones necesarias:</label>
+        <textarea 
+          id="motivo" 
+          [(ngModel)]="motivoRechazo" 
+          rows="4" 
+          placeholder="Describa qué información es incorrecta o qué cambios necesita..."
+          class="form-control"
+        ></textarea>
+      </div>
+      
+      <div class="rechazo-acciones">
+        <button class="btn btn-secondary" (click)="cancelar()">
+          ← Cancelar
+        </button>
+        <button class="btn btn-warning" (click)="confirmarRechazo()" [disabled]="rechazando || !motivoRechazo.trim()">
+          <span *ngIf="!rechazando">↩️ Enviar para Corrección</span>
+          <span *ngIf="rechazando">Procesando...</span>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Sistema de Gestión de Inventario</p>
+    <p class="texto-pequeno">Este es un documento digital con validez legal.</p>
+  </footer>
+</div>

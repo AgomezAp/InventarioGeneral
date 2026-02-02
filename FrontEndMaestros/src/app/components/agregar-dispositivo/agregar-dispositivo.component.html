@@ -1,0 +1,555 @@
+<app-navbar></app-navbar>
+
+<div class="agregar-container">
+  <div class="form-wrapper">
+    <!-- Header -->
+    <header class="page-header">
+      <div class="header-content">
+        <button
+          class="btn-back"
+          (click)="cancelar()"
+          aria-label="Volver"
+          title="Volver al listado"
+        >
+          <i class="pi pi-arrow-left"></i>
+        </button>
+        <div class="header-info">
+          <div class="header-badge">
+            <i class="pi pi-box"></i>
+            <span>Inventario</span>
+          </div>
+          <h1>
+            <i class="pi pi-plus-circle"></i>
+            Agregar Dispositivo
+          </h1>
+          <p class="subtitle">Registra un nuevo dispositivo en el inventario</p>
+        </div>
+      </div>
+      <!-- Indicador de progreso -->
+      <div class="header-progress">
+        <div class="progress-step" [class.completed]="dispositivo.categoria">
+          <span class="step-number">1</span>
+          <span class="step-label">Categoría</span>
+        </div>
+        <div class="progress-line" [class.active]="dispositivo.categoria"></div>
+        <div class="progress-step" [class.completed]="dispositivo.nombre">
+          <span class="step-number">2</span>
+          <span class="step-label">Info Básica</span>
+        </div>
+        <div class="progress-line" [class.active]="dispositivo.nombre"></div>
+        <div class="progress-step" [class.completed]="dispositivo.condicion">
+          <span class="step-number">3</span>
+          <span class="step-label">Estado</span>
+        </div>
+        <div class="progress-line" [class.active]="dispositivo.condicion"></div>
+        <div class="progress-step" [class.completed]="fotosPreview.length > 0">
+          <span class="step-number">4</span>
+          <span class="step-label">Fotos</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mensajes de alerta -->
+    <div class="alert alert-error" *ngIf="errorMessage" @fadeSlide>
+      <div class="alert-icon">
+        <i class="pi pi-exclamation-circle"></i>
+      </div>
+      <div class="alert-content">
+        <strong>Error</strong>
+        <span>{{ errorMessage }}</span>
+      </div>
+      <button
+        class="alert-close"
+        (click)="errorMessage = ''"
+        aria-label="Cerrar"
+      >
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="alert alert-success" *ngIf="successMessage" @fadeSlide>
+      <div class="alert-icon">
+        <i class="pi pi-check-circle"></i>
+      </div>
+      <div class="alert-content">
+        <strong>¡Éxito!</strong>
+        <span>{{ successMessage }}</span>
+      </div>
+      <button
+        class="alert-close"
+        (click)="successMessage = ''"
+        aria-label="Cerrar"
+      >
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <form
+      (ngSubmit)="guardarDispositivo()"
+      class="form-content"
+      #dispositivoForm="ngForm"
+    >
+      <!-- Sección: Categoría -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <div class="section-icon">
+            <i class="pi pi-tag"></i>
+          </div>
+          <div class="section-title">
+            <h3>Categoría del dispositivo</h3>
+            <p>Seleccione el tipo de dispositivo</p>
+          </div>
+        </div>
+        <div class="section-card-body">
+          <div class="categoria-grid">
+            <label
+              *ngFor="let cat of categorias"
+              class="categoria-option"
+              [class.selected]="dispositivo.categoria === cat.value"
+              [class.hover]="hoveredCategoria === cat.value"
+              (mouseenter)="hoveredCategoria = cat.value"
+              (mouseleave)="hoveredCategoria = ''"
+            >
+              <input
+                type="radio"
+                name="categoria"
+                [value]="cat.value"
+                [(ngModel)]="dispositivo.categoria"
+                required
+              />
+              <div class="categoria-content">
+                <div class="categoria-icon">
+                  <i class="pi" [ngClass]="getCategoriaIcon(cat.value)"></i>
+                </div>
+                <span class="categoria-label">{{ cat.label }}</span>
+              </div>
+              <div class="categoria-check">
+                <i class="pi pi-check"></i>
+              </div>
+            </label>
+          </div>
+          <span class="field-hint" *ngIf="!dispositivo.categoria">
+            <i class="pi pi-info-circle"></i>
+            Seleccione una categoría para continuar
+          </span>
+        </div>
+      </section>
+
+      <!-- Sección: Información básica -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <div class="section-icon">
+            <i class="pi pi-info-circle"></i>
+          </div>
+          <div class="section-title">
+            <h3>Información básica</h3>
+            <p>Datos de identificación del dispositivo</p>
+          </div>
+        </div>
+        <div class="section-card-body">
+          <div class="form-group">
+            <label for="nombre">
+              Nombre / Identificador <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="nombre"
+              [(ngModel)]="dispositivo.nombre"
+              name="nombre"
+              placeholder="Ej: iPhone 13 Pro - Oficina 1"
+              class="custom-input"
+              required
+              #nombreInput="ngModel"
+              [class.invalid]="nombreInput.invalid && nombreInput.touched"
+              [class.valid]="nombreInput.valid && nombreInput.touched"
+            />
+            <span class="field-hint" *ngIf="!nombreInput.touched">
+              Ingrese un nombre único que identifique este dispositivo
+            </span>
+            <span
+              class="error-message"
+              *ngIf="nombreInput.invalid && nombreInput.touched"
+            >
+              <i class="pi pi-exclamation-circle"></i>
+              El nombre es requerido
+            </span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="marca">
+                Marca
+                <span class="optional-badge">Opcional</span>
+              </label>
+              <input
+                type="text"
+                id="marca"
+                [(ngModel)]="dispositivo.marca"
+                name="marca"
+                placeholder="Ej: Apple, Samsung, HP"
+                class="custom-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="modelo">
+                Modelo
+                <span class="optional-badge">Opcional</span>
+              </label>
+              <input
+                type="text"
+                id="modelo"
+                [(ngModel)]="dispositivo.modelo"
+                name="modelo"
+                placeholder="Ej: iPhone 13 Pro, Galaxy S22"
+                class="custom-input"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="serial">
+                Número de Serie
+                <span class="optional-badge">Opcional</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="pi pi-hashtag input-icon"></i>
+                <input
+                  type="text"
+                  id="serial"
+                  [(ngModel)]="dispositivo.serial"
+                  name="serial"
+                  placeholder="Número de serie del dispositivo"
+                  class="custom-input with-icon"
+                />
+              </div>
+            </div>
+
+            <div class="form-group" *ngIf="requiereIMEI()">
+              <label for="imei">
+                IMEI
+                <span class="optional-badge">Opcional</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="pi pi-mobile input-icon"></i>
+                <input
+                  type="text"
+                  id="imei"
+                  [(ngModel)]="dispositivo.imei"
+                  name="imei"
+                  placeholder="IMEI del dispositivo"
+                  class="custom-input with-icon"
+                  maxlength="15"
+                />
+              </div>
+              <span class="char-counter" *ngIf="dispositivo.imei">
+                {{ dispositivo.imei.length || 0 }}/15
+              </span>
+            </div>
+
+            <div class="form-group" *ngIf="!requiereIMEI()">
+              <label for="color">
+                Color
+                <span class="optional-badge">Opcional</span>
+              </label>
+              <input
+                type="text"
+                id="color"
+                [(ngModel)]="dispositivo.color"
+                name="color"
+                placeholder="Color del dispositivo"
+                class="custom-input"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Estado y ubicación -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <div class="section-icon">
+            <i class="pi pi-cog"></i>
+          </div>
+          <div class="section-title">
+            <h3>Estado y ubicación</h3>
+            <p>Condición actual y lugar de almacenamiento</p>
+          </div>
+        </div>
+        <div class="section-card-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="condicion">Condición física</label>
+              <div class="custom-select-wrapper">
+                <select
+                  id="condicion"
+                  [(ngModel)]="dispositivo.condicion"
+                  name="condicion"
+                  class="custom-select"
+                >
+                  <option value="" disabled>Seleccione una condición</option>
+                  <option *ngFor="let cond of condiciones" [value]="cond.value">
+                    {{ cond.label }}
+                  </option>
+                </select>
+                <i class="pi pi-chevron-down select-arrow"></i>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="ubicacion">Ubicación / Almacén</label>
+              <div class="input-with-icon">
+                <i class="pi pi-map-marker input-icon"></i>
+                <input
+                  type="text"
+                  id="ubicacion"
+                  [(ngModel)]="dispositivo.ubicacion"
+                  name="ubicacion"
+                  placeholder="Ej: Almacén Principal, Bodega 2"
+                  class="custom-input with-icon"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Indicador visual de condición -->
+          <div class="condicion-indicator" *ngIf="dispositivo.condicion">
+            <div
+              class="condicion-badge"
+              [ngClass]="'condicion-' + dispositivo.condicion"
+            >
+              <i
+                class="pi"
+                [ngClass]="getCondicionIcon(dispositivo.condicion)"
+              ></i>
+              <span>{{ getCondicionLabel(dispositivo.condicion) }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Descripción -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <div class="section-icon">
+            <i class="pi pi-file"></i>
+          </div>
+          <div class="section-title">
+            <h3>Descripción adicional</h3>
+            <p>Detalles y observaciones del dispositivo</p>
+          </div>
+        </div>
+        <div class="section-card-body">
+          <div class="form-group">
+            <label for="descripcion">
+              Descripción
+              <span class="optional-badge">Opcional</span>
+            </label>
+            <textarea
+              id="descripcion"
+              [(ngModel)]="dispositivo.descripcion"
+              name="descripcion"
+              rows="3"
+              placeholder="Descripción detallada del dispositivo, especificaciones técnicas, accesorios incluidos, etc."
+              class="custom-textarea"
+              maxlength="1000"
+            ></textarea>
+            <span class="char-counter" *ngIf="dispositivo.descripcion">
+              {{ dispositivo.descripcion.length || 0 }}/1000
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="observaciones">
+              Observaciones
+              <span class="optional-badge">Opcional</span>
+            </label>
+            <textarea
+              id="observaciones"
+              [(ngModel)]="dispositivo.observaciones"
+              name="observaciones"
+              rows="2"
+              placeholder="Observaciones adicionales, daños conocidos, historial relevante..."
+              class="custom-textarea"
+              maxlength="500"
+            ></textarea>
+            <span class="char-counter" *ngIf="dispositivo.observaciones">
+              {{ dispositivo.observaciones.length || 0 }}/500
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección: Fotos -->
+      <section class="section-card">
+        <div class="section-card-header">
+          <div class="section-icon">
+            <i class="pi pi-camera"></i>
+          </div>
+          <div class="section-title">
+            <h3>Fotos del dispositivo</h3>
+            <p>Agregue imágenes para documentar el estado</p>
+          </div>
+          <div class="section-badge" *ngIf="fotosPreview.length > 0">
+            {{ fotosPreview.length }}/10
+          </div>
+        </div>
+        <div class="section-card-body">
+          <div class="fotos-upload">
+            <label
+              class="upload-area"
+              for="fotos"
+              [class.has-files]="fotosPreview.length > 0"
+              [class.drag-over]="isDragging"
+              (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave($event)"
+              (drop)="onDrop($event)"
+            >
+              <input
+                type="file"
+                id="fotos"
+                multiple
+                accept="image/*"
+                (change)="onFileSelected($event)"
+                hidden
+              />
+              <div class="upload-content">
+                <div class="upload-icon">
+                  <i class="pi pi-cloud-upload"></i>
+                </div>
+                <span class="upload-text"
+                  >Arrastra fotos aquí o haz clic para seleccionar</span
+                >
+                <span class="upload-hint"
+                  >Máximo 10 fotos, 10MB cada una • JPG, PNG, WEBP</span
+                >
+              </div>
+            </label>
+
+            <div class="fotos-preview" *ngIf="fotosPreview.length > 0">
+              <div
+                class="foto-item"
+                *ngFor="let foto of fotosPreview; let i = index"
+                @fadeIn
+              >
+                <img [src]="foto" alt="Preview del dispositivo" />
+                <div class="foto-overlay">
+                  <span class="foto-number">{{ i + 1 }}</span>
+                  <button
+                    type="button"
+                    class="btn-eliminar-foto"
+                    (click)="eliminarFoto(i)"
+                    aria-label="Eliminar foto"
+                    title="Eliminar foto"
+                  >
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Botón para agregar más fotos -->
+              <label
+                class="foto-add"
+                for="fotos"
+                *ngIf="fotosPreview.length < 10"
+              >
+                <i class="pi pi-plus"></i>
+                <span>Agregar</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Tip de fotos -->
+          <div class="fotos-tip" *ngIf="fotosPreview.length === 0">
+            <div class="tip-icon">
+              <i class="pi pi-lightbulb"></i>
+            </div>
+            <div class="tip-content">
+              <strong>Consejo:</strong>
+              <p>
+                Tome fotos del dispositivo desde varios ángulos, incluyendo
+                cualquier daño o marca visible.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Resumen antes de guardar -->
+      <section
+        class="section-card summary-card"
+        *ngIf="dispositivo.nombre && dispositivo.categoria"
+      >
+        <div class="section-card-header">
+          <div class="section-icon success">
+            <i class="pi pi-check-circle"></i>
+          </div>
+          <div class="section-title">
+            <h3>Resumen del dispositivo</h3>
+            <p>Verifique la información antes de guardar</p>
+          </div>
+        </div>
+        <div class="section-card-body">
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-label">Categoría</span>
+              <span class="summary-value">
+                <i
+                  class="pi"
+                  [ngClass]="getCategoriaIcon(dispositivo.categoria)"
+                ></i>
+                {{ getCategoriaLabel(dispositivo.categoria) }}
+              </span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Nombre</span>
+              <span class="summary-value">{{ dispositivo.nombre }}</span>
+            </div>
+            <div class="summary-item" *ngIf="dispositivo.marca">
+              <span class="summary-label">Marca / Modelo</span>
+              <span class="summary-value"
+                >{{ dispositivo.marca }} {{ dispositivo.modelo }}</span
+              >
+            </div>
+            <div class="summary-item" *ngIf="dispositivo.condicion">
+              <span class="summary-label">Condición</span>
+              <span
+                class="summary-value condicion-value"
+                [ngClass]="'condicion-' + dispositivo.condicion"
+              >
+                {{ getCondicionLabel(dispositivo.condicion) }}
+              </span>
+            </div>
+            <div class="summary-item" *ngIf="fotosPreview.length > 0">
+              <span class="summary-label">Fotos</span>
+              <span class="summary-value"
+                >{{ fotosPreview.length }} imagen(es)</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Botones de acción -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelar()">
+          <i class="pi pi-times"></i>
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="btn btn-accent"
+          [disabled]="loading || !dispositivo.nombre || !dispositivo.categoria"
+          [class.loading]="loading"
+        >
+          <i
+            class="pi"
+            [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-save'"
+          ></i>
+          {{ loading ? "Guardando..." : "Guardar Dispositivo" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
