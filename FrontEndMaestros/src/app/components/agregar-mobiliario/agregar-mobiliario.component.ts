@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { NavbarComponent } from '../navbar/navbar.component';
-import { MobiliarioService } from '../../services/mobiliario.service';
-import { CrearMobiliarioRequest } from '../../interfaces/mobiliario-consumible';
+import { MobiliarioService, CrearMobiliarioRequest } from '../../services/mobiliario.service';
+import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -20,59 +20,30 @@ export class AgregarMobiliarioComponent implements OnInit {
   imagenPreview: string | null = null;
   imagenFile: File | null = null;
 
-  // Categorías predefinidas
+  // Categorías predefinidas (basadas en stock)
   categorias = [
-    'Escritorio',
-    'Silla',
-    'Mesa',
-    'Estantería',
-    'Archivador',
-    'Sofá',
-    'Sillón',
-    'Gabinete',
-    'Locker',
-    'Pizarra',
-    'Mesa de juntas',
-    'Otro'
+    { value: 'escritorio', label: 'Escritorio' },
+    { value: 'silla', label: 'Silla' },
+    { value: 'mesa', label: 'Mesa' },
+    { value: 'archivador', label: 'Archivador' },
+    { value: 'estante', label: 'Estante/Estantería' },
+    { value: 'gabinete', label: 'Gabinete/Locker' },
+    { value: 'otro', label: 'Otro' }
   ];
 
-  // Estados posibles
-  estados = [
-    { value: 'disponible', label: 'Disponible' },
-    { value: 'asignado', label: 'Asignado' },
-    { value: 'en_reparacion', label: 'En Reparación' },
-    { value: 'dado_de_baja', label: 'Dado de Baja' }
-  ];
-
-  // Condiciones
-  condiciones = [
-    { value: 'nuevo', label: 'Nuevo' },
-    { value: 'bueno', label: 'Bueno' },
-    { value: 'regular', label: 'Regular' },
-    { value: 'malo', label: 'Malo' }
-  ];
-
-  // Áreas predefinidas
-  areas = [
-    'Administración',
-    'Contabilidad',
-    'Recursos Humanos',
-    'Sistemas',
-    'Gerencia',
-    'Recepción',
-    'Sala de Juntas',
-    'Almacén',
-    'Producción',
-    'Ventas',
-    'Marketing',
-    'Bodega',
-    'Otro'
+  // Unidades de medida
+  unidadesMedida = [
+    { value: 'unidad', label: 'Unidad' },
+    { value: 'pieza', label: 'Pieza' },
+    { value: 'juego', label: 'Juego' },
+    { value: 'par', label: 'Par' }
   ];
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private mobiliarioService: MobiliarioService
+    private mobiliarioService: MobiliarioService,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
@@ -83,14 +54,12 @@ export class AgregarMobiliarioComponent implements OnInit {
     this.mobiliarioForm = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(3)]],
       categoria: ['', Validators.required],
-      marca: [''],
-      dimensiones: [''],
-      material: [''],
-      color: [''],
-      estado: ['disponible', Validators.required],
-      condicion: ['nuevo', Validators.required],
-      ubicacion: ['', Validators.required],
-      area: ['', Validators.required],
+      descripcion: [''],
+      unidadMedida: ['unidad', Validators.required],
+      stockActual: [1, [Validators.required, Validators.min(0)]],
+      ubicacionAlmacen: [''],
+      proveedor: [''],
+      precioUnitario: [null, [Validators.min(0)]],
       observaciones: ['']
     });
   }
@@ -102,21 +71,13 @@ export class AgregarMobiliarioComponent implements OnInit {
       
       // Validar tipo de archivo
       if (!file.type.match(/image\/(jpeg|jpg|png|gif)/)) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Archivo no válido',
-          text: 'Solo se permiten imágenes (JPG, PNG, GIF)'
-        });
+        this.toastr.error('Solo se permiten imágenes (JPG, PNG, GIF)', 'Archivo no válido');
         return;
       }
 
       // Validar tamaño (máximo 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Archivo muy grande',
-          text: 'El tamaño máximo permitido es 5MB'
-        });
+        this.toastr.error('El tamaño máximo permitido es 5MB', 'Archivo muy grande');
         return;
       }
 
@@ -141,77 +102,53 @@ export class AgregarMobiliarioComponent implements OnInit {
       Object.keys(this.mobiliarioForm.controls).forEach(key => {
         this.mobiliarioForm.get(key)?.markAsTouched();
       });
-      Swal.fire({
-        icon: 'warning',
-        title: 'Formulario incompleto',
-        text: 'Por favor complete todos los campos requeridos'
-      });
+      this.toastr.warning('Por favor complete todos los campos requeridos', 'Formulario incompleto');
       return;
     }
 
     this.loading = true;
 
-    const mobiliarioData: CrearMobiliarioRequest = {
-      ...this.mobiliarioForm.value
-    };
-
-    // Si hay imagen, usar FormData
-    if (this.imagenFile) {
-      const formData = new FormData();
-      Object.keys(mobiliarioData).forEach(key => {
-        const value = (mobiliarioData as any)[key];
-        if (value !== null && value !== undefined && value !== '') {
-          formData.append(key, value);
-        }
-      });
-      formData.append('foto', this.imagenFile);
-
-      this.mobiliarioService.crearConFoto(formData).subscribe({
-        next: (response) => {
-          this.loading = false;
-          Swal.fire({
-            icon: 'success',
-            title: '¡Mobiliario agregado!',
-            text: 'El mobiliario se ha registrado correctamente',
-            confirmButtonColor: '#2e7d32'
-          }).then(() => {
-            this.router.navigate(['/inventario-mobiliario']);
-          });
-        },
-        error: (error) => {
-          this.loading = false;
-          console.error('Error al crear mobiliario:', error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.error?.msg || 'No se pudo registrar el mobiliario'
-          });
-        }
-      });
-    } else {
-      this.mobiliarioService.crear(mobiliarioData).subscribe({
-        next: (response) => {
-          this.loading = false;
-          Swal.fire({
-            icon: 'success',
-            title: '¡Mobiliario agregado!',
-            text: 'El mobiliario se ha registrado correctamente',
-            confirmButtonColor: '#2e7d32'
-          }).then(() => {
-            this.router.navigate(['/inventario-mobiliario']);
-          });
-        },
-        error: (error) => {
-          this.loading = false;
-          console.error('Error al crear mobiliario:', error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.error?.msg || 'No se pudo registrar el mobiliario'
-          });
-        }
-      });
+    const formData = new FormData();
+    const formValue = this.mobiliarioForm.value;
+    
+    // Agregar Uid del usuario
+    const user = localStorage.getItem('user');
+    const Uid = user ? JSON.parse(user).Uid : null;
+    if (Uid) {
+      formData.append('Uid', Uid);
     }
+
+    // Agregar todos los campos del formulario
+    Object.keys(formValue).forEach(key => {
+      const value = formValue[key];
+      if (value !== null && value !== undefined && value !== '') {
+        formData.append(key, value);
+      }
+    });
+
+    // Agregar foto si existe
+    if (this.imagenFile) {
+      formData.append('foto', this.imagenFile);
+    }
+
+    this.mobiliarioService.registrarMobiliario(formData).subscribe({
+      next: (response) => {
+        this.loading = false;
+        Swal.fire({
+          icon: 'success',
+          title: '¡Mobiliario registrado!',
+          text: `Se ha registrado "${formValue.nombre}" con ${formValue.stockActual} ${formValue.unidadMedida}(s) en inventario`,
+          confirmButtonColor: '#2e7d32'
+        }).then(() => {
+          this.router.navigate(['/inventario-mobiliario']);
+        });
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('Error al crear mobiliario:', error);
+        this.toastr.error(error.error?.msg || 'No se pudo registrar el mobiliario', 'Error');
+      }
+    });
   }
 
   cancelar(): void {
@@ -229,6 +166,7 @@ export class AgregarMobiliarioComponent implements OnInit {
     if (control?.errors) {
       if (control.errors['required']) return 'Este campo es requerido';
       if (control.errors['minlength']) return `Mínimo ${control.errors['minlength'].requiredLength} caracteres`;
+      if (control.errors['min']) return `El valor mínimo es ${control.errors['min'].min}`;
     }
     return '';
   }

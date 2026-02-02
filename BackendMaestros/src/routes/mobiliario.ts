@@ -5,9 +5,11 @@ import {
   obtenerMobiliarioPorId,
   registrarMobiliario,
   actualizarMobiliario,
-  cambiarEstadoMobiliario,
+  agregarStock,
+  retirarStock,
+  ajustarStock,
   obtenerEstadisticasMobiliario,
-  eliminarMobiliario,
+  desactivarMobiliario,
   obtenerHistorialMobiliario
 } from '../controllers/mobiliario.js';
 import validateToken from './validateToken.js';
@@ -23,13 +25,15 @@ router.get('/:id', validateToken, obtenerMobiliarioPorId);
 router.get('/:id/historial', validateToken, obtenerHistorialMobiliario);
 
 // Rutas POST
-router.post('/', validateToken, upload.array('fotos', 5), registrarMobiliario);
+router.post('/', validateToken, upload.single('foto'), registrarMobiliario);
+router.post('/:id/agregar-stock', validateToken, agregarStock);
+router.post('/:id/retirar-stock', validateToken, retirarStock);
+router.post('/:id/ajustar-stock', validateToken, ajustarStock);
 
 // Rutas PUT/PATCH
-router.put('/:id', validateToken, actualizarMobiliario);
-router.patch('/:id/estado', validateToken, cambiarEstadoMobiliario);
+router.put('/:id', validateToken, upload.single('foto'), actualizarMobiliario);
 
 // Rutas DELETE (dar de baja)
-router.delete('/:id', validateToken, eliminarMobiliario);
+router.delete('/:id', validateToken, desactivarMobiliario);
 
 export default router;

@@ -12,22 +12,19 @@ export interface TipoInventario {
   updatedAt?: Date;
 }
 
-// ==================== MOBILIARIO ====================
+// ==================== MOBILIARIO (BASADO EN STOCK) ====================
 export interface Mobiliario {
   id?: number;
   nombre: string;
-  categoria: 'escritorio' | 'silla' | 'mesa' | 'archivador' | 'estante' | 'otro';
-  marca?: string;
-  dimensiones?: string; // "120x60x75 cm"
-  material?: string; // madera, metal, plástico, mixto
-  color?: string;
+  categoria: 'escritorio' | 'silla' | 'mesa' | 'archivador' | 'estante' | 'gabinete' | 'otro';
   descripcion?: string;
-  estado: 'disponible' | 'asignado' | 'dañado' | 'dado_de_baja';
-  condicion: 'nuevo' | 'bueno' | 'regular' | 'malo';
-  ubicacion?: string; // Oficina 201, Sala de Juntas, etc.
-  area?: string; // Área o departamento
-  fotos?: string; // JSON array de URLs
-  fechaIngreso?: Date | string;
+  unidadMedida: string; // unidad, pieza, juego
+  stockActual: number;
+  ubicacionAlmacen?: string;
+  proveedor?: string;
+  precioUnitario?: number;
+  foto?: string;
+  activo?: boolean;
   observaciones?: string;
   Uid?: number;
   createdAt?: Date;
@@ -38,12 +35,13 @@ export interface Mobiliario {
 export interface MovimientoMobiliario {
   id?: number;
   mobiliarioId: number;
-  tipoMovimiento: 'ingreso' | 'asignacion' | 'devolucion' | 'cambio_ubicacion' | 'baja' | 'reparacion';
-  estadoAnterior?: string;
-  estadoNuevo?: string;
-  ubicacionAnterior?: string;
-  ubicacionNueva?: string;
+  tipoMovimiento: 'entrada' | 'salida' | 'ajuste' | 'baja';
+  cantidad: number;
+  stockAnterior: number;
+  stockNuevo: number;
+  motivo: string; // compra, entrega, devolucion, ajuste_inventario, baja
   descripcion?: string;
+  numeroDocumento?: string;
   actaEntregaId?: number;
   fecha: Date | string;
   Uid?: number;
@@ -52,9 +50,10 @@ export interface MovimientoMobiliario {
 
 export interface EstadisticasMobiliario {
   total: number;
-  porEstado: { estado: string; cantidad: number }[];
-  porCategoria: { categoria: string; cantidad: number }[];
-  porUbicacion: { ubicacion: string; cantidad: number }[];
+  stockTotal: number;
+  sinStock: number;
+  valorTotal: number;
+  porCategoria: { categoria: string; cantidad: number; totalStock: number }[];
 }
 
 // ==================== CONSUMIBLES (ASEO Y PAPELERÍA) ====================

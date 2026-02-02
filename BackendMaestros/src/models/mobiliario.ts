@@ -3,24 +3,21 @@ import sequelize from '../database/connection.js';
 import { User } from './user.js';
 
 /**
- * Modelo Mobiliario - Inventario de muebles de oficina
- * Estados: disponible, asignado, dañado, dado_de_baja
+ * Modelo Mobiliario - Inventario de muebles de oficina CON STOCK
+ * Similar a consumibles - maneja cantidades, no items individuales
  */
 export class Mobiliario extends Model {
   public id!: number;
   public nombre!: string;
   public categoria!: string; // escritorio, silla, mesa, archivador, estante, otro
-  public marca!: string;
-  public dimensiones!: string; // "120x60x75 cm"
-  public material!: string; // madera, metal, plástico, mixto
-  public color!: string;
   public descripcion!: string;
-  public estado!: string; // disponible, asignado, dañado, dado_de_baja
-  public condicion!: string; // nuevo, bueno, regular, malo
-  public ubicacion!: string; // Oficina 201, Sala de Juntas, etc.
-  public area!: string; // Área o departamento
-  public fotos!: string; // JSON array de URLs
-  public fechaIngreso!: Date;
+  public unidadMedida!: string; // unidad, juego, etc.
+  public stockActual!: number;
+  public ubicacionAlmacen!: string; // Donde se guarda
+  public proveedor!: string;
+  public precioUnitario!: number;
+  public foto!: string;
+  public activo!: boolean;
   public observaciones!: string;
   public Uid!: number; // Usuario que registró
 }
@@ -35,65 +32,54 @@ Mobiliario.init(
     nombre: {
       type: DataTypes.STRING,
       allowNull: false,
-      comment: 'Nombre identificador del mueble'
+      comment: 'Nombre del mobiliario (ej: Silla ejecutiva, Escritorio tipo L)'
     },
     categoria: {
       type: DataTypes.STRING,
       allowNull: false,
       comment: 'Tipo: escritorio, silla, mesa, archivador, estante, otro'
     },
-    marca: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    dimensiones: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      comment: 'Dimensiones en formato LxAxA cm'
-    },
-    material: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      comment: 'Material principal: madera, metal, plástico, mixto'
-    },
-    color: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
     descripcion: {
       type: DataTypes.TEXT,
       allowNull: true,
-      comment: 'Descripción detallada del mueble'
+      comment: 'Descripción del mobiliario'
     },
-    estado: {
-      type: DataTypes.ENUM('disponible', 'asignado', 'dañado', 'dado_de_baja'),
-      defaultValue: 'disponible',
-      comment: 'Estado actual del mueble en el inventario'
+    unidadMedida: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'unidad',
+      comment: 'Unidad de medida: unidad, juego, par'
     },
-    condicion: {
-      type: DataTypes.ENUM('nuevo', 'bueno', 'regular', 'malo'),
-      defaultValue: 'bueno',
-      comment: 'Condición física del mueble'
+    stockActual: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: 'Cantidad actual en inventario'
     },
-    ubicacion: {
+    ubicacionAlmacen: {
       type: DataTypes.STRING,
       allowNull: true,
-      comment: 'Ubicación física: Oficina 201, Sala de Juntas, etc.'
+      comment: 'Ubicación de almacenamiento'
     },
-    area: {
+    proveedor: {
       type: DataTypes.STRING,
       allowNull: true,
-      comment: 'Área o departamento donde está asignado'
+      comment: 'Proveedor del mobiliario'
     },
-    fotos: {
-      type: DataTypes.TEXT('long'),
+    precioUnitario: {
+      type: DataTypes.DECIMAL(12, 2),
       allowNull: true,
-      comment: 'JSON array con URLs de fotos del mueble'
+      comment: 'Precio por unidad'
     },
-    fechaIngreso: {
-      type: DataTypes.DATEONLY,
-      defaultValue: DataTypes.NOW,
-      comment: 'Fecha de ingreso al inventario'
+    foto: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      comment: 'URL de foto del mobiliario'
+    },
+    activo: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      comment: 'Si el producto sigue activo en el inventario'
     },
     observaciones: {
       type: DataTypes.TEXT,
@@ -102,7 +88,7 @@ Mobiliario.init(
     Uid: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      comment: 'Usuario que registró el mueble'
+      comment: 'Usuario que registró'
     }
   },
   {

@@ -5,15 +5,12 @@
   <div class="header-section">
     <div class="header-title">
       <h1><i class="fa-solid fa-chair"></i> Inventario de Mobiliario</h1>
-      <p class="subtitle">Gestión de muebles y equipamiento de oficina</p>
+      <p class="subtitle">Gestión de stock de muebles y equipamiento de oficina</p>
     </div>
     
     <div class="header-actions">
       <button class="btn-agregar" (click)="irAAgregar()">
-        <i class="fa-solid fa-plus"></i> Agregar Mueble
-      </button>
-      <button class="btn-entrega" (click)="irAEntrega()">
-        <i class="fa-solid fa-file-signature"></i> Crear Acta de Entrega
+        <i class="fa-solid fa-plus"></i> Agregar Mobiliario
       </button>
     </div>
   </div>
@@ -23,56 +20,38 @@
     <div class="stat-card stat-total">
       <div class="stat-icon"><i class="fa-solid fa-couch"></i></div>
       <div class="stat-info">
-        <span class="stat-number">{{ mobiliario.length }}</span>
-        <span class="stat-label">Total Muebles</span>
+        <span class="stat-number">{{ estadisticas?.total || mobiliario.length }}</span>
+        <span class="stat-label">Tipos de Mobiliario</span>
       </div>
     </div>
     
-    <div class="stat-card stat-disponible">
-      <div class="stat-icon"><i class="fa-solid fa-check-circle"></i></div>
+    <div class="stat-card stat-stock-total">
+      <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
       <div class="stat-info">
-        <span class="stat-number">{{ contarPorEstado('disponible') }}</span>
-        <span class="stat-label">Disponibles</span>
+        <span class="stat-number">{{ estadisticas?.stockTotal || 0 }}</span>
+        <span class="stat-label">Stock Total</span>
       </div>
     </div>
     
-    <div class="stat-card stat-asignado">
-      <div class="stat-icon"><i class="fa-solid fa-user-check"></i></div>
-      <div class="stat-info">
-        <span class="stat-number">{{ contarPorEstado('asignado') }}</span>
-        <span class="stat-label">Asignados</span>
-      </div>
-    </div>
-    
-    <div class="stat-card stat-danado">
-      <div class="stat-icon"><i class="fa-solid fa-exclamation-triangle"></i></div>
-      <div class="stat-info">
-        <span class="stat-number">{{ contarPorEstado('dañado') }}</span>
-        <span class="stat-label">Dañados</span>
-      </div>
-    </div>
-    
-    <div class="stat-card stat-baja">
+    <div class="stat-card stat-sin-stock" [class.alerta]="(estadisticas?.sinStock ?? 0) > 0">
       <div class="stat-icon"><i class="fa-solid fa-ban"></i></div>
       <div class="stat-info">
-        <span class="stat-number">{{ contarPorEstado('dado_de_baja') }}</span>
-        <span class="stat-label">Dados de Baja</span>
+        <span class="stat-number">{{ estadisticas?.sinStock || 0 }}</span>
+        <span class="stat-label">Sin Stock</span>
+      </div>
+    </div>
+    
+    <div class="stat-card stat-valor">
+      <div class="stat-icon"><i class="fa-solid fa-dollar-sign"></i></div>
+      <div class="stat-info">
+        <span class="stat-number">{{ (estadisticas?.valorTotal || 0) | currency:'COP':'symbol':'1.0-0' }}</span>
+        <span class="stat-label">Valor Total</span>
       </div>
     </div>
   </div>
 
   <!-- Filtros -->
   <div class="filtros-section">
-    <div class="filtro-grupo">
-      <label>Estado:</label>
-      <select [(ngModel)]="filtroEstado" (change)="aplicarFiltros()">
-        <option value="todos">Todos los estados</option>
-        <option *ngFor="let estado of estados" [value]="estado">
-          {{ estado | titlecase }}
-        </option>
-      </select>
-    </div>
-    
     <div class="filtro-grupo">
       <label>Categoría:</label>
       <select [(ngModel)]="filtroCategoria" (change)="aplicarFiltros()">
@@ -89,7 +68,7 @@
         type="text" 
         [(ngModel)]="filtroBusqueda" 
         (input)="aplicarFiltros()"
-        placeholder="Nombre, marca, ubicación, área..."
+        placeholder="Nombre, proveedor, ubicación..."
       />
       <i class="fa-solid fa-search"></i>
     </div>
@@ -112,16 +91,15 @@
         <tr>
           <th>Categoría</th>
           <th>Nombre</th>
-          <th>Marca</th>
-          <th>Dimensiones</th>
+          <th>Stock</th>
+          <th>Unidad</th>
           <th>Ubicación</th>
-          <th>Estado</th>
-          <th>Condición</th>
+          <th>Proveedor</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let mueble of mobiliarioPaginado" [class]="'row-' + mueble.estado">
+        <tr *ngFor="let mueble of mobiliarioPaginado" [ngClass]="getStockClass(mueble)">
           <td class="td-categoria">
             <span class="categoria-badge">
               <i class="fa-solid" [ngClass]="getCategoriaIcon(mueble.categoria)"></i>
@@ -130,36 +108,37 @@
           </td>
           <td class="td-nombre">
             <strong>{{ mueble.nombre }}</strong>
+            <span class="descripcion-small" *ngIf="mueble.descripcion">{{ mueble.descripcion }}</span>
           </td>
-          <td class="td-marca">
-            <span *ngIf="mueble.marca">{{ mueble.marca }}</span>
-            <span *ngIf="!mueble.marca" class="sin-datos">-</span>
+          <td class="td-stock">
+            <span class="stock-badge" [ngClass]="getStockClass(mueble)">
+              {{ mueble.stockActual }}
+            </span>
           </td>
-          <td class="td-dimensiones">
-            <span *ngIf="mueble.dimensiones">{{ mueble.dimensiones }}</span>
-            <span *ngIf="!mueble.dimensiones" class="sin-datos">-</span>
+          <td class="td-unidad">
+            {{ mueble.unidadMedida }}
           </td>
           <td class="td-ubicacion">
-            <span *ngIf="mueble.ubicacion">
-              <i class="fa-solid fa-map-marker-alt"></i> {{ mueble.ubicacion }}
+            <span *ngIf="mueble.ubicacionAlmacen">
+              <i class="fa-solid fa-map-marker-alt"></i> {{ mueble.ubicacionAlmacen }}
             </span>
-            <span *ngIf="mueble.area" class="area-tag">{{ mueble.area }}</span>
+            <span *ngIf="!mueble.ubicacionAlmacen" class="sin-datos">-</span>
           </td>
-          <td class="td-estado">
-            <span class="estado-badge" [ngClass]="getEstadoClass(mueble.estado)">
-              {{ mueble.estado | titlecase }}
-            </span>
-          </td>
-          <td class="td-condicion">
-            <span class="condicion-badge condicion-{{ mueble.condicion }}">
-              {{ mueble.condicion | titlecase }}
-            </span>
+          <td class="td-proveedor">
+            <span *ngIf="mueble.proveedor">{{ mueble.proveedor }}</span>
+            <span *ngIf="!mueble.proveedor" class="sin-datos">-</span>
           </td>
           <td class="td-acciones">
-            <button class="btn-accion btn-ver" (click)="verDetalle(mueble.id!)" title="Ver detalle">
-              <i class="fa-solid fa-eye"></i>
+            <button class="btn-accion btn-entrada" (click)="abrirModalMovimiento(mueble, 'entrada')" title="Agregar stock">
+              <i class="fa-solid fa-plus"></i>
             </button>
-            <button class="btn-accion btn-historial" (click)="verTrazabilidad(mueble.id!)" title="Ver historial">
+            <button class="btn-accion btn-salida" (click)="abrirModalMovimiento(mueble, 'salida')" title="Retirar stock" [disabled]="mueble.stockActual === 0">
+              <i class="fa-solid fa-minus"></i>
+            </button>
+            <button class="btn-accion btn-ajuste" (click)="abrirModalMovimiento(mueble, 'ajuste')" title="Ajustar stock">
+              <i class="fa-solid fa-sliders-h"></i>
+            </button>
+            <button class="btn-accion btn-historial" (click)="verHistorial(mueble.id!)" title="Ver historial">
               <i class="fa-solid fa-history"></i>
             </button>
           </td>
@@ -170,7 +149,7 @@
     <!-- Sin resultados -->
     <div class="sin-resultados" *ngIf="mobiliarioFiltrado.length === 0 && !loading">
       <i class="fa-solid fa-inbox"></i>
-      <p>No se encontraron muebles con los filtros seleccionados</p>
+      <p>No se encontró mobiliario con los filtros seleccionados</p>
     </div>
 
     <!-- Paginación -->
@@ -181,6 +160,85 @@
       <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
       <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">
         <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Movimiento de Stock -->
+<div class="modal-overlay" *ngIf="modalAbierto" (click)="cerrarModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header" [ngClass]="'header-' + tipoMovimiento">
+      <h2>
+        <i class="fa-solid" [ngClass]="{
+          'fa-plus-circle': tipoMovimiento === 'entrada',
+          'fa-minus-circle': tipoMovimiento === 'salida',
+          'fa-sliders-h': tipoMovimiento === 'ajuste'
+        }"></i>
+        {{ tipoMovimiento === 'entrada' ? 'Agregar Stock' : 
+           tipoMovimiento === 'salida' ? 'Retirar Stock' : 'Ajustar Stock' }}
+      </h2>
+      <button class="btn-cerrar" (click)="cerrarModal()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body" *ngIf="mobiliarioSeleccionado">
+      <div class="producto-info">
+        <strong>{{ mobiliarioSeleccionado.nombre }}</strong>
+        <span class="stock-actual">Stock actual: {{ mobiliarioSeleccionado.stockActual }} {{ mobiliarioSeleccionado.unidadMedida }}(s)</span>
+      </div>
+      
+      <div class="form-group">
+        <label>{{ tipoMovimiento === 'ajuste' ? 'Nuevo Stock:' : 'Cantidad:' }}</label>
+        <input 
+          type="number" 
+          [(ngModel)]="cantidadMovimiento" 
+          [min]="tipoMovimiento === 'ajuste' ? 0 : 1"
+          [max]="tipoMovimiento === 'salida' ? mobiliarioSeleccionado.stockActual : 99999"
+        />
+      </div>
+      
+      <div class="form-group">
+        <label>Motivo:</label>
+        <select [(ngModel)]="motivoMovimiento">
+          <option value="">Seleccione un motivo</option>
+          <ng-container *ngIf="tipoMovimiento === 'entrada'">
+            <option value="compra">Compra</option>
+            <option value="donacion">Donación</option>
+            <option value="devolucion">Devolución</option>
+            <option value="otro">Otro</option>
+          </ng-container>
+          <ng-container *ngIf="tipoMovimiento === 'salida'">
+            <option value="entrega">Entrega</option>
+            <option value="prestamo">Préstamo</option>
+            <option value="baja">Baja/Daño</option>
+            <option value="otro">Otro</option>
+          </ng-container>
+          <ng-container *ngIf="tipoMovimiento === 'ajuste'">
+            <option value="ajuste_inventario">Ajuste de inventario</option>
+            <option value="correccion_error">Corrección de error</option>
+            <option value="conteo_fisico">Conteo físico</option>
+          </ng-container>
+        </select>
+      </div>
+      
+      <div class="form-group" *ngIf="tipoMovimiento === 'entrada'">
+        <label>N° Documento (factura/orden):</label>
+        <input type="text" [(ngModel)]="numeroDocumento" placeholder="Opcional">
+      </div>
+      
+      <div class="form-group">
+        <label>Descripción:</label>
+        <textarea [(ngModel)]="descripcionMovimiento" rows="3" placeholder="Descripción del movimiento (opcional)"></textarea>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="cerrarModal()">Cancelar</button>
+      <button class="btn-confirmar" [ngClass]="'btn-' + tipoMovimiento" (click)="ejecutarMovimiento()" [disabled]="cantidadMovimiento < 1 && tipoMovimiento !== 'ajuste'">
+        {{ tipoMovimiento === 'entrada' ? 'Agregar' : 
+           tipoMovimiento === 'salida' ? 'Retirar' : 'Ajustar' }}
       </button>
     </div>
   </div>

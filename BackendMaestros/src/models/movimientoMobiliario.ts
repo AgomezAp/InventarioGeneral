@@ -4,21 +4,22 @@ import { User } from './user.js';
 import { Mobiliario } from './mobiliario.js';
 
 /**
- * Modelo MovimientoMobiliario - Registro de movimientos de muebles
- * Permite trazabilidad de asignaciones y cambios de ubicación
+ * Modelo MovimientoMobiliario - Registro de movimientos de stock de mobiliario
+ * Permite trazabilidad completa de entradas, salidas y ajustes de inventario
  */
 export class MovimientoMobiliario extends Model {
   public id!: number;
   public mobiliarioId!: number;
-  public tipoMovimiento!: string; // ingreso, asignacion, devolucion, cambio_ubicacion, baja, reparacion
-  public estadoAnterior!: string;
-  public estadoNuevo!: string;
-  public ubicacionAnterior!: string;
-  public ubicacionNueva!: string;
+  public tipoMovimiento!: string; // entrada, salida, ajuste, baja
+  public cantidad!: number;
+  public stockAnterior!: number;
+  public stockNuevo!: number;
+  public motivo!: string;
   public descripcion!: string;
-  public actaEntregaId!: number; // Si está asociado a un acta
+  public numeroDocumento!: string;
+  public actaEntregaId!: number;
   public fecha!: Date;
-  public Uid!: number; // Usuario que realizó el movimiento
+  public Uid!: number;
 }
 
 MovimientoMobiliario.init(
@@ -34,34 +35,43 @@ MovimientoMobiliario.init(
       comment: 'FK al mobiliario'
     },
     tipoMovimiento: {
-      type: DataTypes.ENUM('ingreso', 'asignacion', 'devolucion', 'cambio_ubicacion', 'baja', 'reparacion'),
+      type: DataTypes.ENUM('entrada', 'salida', 'ajuste', 'baja'),
       allowNull: false,
-      comment: 'Tipo de movimiento'
+      comment: 'Tipo de movimiento de stock'
     },
-    estadoAnterior: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      comment: 'Estado antes del movimiento'
+    cantidad: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: 'Cantidad del movimiento'
     },
-    estadoNuevo: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      comment: 'Estado después del movimiento'
+    stockAnterior: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: 'Stock antes del movimiento'
     },
-    ubicacionAnterior: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      comment: 'Ubicación antes del movimiento'
+    stockNuevo: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: 'Stock después del movimiento'
     },
-    ubicacionNueva: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      comment: 'Ubicación después del movimiento'
+    motivo: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      defaultValue: 'otro',
+      comment: 'Motivo del movimiento (compra, entrega, devolucion, ajuste_inventario, baja, etc)'
     },
     descripcion: {
       type: DataTypes.TEXT,
       allowNull: true,
-      comment: 'Descripción del movimiento'
+      comment: 'Descripción detallada del movimiento'
+    },
+    numeroDocumento: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      comment: 'Número de factura, orden de compra, etc'
     },
     actaEntregaId: {
       type: DataTypes.INTEGER,

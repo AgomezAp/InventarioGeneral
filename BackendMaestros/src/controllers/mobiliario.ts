@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Op, fn, col } from 'sequelize';
+import { Op, fn, col, literal } from 'sequelize';
 import { Mobiliario } from '../models/mobiliario.js';
 import { MovimientoMobiliario } from '../models/movimientoMobiliario.js';
 import { User } from '../models/user.js';
@@ -10,38 +10,28 @@ import { getIO } from '../models/server.js';
  */
 export const obtenerMobiliario = async (req: Request, res: Response) => {
   try {
-    const { estado, categoria, ubicacion, area, busqueda } = req.query;
+    const { categoria, busqueda, activo } = req.query;
     
     let where: any = {};
     
-    if (estado && estado !== 'todos') {
-      where.estado = estado;
-    }
+    // Por defecto solo mostrar activos
+    where.activo = activo !== 'false';
     
     if (categoria && categoria !== 'todas') {
       where.categoria = categoria;
     }
     
-    if (ubicacion && ubicacion !== 'todas') {
-      where.ubicacion = { [Op.iLike]: `%${ubicacion}%` };
-    }
-    
-    if (area && area !== 'todas') {
-      where.area = { [Op.iLike]: `%${area}%` };
-    }
-    
     if (busqueda) {
       where[Op.or] = [
         { nombre: { [Op.iLike]: `%${busqueda}%` } },
-        { marca: { [Op.iLike]: `%${busqueda}%` } },
-        { ubicacion: { [Op.iLike]: `%${busqueda}%` } },
-        { area: { [Op.iLike]: `%${busqueda}%` } }
+        { descripcion: { [Op.iLike]: `%${busqueda}%` } },
+        { proveedor: { [Op.iLike]: `%${busqueda}%` } }
       ];
     }
     
     const mobiliario = await Mobiliario.findAll({
       where,
-      order: [['createdAt', 'DESC']]
+      order: [['nombre', 'ASC']]
     });
     
     res.json(mobiliario);
@@ -52,12 +42,15 @@ export const obtenerMobiliario = async (req: Request, res: Response) => {
 };
 
 /**
- * Obtener mobiliario disponible para asignación
+ * Obtener mobiliario disponible (con stock > 0)
  */
 export const obtenerMobiliarioDisponible = async (req: Request, res: Response) => {
   try {
     const mobiliario = await Mobiliario.findAll({
-      where: { estado: 'disponible' },
+      where: { 
+        activo: true,
+        stockActual: { [Op.gt]: 0 }
+      },
       order: [['categoria', 'ASC'], ['nombre', 'ASC']]
     });
     
@@ -69,7 +62,7 @@ export const obtenerMobiliarioDisponible = async (req: Request, res: Response) =
 };
 
 /**
- * Obtener un mueble por ID con su historial
+ * Obtener un mobiliario por ID con su historial
  */
 export const obtenerMobiliarioPorId = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -86,138 +79,79 @@ export const obtenerMobiliarioPorId = async (req: Request, res: Response): Promi
     });
     
     if (!mueble) {
-      res.status(404).json({ msg: 'Mueble no encontrado' });
+      res.status(404).json({ msg: 'Mobiliario no encontrado' });
       return;
     }
     
     res.json(mueble);
   } catch (error) {
-    console.error('Error al obtener mueble:', error);
-    res.status(500).json({ msg: 'Error al obtener el mueble' });
+    console.error('Error al obtener mobiliario:', error);
+    res.status(500).json({ msg: 'Error al obtener el mobiliario' });
   }
 };
 
 /**
- * Registrar nuevo mueble en el inventario
+ * Registrar nuevo mobiliario en el inventario
  */
 export const registrarMobiliario = async (req: Request, res: Response): Promise<void> => {
   try {
     const {
       nombre,
       categoria,
-      marca,
-      dimensiones,
-      material,
-      color,
       descripcion,
-      condicion,
-      ubicacion,
-      area,
+      unidadMedida,
+      stockActual,
+      ubicacionAlmacen,
+      proveedor,
+      precioUnitario,
       observaciones,
       Uid
     } = req.body;
     
-    // Procesar fotos si se subieron
-    let fotos: string[] = [];
-    if (req.files && Array.isArray(req.files)) {
-      fotos = (req.files as Express.Multer.File[]).map(file => file.filename);
-    }
-    
-    const nuevoMueble = await Mobiliario.create({
-      nombre,
-      categoria,
-      marca,
-      dimensiones,
-      material,
-      color,
-      descripcion,
-      estado: 'disponible',
-      condicion: condicion || 'bueno',
-      ubicacion,
-      area,
-      fotos: JSON.stringify(fotos),
-      fechaIngreso: new Date(),
-      observaciones,
-      Uid
+    // Verificar si ya existe uno con el mismo nombre
+    const existente = await Mobiliario.findOne({
+      where: { 
+        nombre: { [Op.iLike]: nombre },
+        activo: true
+      }
     });
     
-    // Registrar movimiento de ingreso
-    await MovimientoMobiliario.create({
-      mobiliarioId: nuevoMueble.id,
-      tipoMovimiento: 'ingreso',
-      estadoNuevo: 'disponible',
-      ubicacionNueva: ubicacion,
-      descripcion: 'Ingreso inicial al inventario',
-      fecha: new Date(),
-      Uid
-    });
-    
-    // Emitir evento WebSocket
-    const io = getIO();
-    io.to('mobiliario').emit('mobiliario:created', nuevoMueble);
-    
-    res.status(201).json({
-      msg: 'Mueble registrado exitosamente',
-      mobiliario: nuevoMueble
-    });
-  } catch (error) {
-    console.error('Error al registrar mueble:', error);
-    res.status(500).json({ msg: 'Error al registrar el mueble' });
-  }
-};
-
-/**
- * Actualizar mueble
- */
-export const actualizarMobiliario = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const {
-      nombre,
-      categoria,
-      marca,
-      dimensiones,
-      material,
-      color,
-      descripcion,
-      condicion,
-      ubicacion,
-      area,
-      observaciones,
-      Uid
-    } = req.body;
-    
-    const mueble = await Mobiliario.findByPk(Number(id));
-    
-    if (!mueble) {
-      res.status(404).json({ msg: 'Mueble no encontrado' });
+    if (existente) {
+      res.status(400).json({ msg: 'Ya existe un mobiliario con ese nombre' });
       return;
     }
     
-    const ubicacionAnterior = mueble.ubicacion;
+    // Procesar foto si se subió
+    let foto = '';
+    if (req.file) {
+      foto = req.file.filename;
+    }
     
-    await mueble.update({
-      nombre: nombre || mueble.nombre,
-      categoria: categoria || mueble.categoria,
-      marca: marca !== undefined ? marca : mueble.marca,
-      dimensiones: dimensiones !== undefined ? dimensiones : mueble.dimensiones,
-      material: material !== undefined ? material : mueble.material,
-      color: color !== undefined ? color : mueble.color,
-      descripcion: descripcion !== undefined ? descripcion : mueble.descripcion,
-      condicion: condicion || mueble.condicion,
-      ubicacion: ubicacion !== undefined ? ubicacion : mueble.ubicacion,
-      area: area !== undefined ? area : mueble.area,
-      observaciones: observaciones !== undefined ? observaciones : mueble.observaciones
+    const nuevoMobiliario = await Mobiliario.create({
+      nombre,
+      categoria,
+      descripcion,
+      unidadMedida: unidadMedida || 'unidad',
+      stockActual: stockActual || 0,
+      ubicacionAlmacen,
+      proveedor,
+      precioUnitario,
+      foto,
+      activo: true,
+      observaciones,
+      Uid
     });
     
-    // Si cambió la ubicación, registrar movimiento
-    if (ubicacion && ubicacion !== ubicacionAnterior) {
+    // Registrar movimiento de ingreso inicial si hay stock
+    if (stockActual && stockActual > 0) {
       await MovimientoMobiliario.create({
-        mobiliarioId: mueble.id,
-        tipoMovimiento: 'cambio_ubicacion',
-        ubicacionAnterior,
-        ubicacionNueva: ubicacion,
-        descripcion: `Cambio de ubicación de "${ubicacionAnterior}" a "${ubicacion}"`,
+        mobiliarioId: nuevoMobiliario.id,
+        tipoMovimiento: 'entrada',
+        cantidad: stockActual,
+        stockAnterior: 0,
+        stockNuevo: stockActual,
+        motivo: 'ingreso_inicial',
+        descripcion: 'Stock inicial al registrar el mobiliario',
         fecha: new Date(),
         Uid
       });
@@ -225,52 +159,58 @@ export const actualizarMobiliario = async (req: Request, res: Response): Promise
     
     // Emitir evento WebSocket
     const io = getIO();
-    io.to('mobiliario').emit('mobiliario:updated', mueble);
+    io.to('mobiliario').emit('mobiliario:created', nuevoMobiliario);
     
-    res.json({
-      msg: 'Mueble actualizado exitosamente',
-      mobiliario: mueble
+    res.status(201).json({
+      msg: 'Mobiliario registrado exitosamente',
+      mobiliario: nuevoMobiliario
     });
   } catch (error) {
-    console.error('Error al actualizar mueble:', error);
-    res.status(500).json({ msg: 'Error al actualizar el mueble' });
+    console.error('Error al registrar mobiliario:', error);
+    res.status(500).json({ msg: 'Error al registrar el mobiliario' });
   }
 };
 
 /**
- * Cambiar estado del mueble
+ * Actualizar mobiliario
  */
-export const cambiarEstadoMobiliario = async (req: Request, res: Response): Promise<void> => {
+export const actualizarMobiliario = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { nuevoEstado, motivo, Uid } = req.body;
+    const {
+      nombre,
+      categoria,
+      descripcion,
+      unidadMedida,
+      ubicacionAlmacen,
+      proveedor,
+      precioUnitario,
+      observaciones
+    } = req.body;
     
     const mueble = await Mobiliario.findByPk(Number(id));
     
     if (!mueble) {
-      res.status(404).json({ msg: 'Mueble no encontrado' });
+      res.status(404).json({ msg: 'Mobiliario no encontrado' });
       return;
     }
     
-    const estadoAnterior = mueble.estado;
+    // Procesar foto si se subió una nueva
+    let foto = mueble.foto;
+    if (req.file) {
+      foto = req.file.filename;
+    }
     
-    await mueble.update({ estado: nuevoEstado });
-    
-    // Registrar movimiento
-    let tipoMovimiento = 'cambio_ubicacion';
-    if (nuevoEstado === 'asignado') tipoMovimiento = 'asignacion';
-    if (nuevoEstado === 'disponible' && estadoAnterior === 'asignado') tipoMovimiento = 'devolucion';
-    if (nuevoEstado === 'dado_de_baja') tipoMovimiento = 'baja';
-    if (nuevoEstado === 'dañado') tipoMovimiento = 'reparacion';
-    
-    await MovimientoMobiliario.create({
-      mobiliarioId: mueble.id,
-      tipoMovimiento,
-      estadoAnterior,
-      estadoNuevo: nuevoEstado,
-      descripcion: motivo || `Cambio de estado de "${estadoAnterior}" a "${nuevoEstado}"`,
-      fecha: new Date(),
-      Uid
+    await mueble.update({
+      nombre: nombre || mueble.nombre,
+      categoria: categoria || mueble.categoria,
+      descripcion: descripcion !== undefined ? descripcion : mueble.descripcion,
+      unidadMedida: unidadMedida || mueble.unidadMedida,
+      ubicacionAlmacen: ubicacionAlmacen !== undefined ? ubicacionAlmacen : mueble.ubicacionAlmacen,
+      proveedor: proveedor !== undefined ? proveedor : mueble.proveedor,
+      precioUnitario: precioUnitario !== undefined ? precioUnitario : mueble.precioUnitario,
+      foto,
+      observaciones: observaciones !== undefined ? observaciones : mueble.observaciones
     });
     
     // Emitir evento WebSocket
@@ -278,12 +218,191 @@ export const cambiarEstadoMobiliario = async (req: Request, res: Response): Prom
     io.to('mobiliario').emit('mobiliario:updated', mueble);
     
     res.json({
-      msg: 'Estado actualizado exitosamente',
+      msg: 'Mobiliario actualizado exitosamente',
       mobiliario: mueble
     });
   } catch (error) {
-    console.error('Error al cambiar estado del mueble:', error);
-    res.status(500).json({ msg: 'Error al cambiar el estado del mueble' });
+    console.error('Error al actualizar mobiliario:', error);
+    res.status(500).json({ msg: 'Error al actualizar el mobiliario' });
+  }
+};
+
+/**
+ * Agregar stock (entrada)
+ */
+export const agregarStock = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { cantidad, motivo, descripcion, numeroDocumento, Uid } = req.body;
+    
+    if (!cantidad || cantidad <= 0) {
+      res.status(400).json({ msg: 'La cantidad debe ser mayor a 0' });
+      return;
+    }
+    
+    const mueble = await Mobiliario.findByPk(Number(id));
+    
+    if (!mueble) {
+      res.status(404).json({ msg: 'Mobiliario no encontrado' });
+      return;
+    }
+    
+    const stockAnterior = mueble.stockActual;
+    const stockNuevo = stockAnterior + cantidad;
+    
+    await mueble.update({ stockActual: stockNuevo });
+    
+    // Registrar movimiento
+    await MovimientoMobiliario.create({
+      mobiliarioId: mueble.id,
+      tipoMovimiento: 'entrada',
+      cantidad,
+      stockAnterior,
+      stockNuevo,
+      motivo: motivo || 'compra',
+      descripcion,
+      numeroDocumento,
+      fecha: new Date(),
+      Uid
+    });
+    
+    // Emitir evento WebSocket
+    const io = getIO();
+    io.to('mobiliario').emit('mobiliario:stockUpdated', {
+      id: mueble.id,
+      stockActual: stockNuevo
+    });
+    
+    res.json({
+      msg: `Se agregaron ${cantidad} ${mueble.unidadMedida}(s) al inventario`,
+      mobiliario: mueble,
+      stockAnterior,
+      stockNuevo
+    });
+  } catch (error) {
+    console.error('Error al agregar stock:', error);
+    res.status(500).json({ msg: 'Error al agregar stock' });
+  }
+};
+
+/**
+ * Retirar stock (salida)
+ */
+export const retirarStock = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { cantidad, motivo, descripcion, actaEntregaId, Uid } = req.body;
+    
+    if (!cantidad || cantidad <= 0) {
+      res.status(400).json({ msg: 'La cantidad debe ser mayor a 0' });
+      return;
+    }
+    
+    const mueble = await Mobiliario.findByPk(Number(id));
+    
+    if (!mueble) {
+      res.status(404).json({ msg: 'Mobiliario no encontrado' });
+      return;
+    }
+    
+    if (mueble.stockActual < cantidad) {
+      res.status(400).json({ 
+        msg: `Stock insuficiente. Disponible: ${mueble.stockActual} ${mueble.unidadMedida}(s)` 
+      });
+      return;
+    }
+    
+    const stockAnterior = mueble.stockActual;
+    const stockNuevo = stockAnterior - cantidad;
+    
+    await mueble.update({ stockActual: stockNuevo });
+    
+    // Registrar movimiento
+    await MovimientoMobiliario.create({
+      mobiliarioId: mueble.id,
+      tipoMovimiento: 'salida',
+      cantidad,
+      stockAnterior,
+      stockNuevo,
+      motivo: motivo || 'entrega',
+      descripcion,
+      actaEntregaId,
+      fecha: new Date(),
+      Uid
+    });
+    
+    // Emitir evento WebSocket
+    const io = getIO();
+    io.to('mobiliario').emit('mobiliario:stockUpdated', {
+      id: mueble.id,
+      stockActual: stockNuevo
+    });
+    
+    res.json({
+      msg: `Se retiraron ${cantidad} ${mueble.unidadMedida}(s) del inventario`,
+      mobiliario: mueble,
+      stockAnterior,
+      stockNuevo
+    });
+  } catch (error) {
+    console.error('Error al retirar stock:', error);
+    res.status(500).json({ msg: 'Error al retirar stock' });
+  }
+};
+
+/**
+ * Ajustar stock (corrección de inventario)
+ */
+export const ajustarStock = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { nuevoStock, motivo, descripcion, Uid } = req.body;
+    
+    if (nuevoStock === undefined || nuevoStock < 0) {
+      res.status(400).json({ msg: 'El nuevo stock debe ser un número válido mayor o igual a 0' });
+      return;
+    }
+    
+    const mueble = await Mobiliario.findByPk(Number(id));
+    
+    if (!mueble) {
+      res.status(404).json({ msg: 'Mobiliario no encontrado' });
+      return;
+    }
+    
+    const stockAnterior = mueble.stockActual;
+    
+    await mueble.update({ stockActual: nuevoStock });
+    
+    // Registrar movimiento
+    await MovimientoMobiliario.create({
+      mobiliarioId: mueble.id,
+      tipoMovimiento: 'ajuste',
+      cantidad: Math.abs(nuevoStock - stockAnterior),
+      stockAnterior,
+      stockNuevo: nuevoStock,
+      motivo: motivo || 'ajuste_inventario',
+      descripcion: descripcion || `Ajuste de stock de ${stockAnterior} a ${nuevoStock}`,
+      fecha: new Date(),
+      Uid
+    });
+    
+    // Emitir evento WebSocket
+    const io = getIO();
+    io.to('mobiliario').emit('mobiliario:stockUpdated', {
+      id: mueble.id,
+      stockActual: nuevoStock
+    });
+    
+    res.json({
+      msg: 'Stock ajustado exitosamente',
+      mobiliario: mueble,
+      stockAnterior,
+      stockNuevo: nuevoStock
+    });
+  } catch (error) {
+    console.error('Error al ajustar stock:', error);
+    res.status(500).json({ msg: 'Error al ajustar el stock' });
   }
 };
 
@@ -292,45 +411,52 @@ export const cambiarEstadoMobiliario = async (req: Request, res: Response): Prom
  */
 export const obtenerEstadisticasMobiliario = async (req: Request, res: Response) => {
   try {
-    const total = await Mobiliario.count();
+    const where = { activo: true };
     
-    const porEstado = await Mobiliario.findAll({
-      attributes: [
-        'estado',
-        [fn('COUNT', col('estado')), 'cantidad']
-      ],
-      group: ['estado']
+    const total = await Mobiliario.count({ where });
+    
+    // Stock total (suma de todos los items)
+    const stockTotal = await Mobiliario.sum('stockActual', { where }) || 0;
+    
+    // Productos sin stock
+    const sinStock = await Mobiliario.count({
+      where: {
+        ...where,
+        stockActual: 0
+      }
     });
     
+    // Valor total del inventario - usar raw query para evitar problemas con Sequelize
+    const valorTotalResult = await Mobiliario.findAll({
+      where,
+      attributes: [
+        [fn('SUM', literal('"stock_actual" * COALESCE("precio_unitario", 0)')), 'valorTotal']
+      ],
+      raw: true
+    }) as any[];
+    const valorTotal = valorTotalResult[0]?.valorTotal || 0;
+    
+    // Por categoría
     const porCategoria = await Mobiliario.findAll({
+      where,
       attributes: [
         'categoria',
-        [fn('COUNT', col('categoria')), 'cantidad']
+        [fn('COUNT', literal('*')), 'cantidad'],
+        [fn('SUM', literal('"stock_actual"')), 'totalStock']
       ],
-      group: ['categoria']
-    });
-    
-    const porUbicacion = await Mobiliario.findAll({
-      attributes: [
-        'ubicacion',
-        [fn('COUNT', col('ubicacion')), 'cantidad']
-      ],
-      group: ['ubicacion']
-    });
+      group: ['categoria'],
+      raw: true
+    }) as any[];
     
     res.json({
       total,
-      porEstado: porEstado.map((item: any) => ({
-        estado: item.estado,
-        cantidad: parseInt(item.getDataValue('cantidad'))
-      })),
+      stockTotal,
+      sinStock,
+      valorTotal: parseFloat(valorTotal) || 0,
       porCategoria: porCategoria.map((item: any) => ({
         categoria: item.categoria,
-        cantidad: parseInt(item.getDataValue('cantidad'))
-      })),
-      porUbicacion: porUbicacion.map((item: any) => ({
-        ubicacion: item.ubicacion,
-        cantidad: parseInt(item.getDataValue('cantidad'))
+        cantidad: parseInt(item.cantidad) || 0,
+        totalStock: parseInt(item.totalStock) || 0
       }))
     });
   } catch (error) {
@@ -340,9 +466,9 @@ export const obtenerEstadisticasMobiliario = async (req: Request, res: Response)
 };
 
 /**
- * Eliminar mueble (dar de baja)
+ * Desactivar mobiliario (no eliminar)
  */
-export const eliminarMobiliario = async (req: Request, res: Response): Promise<void> => {
+export const desactivarMobiliario = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const { motivo, Uid } = req.body;
@@ -350,22 +476,21 @@ export const eliminarMobiliario = async (req: Request, res: Response): Promise<v
     const mueble = await Mobiliario.findByPk(Number(id));
     
     if (!mueble) {
-      res.status(404).json({ msg: 'Mueble no encontrado' });
+      res.status(404).json({ msg: 'Mobiliario no encontrado' });
       return;
     }
     
-    const estadoAnterior = mueble.estado;
+    await mueble.update({ activo: false });
     
-    // En lugar de eliminar, cambiar estado a dado_de_baja
-    await mueble.update({ estado: 'dado_de_baja' });
-    
-    // Registrar movimiento
+    // Registrar movimiento de baja
     await MovimientoMobiliario.create({
       mobiliarioId: mueble.id,
       tipoMovimiento: 'baja',
-      estadoAnterior,
-      estadoNuevo: 'dado_de_baja',
-      descripcion: motivo || 'Dado de baja del inventario',
+      cantidad: mueble.stockActual,
+      stockAnterior: mueble.stockActual,
+      stockNuevo: 0,
+      motivo: motivo || 'baja',
+      descripcion: 'Mobiliario dado de baja del inventario',
       fecha: new Date(),
       Uid
     });
@@ -375,17 +500,17 @@ export const eliminarMobiliario = async (req: Request, res: Response): Promise<v
     io.to('mobiliario').emit('mobiliario:deleted', { id: mueble.id });
     
     res.json({
-      msg: 'Mueble dado de baja exitosamente',
+      msg: 'Mobiliario dado de baja exitosamente',
       mobiliario: mueble
     });
   } catch (error) {
-    console.error('Error al dar de baja el mueble:', error);
-    res.status(500).json({ msg: 'Error al dar de baja el mueble' });
+    console.error('Error al dar de baja el mobiliario:', error);
+    res.status(500).json({ msg: 'Error al dar de baja el mobiliario' });
   }
 };
 
 /**
- * Obtener historial de movimientos de un mueble
+ * Obtener historial de movimientos de un mobiliario
  */
 export const obtenerHistorialMobiliario = async (req: Request, res: Response): Promise<void> => {
   try {

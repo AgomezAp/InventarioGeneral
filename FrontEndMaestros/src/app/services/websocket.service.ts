@@ -313,6 +313,12 @@ export class WebsocketService implements OnDestroy {
       this.inventarioUpdated$.next({ action: 'refresh' });
     });
 
+    this.socket.on('mobiliario:stockUpdated', (data) => {
+      console.log('📦 Stock mobiliario actualizado:', data);
+      this.mobiliarioUpdated$.next({ action: 'stockUpdated', data });
+      this.inventarioUpdated$.next({ action: 'refresh' });
+    });
+
     // ==================== EVENTOS DE MAESTROS (Celulares) ====================
     this.socket.on('maestro:created', (data) => {
       console.log('📱 Maestro creado:', data);
@@ -679,6 +685,17 @@ export class WebsocketService implements OnDestroy {
     return new Observable(observer => {
       const sub = this.mobiliarioUpdated$.subscribe(event => {
         if (event.action === 'deleted') {
+          observer.next(event.data);
+        }
+      });
+      return () => sub.unsubscribe();
+    });
+  }
+
+  onMobiliarioStockUpdated(): Observable<any> {
+    return new Observable(observer => {
+      const sub = this.mobiliarioUpdated$.subscribe(event => {
+        if (event.action === 'stockUpdated') {
           observer.next(event.data);
         }
       });

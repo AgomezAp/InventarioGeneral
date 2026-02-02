@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { MobiliarioService } from '../../services/mobiliario.service';
 import { WebsocketService } from '../../services/websocket.service';
 import { Mobiliario, EstadisticasMobiliario } from '../../interfaces/mobiliario-consumible';
 import { NavbarComponent } from '../navbar/navbar.component';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-inventario-mobiliario',
@@ -23,7 +24,6 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
   error = '';
 
   // Filtros
-  filtroEstado = 'todos';
   filtroCategoria = 'todas';
   filtroBusqueda = '';
 
@@ -32,16 +32,24 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
   itemsPorPagina = 10;
 
   // Opciones
-  categorias = ['escritorio', 'silla', 'mesa', 'archivador', 'estante', 'otro'];
-  estados = ['disponible', 'asignado', 'dañado', 'dado_de_baja'];
+  categorias = ['escritorio', 'silla', 'mesa', 'archivador', 'estante', 'gabinete', 'otro'];
 
-  // Suscripciones WebSocket
-  private subscriptions: Subscription[] = [];
+  // Modal de movimiento de stock
+  modalAbierto = false;
+  tipoMovimiento: 'entrada' | 'salida' | 'ajuste' = 'entrada';
+  mobiliarioSeleccionado: Mobiliario | null = null;
+  cantidadMovimiento = 1;
+  motivoMovimiento = '';
+  descripcionMovimiento = '';
+  numeroDocumento = '';
+
+  private destroy$ = new Subject<void>();
 
   constructor(
     private mobiliarioService: MobiliarioService,
     private websocketService: WebsocketService,
-    private router: Router
+    private router: Router,
+    private toastr: ToastrService
   ) {}
 
   ngOnInit(): void {
@@ -51,37 +59,52 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.destroy$.next();
+    this.destroy$.complete();
     this.websocketService.leaveRoom('mobiliario');
   }
 
   private conectarWebSocket(): void {
     this.websocketService.joinRoom('mobiliario');
 
-    // Suscribirse a eventos de mobiliario para actualización en tiempo real
-    this.subscriptions.push(
-      this.websocketService.onMobiliarioCreated().subscribe((data) => {
-        console.log('🪑 Nuevo mobiliario detectado, recargando lista...');
+    this.websocketService.onMobiliarioCreated()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        console.log('🪑 Nuevo mobiliario detectado');
         this.cargarMobiliario();
         this.cargarEstadisticas();
-      })
-    );
+        this.toastr.info('Se ha registrado nuevo mobiliario', 'Inventario actualizado');
+      });
 
-    this.subscriptions.push(
-      this.websocketService.onMobiliarioUpdated().subscribe((data) => {
-        console.log('🪑 Mobiliario actualizado, recargando lista...');
+    this.websocketService.onMobiliarioUpdated()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        console.log('🪑 Mobiliario actualizado');
         this.cargarMobiliario();
         this.cargarEstadisticas();
-      })
-    );
+      });
 
-    this.subscriptions.push(
-      this.websocketService.onMobiliarioDeleted().subscribe((data) => {
-        console.log('🪑 Mobiliario eliminado, recargando lista...');
+    this.websocketService.onMobiliarioStockUpdated()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data: any) => {
+        console.log('📦 Stock actualizado:', data);
+        // Actualizar localmente sin recargar toda la lista
+        const index = this.mobiliario.findIndex(m => m.id === data.id);
+        if (index !== -1) {
+          this.mobiliario[index].stockActual = data.stockActual;
+          this.aplicarFiltros();
+        }
+        this.cargarEstadisticas();
+      });
+
+    this.websocketService.onMobiliarioDeleted()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        console.log('🪑 Mobiliario dado de baja');
         this.cargarMobiliario();
         this.cargarEstadisticas();
-      })
-    );
+        this.toastr.info('Un mobiliario ha sido dado de baja', 'Inventario actualizado');
+      });
   }
 
   cargarMobiliario(): void {
@@ -96,6 +119,7 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
         this.error = 'Error al cargar el mobiliario';
         this.loading = false;
         console.error(err);
+        this.toastr.error('Error al cargar el inventario', 'Error');
       }
     });
   }
@@ -114,10 +138,6 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
   aplicarFiltros(): void {
     let resultado = [...this.mobiliario];
 
-    if (this.filtroEstado !== 'todos') {
-      resultado = resultado.filter(m => m.estado === this.filtroEstado);
-    }
-
     if (this.filtroCategoria !== 'todas') {
       resultado = resultado.filter(m => m.categoria === this.filtroCategoria);
     }
@@ -126,9 +146,9 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
       const busqueda = this.filtroBusqueda.toLowerCase().trim();
       resultado = resultado.filter(m =>
         m.nombre.toLowerCase().includes(busqueda) ||
-        m.marca?.toLowerCase().includes(busqueda) ||
-        m.ubicacion?.toLowerCase().includes(busqueda) ||
-        m.area?.toLowerCase().includes(busqueda)
+        m.descripcion?.toLowerCase().includes(busqueda) ||
+        m.proveedor?.toLowerCase().includes(busqueda) ||
+        m.ubicacionAlmacen?.toLowerCase().includes(busqueda)
       );
     }
 
@@ -152,10 +172,6 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
     }
   }
 
-  contarPorEstado(estado: string): number {
-    return this.mobiliario.filter(m => m.estado === estado).length;
-  }
-
   getCategoriaIcon(categoria: string): string {
     const iconos: { [key: string]: string } = {
       'escritorio': 'fa-desktop',
@@ -163,34 +179,108 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
       'mesa': 'fa-table',
       'archivador': 'fa-cabinet-filing',
       'estante': 'fa-shelves',
+      'gabinete': 'fa-door-closed',
       'otro': 'fa-box'
     };
     return iconos[categoria] || 'fa-box';
   }
 
-  getEstadoClass(estado: string): string {
-    const clases: { [key: string]: string } = {
-      'disponible': 'badge-disponible',
-      'asignado': 'badge-asignado',
-      'dañado': 'badge-danado',
-      'dado_de_baja': 'badge-baja'
-    };
-    return clases[estado] || 'badge-default';
+  getStockClass(mueble: Mobiliario): string {
+    if (mueble.stockActual === 0) return 'stock-agotado';
+    return 'stock-normal';
+  }
+
+  // ==================== MODAL DE MOVIMIENTOS ====================
+
+  abrirModalMovimiento(mueble: Mobiliario, tipo: 'entrada' | 'salida' | 'ajuste'): void {
+    this.mobiliarioSeleccionado = mueble;
+    this.tipoMovimiento = tipo;
+    this.cantidadMovimiento = tipo === 'ajuste' ? mueble.stockActual : 1;
+    this.motivoMovimiento = '';
+    this.descripcionMovimiento = '';
+    this.numeroDocumento = '';
+    this.modalAbierto = true;
+  }
+
+  cerrarModal(): void {
+    this.modalAbierto = false;
+    this.mobiliarioSeleccionado = null;
+  }
+
+  ejecutarMovimiento(): void {
+    if (!this.mobiliarioSeleccionado) return;
+
+    const id = this.mobiliarioSeleccionado.id!;
+    const Uid = this.getUserId();
+
+    switch (this.tipoMovimiento) {
+      case 'entrada':
+        this.mobiliarioService.agregarStock(id, {
+          cantidad: this.cantidadMovimiento,
+          motivo: this.motivoMovimiento || 'compra',
+          descripcion: this.descripcionMovimiento,
+          numeroDocumento: this.numeroDocumento,
+          Uid
+        }).subscribe({
+          next: (res) => {
+            this.toastr.success(res.msg, 'Stock actualizado');
+            this.cerrarModal();
+            this.cargarEstadisticas();
+          },
+          error: (err) => {
+            this.toastr.error(err.error?.msg || 'Error al agregar stock', 'Error');
+          }
+        });
+        break;
+
+      case 'salida':
+        this.mobiliarioService.retirarStock(id, {
+          cantidad: this.cantidadMovimiento,
+          motivo: this.motivoMovimiento || 'entrega',
+          descripcion: this.descripcionMovimiento,
+          Uid
+        }).subscribe({
+          next: (res) => {
+            this.toastr.success(res.msg, 'Stock actualizado');
+            this.cerrarModal();
+            this.cargarEstadisticas();
+          },
+          error: (err) => {
+            this.toastr.error(err.error?.msg || 'Error al retirar stock', 'Error');
+          }
+        });
+        break;
+
+      case 'ajuste':
+        this.mobiliarioService.ajustarStock(id, {
+          nuevoStock: this.cantidadMovimiento,
+          motivo: this.motivoMovimiento || 'ajuste_inventario',
+          descripcion: this.descripcionMovimiento,
+          Uid
+        }).subscribe({
+          next: (res) => {
+            this.toastr.success(res.msg, 'Stock ajustado');
+            this.cerrarModal();
+            this.cargarEstadisticas();
+          },
+          error: (err) => {
+            this.toastr.error(err.error?.msg || 'Error al ajustar stock', 'Error');
+          }
+        });
+        break;
+    }
+  }
+
+  private getUserId(): number {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user).Uid : 0;
   }
 
   irAAgregar(): void {
     this.router.navigate(['/agregar-mobiliario']);
   }
 
-  irAEntrega(): void {
-    this.router.navigate(['/crear-acta-mobiliario']);
-  }
-
-  verDetalle(id: number): void {
-    this.router.navigate(['/mobiliario', id]);
-  }
-
-  verTrazabilidad(id: number): void {
+  verHistorial(id: number): void {
     this.router.navigate(['/trazabilidad-mobiliario', id]);
   }
 }

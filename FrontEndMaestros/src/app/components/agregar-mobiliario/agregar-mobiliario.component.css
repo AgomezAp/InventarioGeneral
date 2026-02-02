@@ -154,6 +154,14 @@
   gap: var(--spacing-lg);
 }
 
+.form-row.four-columns {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.form-row.full-width {
+  grid-template-columns: 1fr;
+}
+
 .form-row:not(:last-child) {
   margin-bottom: var(--spacing-lg);
 }
@@ -181,6 +189,12 @@
 .required {
   color: var(--color-danger);
   font-weight: 600;
+}
+
+.helper-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
 }
 
 /* ========================================

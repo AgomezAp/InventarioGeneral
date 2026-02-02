@@ -6,11 +6,38 @@ import {
   TipoInventario,
   Mobiliario,
   EstadisticasMobiliario,
-  MobiliarioRequest,
-  CrearMobiliarioRequest,
-  CambiarEstadoMobiliarioRequest,
   MovimientoMobiliario
 } from '../interfaces/mobiliario-consumible';
+
+// Interfaces para requests
+export interface CrearMobiliarioRequest {
+  nombre: string;
+  categoria: string;
+  descripcion?: string;
+  unidadMedida?: string;
+  stockActual?: number;
+  ubicacionAlmacen?: string;
+  proveedor?: string;
+  precioUnitario?: number;
+  observaciones?: string;
+  Uid?: number;
+}
+
+export interface MovimientoStockRequest {
+  cantidad: number;
+  motivo?: string;
+  descripcion?: string;
+  numeroDocumento?: string;
+  actaEntregaId?: number;
+  Uid?: number;
+}
+
+export interface AjustarStockRequest {
+  nuevoStock: number;
+  motivo?: string;
+  descripcion?: string;
+  Uid?: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -42,46 +69,42 @@ export class MobiliarioService {
    * Obtener todo el mobiliario con filtros opcionales
    */
   obtenerMobiliario(filtros?: {
-    estado?: string;
     categoria?: string;
-    ubicacion?: string;
-    area?: string;
     busqueda?: string;
+    activo?: boolean;
   }): Observable<Mobiliario[]> {
     let params = new HttpParams();
     
     if (filtros) {
-      if (filtros.estado) params = params.set('estado', filtros.estado);
       if (filtros.categoria) params = params.set('categoria', filtros.categoria);
-      if (filtros.ubicacion) params = params.set('ubicacion', filtros.ubicacion);
-      if (filtros.area) params = params.set('area', filtros.area);
       if (filtros.busqueda) params = params.set('busqueda', filtros.busqueda);
+      if (filtros.activo !== undefined) params = params.set('activo', String(filtros.activo));
     }
     
     return this.http.get<Mobiliario[]>(`${this.apiUrl}api/mobiliario`, { params });
   }
 
   /**
-   * Obtener mobiliario disponible para asignación
+   * Obtener mobiliario disponible (con stock > 0)
    */
   obtenerMobiliarioDisponible(): Observable<Mobiliario[]> {
     return this.http.get<Mobiliario[]>(`${this.apiUrl}api/mobiliario/disponibles`);
   }
 
   /**
-   * Obtener un mueble por ID con historial
+   * Obtener un mobiliario por ID con historial
    */
   obtenerMobiliarioPorId(id: number): Observable<Mobiliario> {
     return this.http.get<Mobiliario>(`${this.apiUrl}api/mobiliario/${id}`);
   }
 
   /**
-   * Registrar nuevo mueble
+   * Registrar nuevo mobiliario (con FormData para foto)
    */
-  registrarMobiliario(mobiliario: FormData): Observable<{ msg: string; mobiliario: Mobiliario }> {
+  registrarMobiliario(formData: FormData): Observable<{ msg: string; mobiliario: Mobiliario }> {
     return this.http.post<{ msg: string; mobiliario: Mobiliario }>(
       `${this.apiUrl}api/mobiliario`,
-      mobiliario
+      formData
     );
   }
 
@@ -96,19 +119,9 @@ export class MobiliarioService {
   }
 
   /**
-   * Crear mobiliario con foto (usando FormData)
+   * Actualizar mobiliario
    */
-  crearConFoto(formData: FormData): Observable<{ msg: string; mobiliario: Mobiliario }> {
-    return this.http.post<{ msg: string; mobiliario: Mobiliario }>(
-      `${this.apiUrl}api/mobiliario`,
-      formData
-    );
-  }
-
-  /**
-   * Actualizar mueble
-   */
-  actualizarMobiliario(id: number, mobiliario: Partial<MobiliarioRequest>): Observable<{ msg: string; mobiliario: Mobiliario }> {
+  actualizarMobiliario(id: number, mobiliario: Partial<CrearMobiliarioRequest>): Observable<{ msg: string; mobiliario: Mobiliario }> {
     return this.http.put<{ msg: string; mobiliario: Mobiliario }>(
       `${this.apiUrl}api/mobiliario/${id}`,
       mobiliario
@@ -116,19 +129,74 @@ export class MobiliarioService {
   }
 
   /**
-   * Cambiar estado del mueble
+   * Actualizar mobiliario con foto (FormData)
    */
-  cambiarEstado(id: number, request: CambiarEstadoMobiliarioRequest): Observable<{ msg: string; mobiliario: Mobiliario }> {
-    return this.http.patch<{ msg: string; mobiliario: Mobiliario }>(
-      `${this.apiUrl}api/mobiliario/${id}/estado`,
-      request
+  actualizarConFoto(id: number, formData: FormData): Observable<{ msg: string; mobiliario: Mobiliario }> {
+    return this.http.put<{ msg: string; mobiliario: Mobiliario }>(
+      `${this.apiUrl}api/mobiliario/${id}`,
+      formData
     );
   }
 
+  // ==================== OPERACIONES DE STOCK ====================
+
   /**
-   * Dar de baja un mueble
+   * Agregar stock (entrada)
    */
-  darDeBaja(id: number, motivo: string, Uid: number): Observable<{ msg: string; mobiliario: Mobiliario }> {
+  agregarStock(id: number, request: MovimientoStockRequest): Observable<{
+    msg: string;
+    mobiliario: Mobiliario;
+    stockAnterior: number;
+    stockNuevo: number;
+  }> {
+    return this.http.post<{
+      msg: string;
+      mobiliario: Mobiliario;
+      stockAnterior: number;
+      stockNuevo: number;
+    }>(`${this.apiUrl}api/mobiliario/${id}/agregar-stock`, request);
+  }
+
+  /**
+   * Retirar stock (salida)
+   */
+  retirarStock(id: number, request: MovimientoStockRequest): Observable<{
+    msg: string;
+    mobiliario: Mobiliario;
+    stockAnterior: number;
+    stockNuevo: number;
+  }> {
+    return this.http.post<{
+      msg: string;
+      mobiliario: Mobiliario;
+      stockAnterior: number;
+      stockNuevo: number;
+    }>(`${this.apiUrl}api/mobiliario/${id}/retirar-stock`, request);
+  }
+
+  /**
+   * Ajustar stock (corrección de inventario)
+   */
+  ajustarStock(id: number, request: AjustarStockRequest): Observable<{
+    msg: string;
+    mobiliario: Mobiliario;
+    stockAnterior: number;
+    stockNuevo: number;
+  }> {
+    return this.http.post<{
+      msg: string;
+      mobiliario: Mobiliario;
+      stockAnterior: number;
+      stockNuevo: number;
+    }>(`${this.apiUrl}api/mobiliario/${id}/ajustar-stock`, request);
+  }
+
+  // ==================== ESTADÍSTICAS E HISTORIAL ====================
+
+  /**
+   * Desactivar/dar de baja mobiliario
+   */
+  desactivar(id: number, motivo: string, Uid: number): Observable<{ msg: string; mobiliario: Mobiliario }> {
     return this.http.delete<{ msg: string; mobiliario: Mobiliario }>(
       `${this.apiUrl}api/mobiliario/${id}`,
       { body: { motivo, Uid } }
@@ -143,7 +211,7 @@ export class MobiliarioService {
   }
 
   /**
-   * Obtener historial de movimientos de un mueble
+   * Obtener historial de movimientos de un mobiliario
    */
   obtenerHistorial(id: number): Observable<MovimientoMobiliario[]> {
     return this.http.get<MovimientoMobiliario[]>(`${this.apiUrl}api/mobiliario/${id}/historial`);
