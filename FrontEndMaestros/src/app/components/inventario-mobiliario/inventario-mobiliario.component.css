@@ -555,6 +555,11 @@ body.dark-mode .filtro-grupo select {
   color: #ffffff;
 }
 
+.btn-accion.btn-editar:hover {
+  background-color: #3498db;
+  color: #ffffff;
+}
+
 .btn-accion.btn-historial:hover {
   background-color: var(--color-primary);
   color: var(--color-secondary);
@@ -1133,6 +1138,86 @@ tr.stock-agotado {
 
 .btn-confirmar.btn-ajuste:hover {
   background-color: #1976D2;
+}
+
+.btn-confirmar.btn-editar {
+  background-color: #3498db;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.btn-confirmar.btn-editar:hover {
+  background-color: #2980b9;
+}
+
+/* ========================================
+   MODAL DE EDICIÓN
+   ======================================== */
+.modal-edicion {
+  max-width: 700px;
+  width: 95%;
+}
+
+.header-editar {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+}
+
+.form-group-full {
+  grid-column: 1 / -1;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.form-group label .required {
+  color: var(--color-danger);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-family);
+  font-size: 0.9375rem;
+  transition: all var(--transition-fast);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .btn-confirmar:disabled {

@@ -43,6 +43,20 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
   descripcionMovimiento = '';
   numeroDocumento = '';
 
+  // Modal de edición
+  modalEdicionAbierto = false;
+  mobiliarioEditando: Mobiliario | null = null;
+  formularioEdicion = {
+    nombre: '',
+    categoria: '',
+    descripcion: '',
+    unidadMedida: '',
+    ubicacionAlmacen: '',
+    proveedor: '',
+    precioUnitario: 0,
+    observaciones: ''
+  };
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -282,5 +296,61 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
 
   verHistorial(id: number): void {
     this.router.navigate(['/trazabilidad-mobiliario', id]);
+  }
+
+  // ==================== EDICIÓN DE MOBILIARIO ====================
+
+  abrirModalEdicion(mueble: Mobiliario): void {
+    this.mobiliarioEditando = { ...mueble };
+    this.formularioEdicion = {
+      nombre: mueble.nombre,
+      categoria: mueble.categoria,
+      descripcion: mueble.descripcion || '',
+      unidadMedida: mueble.unidadMedida,
+      ubicacionAlmacen: mueble.ubicacionAlmacen || '',
+      proveedor: mueble.proveedor || '',
+      precioUnitario: mueble.precioUnitario || 0,
+      observaciones: mueble.observaciones || ''
+    };
+    this.modalEdicionAbierto = true;
+  }
+
+  cerrarModalEdicion(): void {
+    this.modalEdicionAbierto = false;
+    this.mobiliarioEditando = null;
+  }
+
+  guardarEdicion(): void {
+    if (!this.mobiliarioEditando?.id || !this.formularioEdicion.nombre.trim()) {
+      this.toastr.error('El nombre es obligatorio', 'Error');
+      return;
+    }
+
+    this.loading = true;
+    const datosActualizados = {
+      nombre: this.formularioEdicion.nombre.trim(),
+      categoria: this.formularioEdicion.categoria,
+      descripcion: this.formularioEdicion.descripcion?.trim(),
+      unidadMedida: this.formularioEdicion.unidadMedida,
+      ubicacionAlmacen: this.formularioEdicion.ubicacionAlmacen?.trim(),
+      proveedor: this.formularioEdicion.proveedor?.trim(),
+      precioUnitario: this.formularioEdicion.precioUnitario,
+      observaciones: this.formularioEdicion.observaciones?.trim()
+    };
+
+    this.mobiliarioService.actualizarMobiliario(this.mobiliarioEditando.id, datosActualizados)
+      .subscribe({
+        next: (response) => {
+          this.toastr.success('Mobiliario actualizado exitosamente', 'Éxito');
+          this.cerrarModalEdicion();
+          this.cargarMobiliario();
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error al actualizar mobiliario:', err);
+          this.toastr.error('Error al actualizar el mobiliario', 'Error');
+          this.loading = false;
+        }
+      });
   }
 }
