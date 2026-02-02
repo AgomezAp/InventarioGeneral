@@ -28,6 +28,7 @@ export class AgregarMobiliarioComponent implements OnInit {
     { value: 'archivador', label: 'Archivador' },
     { value: 'estante', label: 'Estante/Estantería' },
     { value: 'gabinete', label: 'Gabinete/Locker' },
+    { value: 'electrodomesticos', label: 'Electrodomésticos' },
     { value: 'otro', label: 'Otro' }
   ];
 

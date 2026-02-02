@@ -108,19 +108,6 @@ export const registrarMobiliario = async (req: Request, res: Response): Promise<
       Uid
     } = req.body;
     
-    // Verificar si ya existe uno con el mismo nombre
-    const existente = await Mobiliario.findOne({
-      where: { 
-        nombre: { [Op.iLike]: nombre },
-        activo: true
-      }
-    });
-    
-    if (existente) {
-      res.status(400).json({ msg: 'Ya existe un mobiliario con ese nombre' });
-      return;
-    }
-    
     // Procesar foto si se subió
     let foto = '';
     if (req.file) {

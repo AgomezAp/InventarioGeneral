@@ -32,7 +32,7 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
   itemsPorPagina = 10;
 
   // Opciones
-  categorias = ['escritorio', 'silla', 'mesa', 'archivador', 'estante', 'gabinete', 'otro'];
+  categorias = ['escritorio', 'silla', 'mesa', 'archivador', 'estante', 'gabinete', 'electrodomesticos', 'otro'];
 
   // Modal de movimiento de stock
   modalAbierto = false;
@@ -194,6 +194,7 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
       'archivador': 'fa-cabinet-filing',
       'estante': 'fa-shelves',
       'gabinete': 'fa-door-closed',
+      'electrodomesticos': 'fa-plug',
       'otro': 'fa-box'
     };
     return iconos[categoria] || 'fa-box';
