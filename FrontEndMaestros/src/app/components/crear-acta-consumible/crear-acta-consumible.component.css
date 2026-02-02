@@ -710,6 +710,7 @@
   color: var(--text-primary);
   background-color: var(--bg-card);
   -moz-appearance: textfield;
+  appearance: inherit;
 }
 
 .input-cantidad::-webkit-outer-spin-button,
