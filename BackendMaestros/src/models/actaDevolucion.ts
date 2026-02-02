@@ -60,8 +60,8 @@ ActaDevolucion.init(
     },
     correoReceptor: {
       type: DataTypes.STRING,
-      allowNull: false,
-      comment: 'Correo para enviar solicitud de firma'
+      allowNull: true,  // Permitir null - el correo es opcional
+      comment: 'Correo del receptor (opcional)'
     },
     nombreEntrega: {
       type: DataTypes.STRING,

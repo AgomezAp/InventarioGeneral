@@ -83,8 +83,14 @@ export class WebsocketService implements OnDestroy {
       return;
     }
 
-    // Usar la URL base sin el /api
-    const wsUrl = environment.apiUrl.replace('/api/', '').replace('/api', '');
+    // Limpiar la URL y asegurar formato correcto
+    let wsUrl = environment.apiUrl;
+    
+    // Remover /api/ o /api si existe
+    wsUrl = wsUrl.replace('/api/', '/').replace(/\/api$/, '');
+    
+    // Remover trailing slash si existe
+    wsUrl = wsUrl.replace(/\/$/, '');
     
     console.log('🔌 Conectando a WebSocket:', wsUrl);
     

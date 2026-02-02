@@ -425,10 +425,8 @@ body.dark-mode .filtro-grupo select {
   font-weight: 600;
 }
 
-.td-marca {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.td-marca span {
+  display: block;
 }
 
 .td-marca .modelo {
@@ -436,10 +434,8 @@ body.dark-mode .filtro-grupo select {
   color: var(--text-secondary);
 }
 
-.td-serial {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.td-serial span {
+  display: block;
 }
 
 .td-serial .serial,
@@ -450,6 +446,8 @@ body.dark-mode .filtro-grupo select {
   background-color: var(--bg-secondary);
   padding: 2px 6px;
   border-radius: var(--border-radius-sm);
+  display: inline-block;
+  margin-bottom: 2px;
 }
 
 /* Estado Badge */
@@ -527,9 +525,6 @@ body.dark-mode .filtro-grupo select {
 
 /* Ubicación */
 .td-ubicacion {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
   color: var(--text-secondary);
   font-size: 0.8125rem;
 }
@@ -537,14 +532,23 @@ body.dark-mode .filtro-grupo select {
 .td-ubicacion i {
   color: var(--color-secondary);
   font-size: 0.75rem;
+  margin-right: var(--spacing-xs);
 }
 
 /* ========================================
    BOTONES DE ACCIÓN EN TABLA
    ======================================== */
 .td-acciones {
-  display: flex;
-  gap: var(--spacing-xs);
+  white-space: nowrap;
+}
+
+.td-acciones .btn-accion {
+  display: inline-flex;
+  margin-right: 4px;
+}
+
+.td-acciones .btn-accion:last-child {
+  margin-right: 0;
 }
 
 .btn-accion {

@@ -23,8 +23,9 @@ interface WebSocketConfig {
 }
 
 // Configuración por defecto
+// IMPORTANTE: Usar el mismo secret que se usa en el login (SECRET_KEY)
 const defaultConfig: WebSocketConfig = {
-  jwtSecret: process.env.JWT_SECRET || 'tu_clave_secreta_aqui',
+  jwtSecret: process.env.SECRET_KEY || 'DxVj971V5CxBQGB7hDqwOenbRbbH4mrS',
   rateLimitWindow: 60000, // 1 minuto
   rateLimitMax: 100, // máximo 100 mensajes por minuto
   reconnectionAttempts: 5

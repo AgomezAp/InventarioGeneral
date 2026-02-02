@@ -426,23 +426,23 @@ export const obtenerEstadisticasMobiliario = async (req: Request, res: Response)
       }
     });
     
-    // Valor total del inventario - usar raw query para evitar problemas con Sequelize
+    // Valor total del inventario - usar nombres de columna correctos (camelCase)
     const valorTotalResult = await Mobiliario.findAll({
       where,
       attributes: [
-        [fn('SUM', literal('"stock_actual" * COALESCE("precio_unitario", 0)')), 'valorTotal']
+        [fn('SUM', literal('"stockActual" * COALESCE("precioUnitario", 0)')), 'valorTotal']
       ],
       raw: true
     }) as any[];
     const valorTotal = valorTotalResult[0]?.valorTotal || 0;
     
-    // Por categoría
+    // Por categoría - usar nombres de columna correctos (camelCase)
     const porCategoria = await Mobiliario.findAll({
       where,
       attributes: [
         'categoria',
         [fn('COUNT', literal('*')), 'cantidad'],
-        [fn('SUM', literal('"stock_actual"')), 'totalStock']
+        [fn('SUM', literal('"stockActual"')), 'totalStock']
       ],
       group: ['categoria'],
       raw: true
