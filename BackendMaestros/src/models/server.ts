@@ -103,13 +103,21 @@ class Server {
         crossOriginEmbedderPolicy: false,
       })
     );
+    
+    // Configurar CORS con orígenes permitidos
+    const allowedOrigins = process.env.CORS_ORIGIN 
+      ? process.env.CORS_ORIGIN.split(',')
+      : ["https://numerologiachile.com", "http://localhost:4200"];
+    
     this.app.use(
       cors({
-      origin: ["https://numerologiachile.com", "http://localhost:4200"],
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-      allowedHeaders: ["Content-Type", "Authorization"],
+        origin: allowedOrigins,
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true
       })
     );
+    
     // Servir archivos estáticos de uploads
     this.app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
     this.app.use((req, res, next) => {

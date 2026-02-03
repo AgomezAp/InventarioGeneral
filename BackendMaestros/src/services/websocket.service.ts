@@ -45,9 +45,14 @@ class WebSocketService {
    * Inicializar el servidor WebSocket
    */
   initialize(httpServer: http.Server): SocketIOServer {
+    // Configurar orígenes permitidos desde variables de entorno
+    const allowedOrigins = process.env.CORS_ORIGIN 
+      ? process.env.CORS_ORIGIN.split(',')
+      : ["https://numerologiachile.com", "http://localhost:4200"];
+    
     this.io = new SocketIOServer(httpServer, {
       cors: {
-        origin: process.env.CORS_ORIGIN || "*",
+        origin: allowedOrigins,
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
         credentials: true
       },
