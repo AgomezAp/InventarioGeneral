@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.numerologiachile.com/', // Cambiar a la URL correcta en producción
+  apiUrl: 'https://api.numerologiamexico.com/',
 };
 
 
