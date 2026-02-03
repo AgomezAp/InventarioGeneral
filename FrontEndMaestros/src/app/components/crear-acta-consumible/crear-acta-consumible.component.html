@@ -1,315 +1,399 @@
 <app-navbar></app-navbar>
 
-<div class="crear-acta-container" [class.aseo]="tipoInventario === 'aseo'" [class.papeleria]="tipoInventario === 'papeleria'">
+<div
+  class="crear-acta-container"
+  [class.aseo]="tipoInventario === 'aseo'"
+  [class.papeleria]="tipoInventario === 'papeleria'"
+>
   <div class="form-wrapper">
-    <!-- Header -->
-    <header class="page-header" [style.background]="'linear-gradient(135deg, ' + colorTema + ' 0%, ' + colorTema + 'cc 100%)'">
+    <!-- Header Negro -->
+    <header class="page-header">
       <div class="header-content">
         <button class="btn-back" (click)="cancelar()" aria-label="Volver">
-          <i class="fas fa-arrow-left"></i>
+          <i class="pi pi-arrow-left"></i>
         </button>
         <div class="header-info">
-          <div class="header-badge">
-            <i class="fas" [ngClass]="iconoTipo"></i>
-            <span>Nueva Acta</span>
-          </div>
-          <h1><i class="fas fa-file-alt"></i> Acta de Entrega - {{ tituloTipo }}</h1>
-          <p class="subtitle">
-            Registra la entrega de artículos con firma digital
-          </p>
+          <h1>
+            <i class="pi pi-file-edit"></i>
+            Acta de Entrega - {{ tituloTipo }}
+          </h1>
+        </div>
+        <div class="header-badge" [ngClass]="'badge-' + tipoInventario">
+          <i class="pi" [ngClass]="iconoTipo"></i>
+          <span>{{ tipoInventario | titlecase }}</span>
+        </div>
+        <div class="header-progress">
+          <span
+            class="progress-dot"
+            [class.completed]="receptor.nombre && receptor.correo"
+          ></span>
+          <span
+            class="progress-dot"
+            [class.completed]="articulosSeleccionados.length > 0"
+          ></span>
+          <span
+            class="progress-dot"
+            [class.completed]="
+              articulosSeleccionados.length > 0 && receptor.nombre
+            "
+          ></span>
         </div>
       </div>
     </header>
 
-    <!-- Mensajes -->
+    <!-- Alertas -->
     <div class="alert alert-error" *ngIf="errorMessage">
-      <i class="fas fa-exclamation-circle"></i>
+      <i class="pi pi-exclamation-circle"></i>
       <span>{{ errorMessage }}</span>
       <button class="alert-close" (click)="errorMessage = ''">
-        <i class="fas fa-times"></i>
+        <i class="pi pi-times"></i>
       </button>
     </div>
 
     <div class="alert alert-success" *ngIf="successMessage">
-      <i class="fas fa-check-circle"></i>
+      <i class="pi pi-check-circle"></i>
       <span>{{ successMessage }}</span>
       <button class="alert-close" (click)="successMessage = ''">
-        <i class="fas fa-times"></i>
+        <i class="pi pi-times"></i>
       </button>
     </div>
 
     <form (ngSubmit)="crearActa()" class="form-content">
-      <!-- Sección: Datos del receptor -->
-      <section class="section-card">
-        <div class="section-card-header">
-          <h3><i class="fas fa-user"></i> Datos del receptor</h3>
-        </div>
-        <div class="section-card-body">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="nombre">Nombre completo <span class="required">*</span></label>
-              <input
-                type="text"
-                id="nombre"
-                [(ngModel)]="receptor.nombre"
-                name="nombre"
-                placeholder="Nombre de quien recibe"
-                class="custom-input"
-                required
-              />
+      <div class="form-grid-main">
+        <!-- COLUMNA IZQUIERDA -->
+        <div class="form-column">
+          <!-- Datos del receptor -->
+          <section class="section-card section-compact">
+            <div class="section-header-inline">
+              <i class="pi pi-user section-icon-sm"></i>
+              <h3>Datos del receptor</h3>
             </div>
 
-            <div class="form-group">
-              <label for="cargo">Cargo <span class="required">*</span></label>
-              <input
-                type="text"
-                id="cargo"
-                [(ngModel)]="receptor.cargo"
-                name="cargo"
-                placeholder="Cargo o posición"
-                class="custom-input"
-                required
-              />
+            <div class="form-row-compact">
+              <div class="form-group-compact">
+                <label for="nombre"
+                  >Nombre <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="nombre"
+                  [(ngModel)]="receptor.nombre"
+                  name="nombre"
+                  placeholder="Nombre completo"
+                  class="input-compact"
+                  required
+                />
+              </div>
+              <div class="form-group-compact">
+                <label for="cargo">Cargo <span class="required">*</span></label>
+                <input
+                  type="text"
+                  id="cargo"
+                  [(ngModel)]="receptor.cargo"
+                  name="cargo"
+                  placeholder="Cargo o posición"
+                  class="input-compact"
+                  required
+                />
+              </div>
             </div>
-          </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="area">Área / Departamento</label>
-              <select
-                id="area"
-                [(ngModel)]="receptor.area"
-                name="area"
-                class="custom-select"
-              >
-                <option value="">Seleccione un área</option>
-                <option *ngFor="let a of areas" [value]="a">{{ a }}</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="correo">Correo electrónico <span class="required">*</span></label>
-              <div class="input-with-icon">
-                <i class="fas fa-envelope input-icon"></i>
+            <div class="form-row-compact">
+              <div class="form-group-compact">
+                <label for="area">Área</label>
+                <div class="select-wrapper">
+                  <select
+                    id="area"
+                    [(ngModel)]="receptor.area"
+                    name="area"
+                    class="select-compact"
+                  >
+                    <option value="">Seleccione...</option>
+                    <option *ngFor="let a of areas" [value]="a">{{ a }}</option>
+                  </select>
+                  <i class="pi pi-chevron-down"></i>
+                </div>
+              </div>
+              <div class="form-group-compact">
+                <label for="correo"
+                  >Correo <span class="required">*</span></label
+                >
                 <input
                   type="email"
                   id="correo"
                   [(ngModel)]="receptor.correo"
                   name="correo"
                   placeholder="correo@ejemplo.com"
-                  class="custom-input with-icon"
+                  class="input-compact"
                   required
                 />
               </div>
             </div>
-          </div>
 
-          <div class="help-text">
-            <i class="fas fa-info-circle"></i>
-            <span>Se enviará un enlace a este correo para que el receptor firme digitalmente.</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Sección: Selección de artículos -->
-      <section class="section-card">
-        <div class="section-card-header">
-          <h3><i class="fas fa-boxes"></i> Artículos a entregar</h3>
-        </div>
-        <div class="section-card-body">
-          <!-- Artículos disponibles -->
-          <div class="articulos-disponibles">
-            <label class="subsection-label">Seleccionar artículos disponibles:</label>
-
-            <!-- Loading -->
-            <div class="loading-inline" *ngIf="loadingArticulos">
-              <div class="spinner-sm"></div>
-              <span>Cargando artículos...</span>
-            </div>
-
-            <!-- Lista de disponibles -->
-            <div class="lista-disponibles" *ngIf="!loadingArticulos && articulosDisponibles.length > 0">
-              <div
-                class="articulo-disponible"
-                *ngFor="let art of articulosDisponibles"
-                (click)="agregarArticulo(art)"
-                tabindex="0"
-                (keydown.enter)="agregarArticulo(art)"
+            <div class="field-hint">
+              <i class="pi pi-info-circle"></i>
+              <span
+                >El receptor recibirá un enlace para firmar digitalmente</span
               >
-                <div class="art-icon">
-                  <i class="fas" [ngClass]="getCategoriaIcon(art.categoria)"></i>
-                </div>
-                <div class="art-info">
-                  <strong>{{ art.nombre }}</strong>
-                  <span class="art-categoria">{{ art.categoria || 'Sin categoría' }}</span>
-                  <span class="art-stock">
-                    <i class="fas fa-cubes"></i> {{ art.stockActual }} {{ art.unidadMedida }}s disponibles
-                  </span>
-                </div>
-                <button type="button" class="btn-agregar" aria-label="Agregar artículo">
-                  <i class="fas fa-plus"></i>
-                </button>
-              </div>
+            </div>
+          </section>
+
+          <!-- Observaciones -->
+          <section class="section-card section-compact">
+            <div class="section-header-inline">
+              <i class="pi pi-comment section-icon-sm"></i>
+              <h3>Observaciones</h3>
+            </div>
+            <textarea
+              id="observaciones"
+              [(ngModel)]="observacionesEntrega"
+              name="observaciones"
+              rows="3"
+              placeholder="Notas adicionales sobre la entrega..."
+              class="textarea-compact"
+            ></textarea>
+          </section>
+
+        </div>
+
+        <!-- COLUMNA DERECHA -->
+        <div class="form-column column-articulos">
+          <section class="section-card section-compact section-articulos">
+            <div class="section-header-inline">
+              <i class="pi pi-box section-icon-sm tipo"></i>
+              <h3>Artículos a entregar</h3>
+              <span
+                class="badge-count"
+                *ngIf="articulosSeleccionados.length > 0"
+              >
+                {{ getTotalArticulos() }}
+              </span>
             </div>
 
-            <!-- Sin disponibles -->
-            <div class="empty-disponibles" *ngIf="!loadingArticulos && articulosDisponibles.length === 0">
-              <div class="empty-icon">
-                <i class="fas fa-inbox"></i>
+            <!-- Disponibles -->
+            <div class="disponibles-area">
+              <label class="mini-label">Disponibles:</label>
+
+              <div class="loading-inline" *ngIf="loadingArticulos">
+                <div class="spinner-sm"></div>
+                <span>Cargando...</span>
               </div>
-              <p>No hay artículos disponibles con stock</p>
-            </div>
-          </div>
 
-          <!-- Artículos seleccionados -->
-          <div class="articulos-seleccionados" *ngIf="articulosSeleccionados.length > 0">
-            <label class="subsection-label">
-              <i class="fas fa-check-circle"></i>
-              Artículos seleccionados ({{ articulosSeleccionados.length }}):
-            </label>
-
-            <div class="lista-seleccionados">
-              <div class="articulo-seleccionado" *ngFor="let item of articulosSeleccionados; let i = index">
-                <div class="art-header">
-                  <div class="art-titulo">
-                    <div class="art-icon selected">
-                      <i class="fas" [ngClass]="getCategoriaIcon(item.consumible.categoria)"></i>
-                    </div>
-                    <div class="art-info">
-                      <strong>{{ item.consumible.nombre }}</strong>
-                      <span class="art-categoria">{{ item.consumible.categoria || 'Sin categoría' }}</span>
-                    </div>
+              <div
+                class="disponibles-scroll"
+                *ngIf="!loadingArticulos && articulosDisponibles.length > 0"
+              >
+                <div
+                  class="art-chip"
+                  *ngFor="let art of articulosDisponibles"
+                  (click)="agregarArticulo(art)"
+                  tabindex="0"
+                >
+                  <i class="pi" [ngClass]="getCategoriaIcon(art.categoria)"></i>
+                  <div class="art-chip-info">
+                    <span class="art-chip-name">{{ art.nombre }}</span>
+                    <span class="art-chip-stock"
+                      >{{ art.stockActual }} disp.</span
+                    >
                   </div>
-                  <button type="button" class="btn-quitar" (click)="quitarArticulo(i)" aria-label="Quitar artículo">
-                    <i class="fas fa-times"></i>
-                  </button>
+                  <i class="pi pi-plus add-icon"></i>
                 </div>
+              </div>
 
-                <div class="art-detalles">
-                  <div class="form-row">
-                    <div class="form-group cantidad-group">
-                      <label>Cantidad a entregar</label>
-                      <div class="cantidad-input">
-                        <button type="button" class="btn-cantidad" (click)="item.cantidad = item.cantidad > 1 ? item.cantidad - 1 : 1">
-                          <i class="fas fa-minus"></i>
+              <div
+                class="empty-mini"
+                *ngIf="!loadingArticulos && articulosDisponibles.length === 0"
+              >
+                <i class="pi pi-inbox"></i>
+                <span>No hay artículos disponibles</span>
+              </div>
+            </div>
+
+            <!-- Seleccionados -->
+            <div
+              class="seleccionados-area"
+              *ngIf="articulosSeleccionados.length > 0"
+            >
+              <label class="mini-label success">
+                <i class="pi pi-check-circle"></i>
+                Seleccionados ({{ articulosSeleccionados.length }}):
+              </label>
+
+              <div class="seleccionados-list">
+                <div
+                  class="art-card"
+                  *ngFor="let item of articulosSeleccionados; let i = index"
+                >
+                  <div class="art-card-header">
+                    <div class="art-card-icon">
+                      <i
+                        class="pi"
+                        [ngClass]="getCategoriaIcon(item.consumible.categoria)"
+                      ></i>
+                    </div>
+                    <div class="art-card-title">
+                      <h4>{{ item.consumible.nombre }}</h4>
+                      <span>{{
+                        item.consumible.categoria || "Sin categoría"
+                      }}</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="btn-remove-card"
+                      (click)="quitarArticulo(i)"
+                    >
+                      <i class="pi pi-times"></i>
+                    </button>
+                  </div>
+
+                  <div class="art-card-form">
+                    <div class="cantidad-row">
+                      <label>Cantidad:</label>
+                      <div class="cantidad-control">
+                        <button
+                          type="button"
+                          class="btn-qty"
+                          (click)="
+                            item.cantidad =
+                              item.cantidad > 1 ? item.cantidad - 1 : 1
+                          "
+                        >
+                          <i class="pi pi-minus"></i>
                         </button>
                         <input
                           type="number"
                           [(ngModel)]="item.cantidad"
-                          [name]="'cantidad_' + i"
+                          [name]="'cant_' + i"
                           min="1"
                           [max]="item.consumible.stockActual"
                           (change)="validarCantidad(i)"
-                          class="input-cantidad"
+                          class="input-qty"
                         />
-                        <button type="button" class="btn-cantidad" (click)="item.cantidad = item.cantidad < item.consumible.stockActual ? item.cantidad + 1 : item.consumible.stockActual">
-                          <i class="fas fa-plus"></i>
+                        <button
+                          type="button"
+                          class="btn-qty"
+                          (click)="
+                            item.cantidad =
+                              item.cantidad < item.consumible.stockActual
+                                ? item.cantidad + 1
+                                : item.consumible.stockActual
+                          "
+                        >
+                          <i class="pi pi-plus"></i>
                         </button>
                       </div>
-                      <span class="stock-disponible">de {{ item.consumible.stockActual }} {{ item.consumible.unidadMedida }}s disponibles</span>
+                      <span class="stock-info"
+                        >de {{ item.consumible.stockActual }}
+                        {{ item.consumible.unidadMedida }}</span
+                      >
                     </div>
 
-                    <div class="form-group">
-                      <label>Observaciones</label>
+                    <div class="form-field">
+                      <label>Observaciones:</label>
                       <input
                         type="text"
                         [(ngModel)]="item.observaciones"
                         [name]="'obs_' + i"
-                        placeholder="Observaciones del artículo"
-                        class="custom-input"
+                        placeholder="Opcional..."
+                        class="input-mini"
                       />
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      <!-- Sección: Observaciones generales -->
-      <section class="section-card">
-        <div class="section-card-header">
-          <h3><i class="fas fa-comment"></i> Observaciones de la entrega</h3>
-        </div>
-        <div class="section-card-body">
-          <div class="form-group">
-            <label for="observaciones">Notas adicionales</label>
-            <textarea
-              id="observaciones"
-              [(ngModel)]="observacionesEntrega"
-              name="observaciones"
-              rows="3"
-              placeholder="Observaciones generales sobre la entrega..."
-              class="custom-textarea"
-            ></textarea>
-          </div>
-        </div>
-      </section>
-
-      <!-- Info de firma digital -->
-      <section class="section-card info-card">
-        <div class="section-card-header info-header">
-          <h3><i class="fas fa-envelope"></i> Firma Digital por Correo</h3>
-        </div>
-        <div class="section-card-body">
-          <div class="info-box">
-            <div class="info-icon">
-              <i class="fas fa-pencil-alt"></i>
+            <!-- Sin seleccionados -->
+            <div
+              class="empty-seleccionados"
+              *ngIf="articulosSeleccionados.length === 0"
+            >
+              <i class="pi pi-arrow-up"></i>
+              <p>Selecciona artículos de la lista superior</p>
             </div>
-            <div class="info-contenido">
-              <p class="info-titulo">¿Cómo funciona?</p>
-              <ol class="info-pasos">
-                <li>Se creará el acta con los artículos y cantidades seleccionados</li>
-                <li>El receptor recibirá un correo con un enlace único</li>
-                <li>Al abrir el enlace, podrá revisar los artículos y firmar digitalmente</li>
-                <li>Una vez firmada, el acta quedará completada</li>
-              </ol>
+
+            <!-- Resumen + Botones -->
+            <div
+              class="section-footer-summary"
+              *ngIf="articulosSeleccionados.length > 0"
+            >
+              <div class="summary-mini">
+                <div class="summary-row">
+                  <span>Receptor:</span>
+                  <strong>{{ receptor.nombre || "-" }}</strong>
+                </div>
+                <div class="summary-row">
+                  <span>Área:</span>
+                  <strong>{{ receptor.area || "-" }}</strong>
+                </div>
+                <div class="summary-row highlight">
+                  <span>Total:</span>
+                  <strong
+                    >{{ getTotalArticulos() }} unidades ({{
+                      articulosSeleccionados.length
+                    }}
+                    productos)</strong
+                  >
+                </div>
+              </div>
+
+              <div class="section-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-compact"
+                  (click)="cancelar()"
+                >
+                  <i class="pi pi-times"></i> Cancelar
+                </button>
+                <button
+                  type="submit"
+                  class="btn btn-accent btn-compact"
+                  [disabled]="
+                    loading ||
+                    enviandoCorreo ||
+                    articulosSeleccionados.length === 0 ||
+                    !receptor.nombre ||
+                    !receptor.correo
+                  "
+                  [class.loading]="loading || enviandoCorreo"
+                >
+                  <i
+                    class="pi"
+                    [ngClass]="
+                      loading || enviandoCorreo
+                        ? 'pi-spin pi-spinner'
+                        : 'pi-send'
+                    "
+                  ></i>
+                  {{
+                    loading
+                      ? "Creando..."
+                      : enviandoCorreo
+                        ? "Enviando..."
+                        : "Crear y Enviar"
+                  }}
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      <!-- Resumen -->
-      <div class="resumen-card" *ngIf="articulosSeleccionados.length > 0">
-        <div class="resumen-header">
-          <i class="fas fa-list"></i>
-          <h4>Resumen de la entrega</h4>
+            <!-- Sin artículos -->
+            <div
+              class="section-footer"
+              *ngIf="articulosSeleccionados.length === 0"
+            >
+              <button
+                type="button"
+                class="btn btn-secondary btn-compact"
+                (click)="cancelar()"
+              >
+                <i class="pi pi-times"></i> Cancelar
+              </button>
+              <button type="submit" class="btn btn-accent btn-compact" disabled>
+                <i class="pi pi-send"></i> Crear y Enviar
+              </button>
+            </div>
+          </section>
         </div>
-        <div class="resumen-body">
-          <div class="resumen-item">
-            <span class="resumen-label">Receptor:</span>
-            <span class="resumen-value">{{ receptor.nombre || '-' }} ({{ receptor.cargo || '-' }})</span>
-          </div>
-          <div class="resumen-item">
-            <span class="resumen-label">Área:</span>
-            <span class="resumen-value">{{ receptor.area || '-' }}</span>
-          </div>
-          <div class="resumen-item">
-            <span class="resumen-label">Correo:</span>
-            <span class="resumen-value">{{ receptor.correo || '-' }}</span>
-          </div>
-          <div class="resumen-item highlight">
-            <span class="resumen-label">Total artículos:</span>
-            <span class="resumen-value">{{ getTotalArticulos() }} unidades ({{ articulosSeleccionados.length }} productos)</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Botones de acción -->
-      <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="cancelar()">
-          <i class="fas fa-times"></i> Cancelar
-        </button>
-        <button
-          type="submit"
-          class="btn btn-accent"
-          [style.background]="'linear-gradient(135deg, ' + colorTema + ' 0%, ' + colorTema + 'cc 100%)'"
-          [disabled]="loading || enviandoCorreo || articulosSeleccionados.length === 0"
-        >
-          <i class="fas" [ngClass]="loading || enviandoCorreo ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
-          {{ loading ? 'Creando acta...' : enviandoCorreo ? 'Enviando correo...' : 'Crear y Enviar para Firma' }}
-        </button>
       </div>
     </form>
   </div>

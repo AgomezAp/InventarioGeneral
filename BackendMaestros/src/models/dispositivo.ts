@@ -23,6 +23,11 @@ export class Dispositivo extends Model {
   public fechaIngreso!: Date;
   public observaciones!: string;
   public Uid!: number; // Usuario que registró
+  
+  // Campos para manejo de stock (accesorios, cargadores, etc.)
+  public tipoRegistro!: string; // 'individual' o 'stock'
+  public stockActual!: number; // Cantidad disponible para items de stock
+  public stockMinimo!: number; // Alerta de stock bajo
 }
 
 Dispositivo.init(
@@ -103,6 +108,21 @@ Dispositivo.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       comment: 'Usuario que registró el dispositivo'
+    },
+    tipoRegistro: {
+      type: DataTypes.ENUM('individual', 'stock'),
+      defaultValue: 'individual',
+      comment: 'individual: con serial único (celulares, laptops), stock: por cantidad (cargadores, accesorios)'
+    },
+    stockActual: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
+      comment: 'Cantidad actual en stock (solo para tipoRegistro=stock)'
+    },
+    stockMinimo: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: 'Stock mínimo para alertas (solo para tipoRegistro=stock)'
     }
   },
   {

@@ -242,8 +242,19 @@ export const registrarConsumible = async (req: Request, res: Response): Promise<
       msg: 'Producto registrado exitosamente',
       consumible: nuevoConsumible
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error al registrar consumible:', error);
+    
+    // Manejo específico de errores de constraint unique
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const field = error.errors?.[0]?.path || 'campo';
+      res.status(400).json({ 
+        msg: `Ya existe un consumible con ese ${field}. Por favor verifica los datos.`,
+        error: 'duplicate_entry'
+      });
+      return;
+    }
+    
     res.status(500).json({ msg: 'Error al registrar el producto' });
   }
 };

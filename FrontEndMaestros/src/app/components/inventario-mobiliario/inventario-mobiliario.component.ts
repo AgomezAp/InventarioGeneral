@@ -57,6 +57,12 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
     observaciones: ''
   };
 
+  // Modal de eliminación
+  modalEliminarAbierto = false;
+  mobiliarioEliminar: Mobiliario | null = null;
+  motivoEliminacion = '';
+  descripcionEliminacion = '';
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -101,14 +107,16 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
     this.websocketService.onMobiliarioStockUpdated()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data: any) => {
-        console.log('📦 Stock actualizado:', data);
-        // Actualizar localmente sin recargar toda la lista
-        const index = this.mobiliario.findIndex(m => m.id === data.id);
-        if (index !== -1) {
-          this.mobiliario[index].stockActual = data.stockActual;
-          this.aplicarFiltros();
+        console.log('📦 Stock actualizado desde otro usuario:', data);
+        // Solo actualizar si el modal no está abierto (cambio de otro usuario)
+        if (!this.modalAbierto) {
+          const index = this.mobiliario.findIndex(m => m.id === data.id);
+          if (index !== -1) {
+            this.mobiliario[index].stockActual = data.stockActual;
+            this.aplicarFiltros();
+          }
+          this.cargarEstadisticas();
         }
-        this.cargarEstadisticas();
       });
 
     this.websocketService.onMobiliarioDeleted()
@@ -240,6 +248,7 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
           next: (res) => {
             this.toastr.success(res.msg, 'Stock actualizado');
             this.cerrarModal();
+            this.cargarMobiliario(); // Recargar todo para evitar inconsistencias
             this.cargarEstadisticas();
           },
           error: (err) => {
@@ -258,6 +267,7 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
           next: (res) => {
             this.toastr.success(res.msg, 'Stock actualizado');
             this.cerrarModal();
+            this.cargarMobiliario(); // Recargar todo para evitar inconsistencias
             this.cargarEstadisticas();
           },
           error: (err) => {
@@ -276,6 +286,7 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
           next: (res) => {
             this.toastr.success(res.msg, 'Stock ajustado');
             this.cerrarModal();
+            this.cargarMobiliario(); // Recargar todo para evitar inconsistencias
             this.cargarEstadisticas();
           },
           error: (err) => {
@@ -351,6 +362,52 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
           console.error('Error al actualizar mobiliario:', err);
           this.toastr.error('Error al actualizar el mobiliario', 'Error');
           this.loading = false;
+        }
+      });
+  }
+
+  // ==================== ELIMINACIÓN DE MOBILIARIO ====================
+
+  abrirModalEliminar(mueble: Mobiliario): void {
+    this.mobiliarioEliminar = mueble;
+    this.motivoEliminacion = '';
+    this.descripcionEliminacion = '';
+    this.modalEliminarAbierto = true;
+  }
+
+  cerrarModalEliminar(): void {
+    this.modalEliminarAbierto = false;
+    this.mobiliarioEliminar = null;
+    this.motivoEliminacion = '';
+    this.descripcionEliminacion = '';
+  }
+
+  confirmarEliminacion(): void {
+    if (!this.mobiliarioEliminar?.id || !this.motivoEliminacion) {
+      this.toastr.error('Debe seleccionar un motivo de baja', 'Error');
+      return;
+    }
+
+    const Uid = this.getUserId();
+    const motivoCompleto = this.motivoEliminacion + (this.descripcionEliminacion ? `: ${this.descripcionEliminacion}` : '');
+
+    this.mobiliarioService.desactivar(this.mobiliarioEliminar.id, motivoCompleto, Uid)
+      .subscribe({
+        next: (response) => {
+          this.toastr.success(
+            `El mobiliario "${this.mobiliarioEliminar!.nombre}" ha sido dado de baja exitosamente`,
+            'Baja registrada'
+          );
+          this.cerrarModalEliminar();
+          this.cargarMobiliario();
+          this.cargarEstadisticas();
+        },
+        error: (err) => {
+          console.error('Error al dar de baja mobiliario:', err);
+          this.toastr.error(
+            err.error?.msg || 'Error al dar de baja el mobiliario',
+            'Error'
+          );
         }
       });
   }

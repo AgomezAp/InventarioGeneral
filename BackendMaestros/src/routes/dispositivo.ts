@@ -9,7 +9,9 @@ import {
   cambiarEstadoDispositivo,
   obtenerEstadisticas,
   obtenerTrazabilidad,
-  darDeBajaDispositivo
+  darDeBajaDispositivo,
+  agregarStockDispositivo,
+  retirarStockDispositivo
 } from '../controllers/dispositivo.js';
 import validateToken from './validateToken.js';
 
@@ -29,5 +31,9 @@ router.post('/', validateToken, upload.array('fotos', 10), registrarDispositivo)
 router.put('/:id', validateToken, actualizarDispositivo);
 router.patch('/:id/estado', validateToken, cambiarEstadoDispositivo);
 router.patch('/:id/baja', validateToken, darDeBajaDispositivo);
+
+// Rutas para gestión de stock
+router.post('/:id/agregar-stock', validateToken, agregarStockDispositivo);
+router.post('/:id/retirar-stock', validateToken, retirarStockDispositivo);
 
 export default router;

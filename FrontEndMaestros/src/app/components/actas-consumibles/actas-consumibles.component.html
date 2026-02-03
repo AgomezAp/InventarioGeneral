@@ -1,174 +1,183 @@
 <app-navbar></app-navbar>
 
-<div class="actas-container" [class.aseo]="tipoInventario === 'aseo'" [class.papeleria]="tipoInventario === 'papeleria'">
+<div
+  class="actas-container"
+  [class.aseo]="tipoInventario === 'aseo'"
+  [class.papeleria]="tipoInventario === 'papeleria'"
+>
   <div class="content-wrapper">
-    <!-- Header -->
-    <header class="page-header" [style.background]="'linear-gradient(135deg, ' + colorTema + ' 0%, ' + colorTema + 'cc 100%)'">
+    <!-- Header Negro -->
+    <header class="page-header">
       <div class="header-content">
         <div class="header-info">
-          <div class="header-badge">
-            <i class="fas" [ngClass]="iconoTipo"></i>
-            <span>Actas de Entrega</span>
-          </div>
-          <h1><i class="fas fa-file-alt"></i> Actas - {{ tituloTipo }}</h1>
-          <p class="subtitle">
-            Gestión de entregas de artículos con firma digital
-          </p>
+          <h1>
+            <i class="pi pi-file-edit"></i>
+            Actas de Entrega - {{ tituloTipo }}
+          </h1>
+        </div>
+        <div class="header-badge" [ngClass]="'badge-' + tipoInventario">
+          <i class="pi" [ngClass]="iconoTipo"></i>
+          <span>{{ tipoInventario | titlecase }}</span>
         </div>
         <div class="header-actions">
-          <button class="btn btn-header" (click)="irACrearActa()">
-            <i class="fas fa-plus"></i>
-            Nueva Acta
+          <button class="btn-header-outline" (click)="irAInventario()">
+            <i class="pi pi-box"></i>
+            <span>Inventario</span>
           </button>
-          <button class="btn btn-header-outline" (click)="irAInventario()">
-            <i class="fas fa-boxes"></i>
-            Ver Inventario
+          <button class="btn-header-primary" (click)="irACrearActa()">
+            <i class="pi pi-plus"></i>
+            <span>Nueva Acta</span>
           </button>
         </div>
       </div>
     </header>
 
-    <!-- Estadísticas -->
-    <div class="stats-cards">
-      <div class="stat-card" [class.active]="filtroEstado === 'todas'" (click)="filtroEstado = 'todas'; aplicarFiltros()">
-        <div class="stat-icon all">
-          <i class="fas fa-list"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-number">{{ actas.length }}</span>
-          <span class="stat-label">Total Actas</span>
-        </div>
-      </div>
-
-      <div class="stat-card" [class.active]="filtroEstado === 'pendiente_firma'" (click)="filtroEstado = 'pendiente_firma'; aplicarFiltros()">
-        <div class="stat-icon pending">
-          <i class="fas fa-envelope"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-number">{{ contarPendientesFirma() }}</span>
+    <!-- Stats + Filtros en una fila -->
+    <div class="toolbar">
+      <div class="stats-row">
+        <button
+          class="stat-chip"
+          [class.active]="filtroEstado === 'todas'"
+          (click)="filtroEstado = 'todas'; aplicarFiltros()"
+        >
+          <i class="pi pi-list"></i>
+          <span class="stat-num">{{ actas.length }}</span>
+          <span class="stat-label">Total</span>
+        </button>
+        <button
+          class="stat-chip pending"
+          [class.active]="filtroEstado === 'pendiente_firma'"
+          (click)="filtroEstado = 'pendiente_firma'; aplicarFiltros()"
+        >
+          <i class="pi pi-envelope"></i>
+          <span class="stat-num">{{ contarPendientesFirma() }}</span>
           <span class="stat-label">Pendientes</span>
-        </div>
-      </div>
-
-      <div class="stat-card" [class.active]="filtroEstado === 'firmada'" (click)="filtroEstado = 'firmada'; aplicarFiltros()">
-        <div class="stat-icon signed">
-          <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-number">{{ contarFirmadas() }}</span>
+        </button>
+        <button
+          class="stat-chip signed"
+          [class.active]="filtroEstado === 'firmada'"
+          (click)="filtroEstado = 'firmada'; aplicarFiltros()"
+        >
+          <i class="pi pi-check-circle"></i>
+          <span class="stat-num">{{ contarFirmadas() }}</span>
           <span class="stat-label">Firmadas</span>
-        </div>
-      </div>
-
-      <div class="stat-card" [class.active]="filtroEstado === 'rechazada'" (click)="filtroEstado = 'rechazada'; aplicarFiltros()">
-        <div class="stat-icon rejected">
-          <i class="fas fa-times-circle"></i>
-        </div>
-        <div class="stat-info">
-          <span class="stat-number">{{ contarRechazadas() }}</span>
+        </button>
+        <button
+          class="stat-chip rejected"
+          [class.active]="filtroEstado === 'rechazada'"
+          (click)="filtroEstado = 'rechazada'; aplicarFiltros()"
+        >
+          <i class="pi pi-times-circle"></i>
+          <span class="stat-num">{{ contarRechazadas() }}</span>
           <span class="stat-label">Rechazadas</span>
-        </div>
+        </button>
       </div>
-    </div>
 
-    <!-- Filtros y búsqueda -->
-    <div class="filters-bar">
       <div class="search-box">
-        <i class="fas fa-search"></i>
+        <i class="pi pi-search"></i>
         <input
           type="text"
           [(ngModel)]="filtroBusqueda"
           (ngModelChange)="aplicarFiltros()"
-          placeholder="Buscar por número de acta, receptor, área..."
+          placeholder="Buscar acta, receptor, área..."
         />
       </div>
     </div>
 
     <!-- Loading -->
-    <div class="loading-container" *ngIf="loading">
+    <div class="loading-state" *ngIf="loading">
       <div class="spinner"></div>
-      <p>Cargando actas...</p>
+      <span>Cargando actas...</span>
     </div>
 
     <!-- Error -->
-    <div class="error-container" *ngIf="error && !loading">
-      <div class="error-icon">
-        <i class="fas fa-exclamation-triangle"></i>
-      </div>
+    <div class="error-state" *ngIf="error && !loading">
+      <i class="pi pi-exclamation-triangle"></i>
       <p>{{ error }}</p>
-      <button class="btn btn-retry" (click)="cargarActas()">
-        <i class="fas fa-redo"></i> Reintentar
+      <button class="btn btn-secondary btn-compact" (click)="cargarActas()">
+        <i class="pi pi-refresh"></i> Reintentar
       </button>
     </div>
 
     <!-- Lista de actas -->
-    <div class="actas-grid" *ngIf="!loading && !error">
-      <!-- Sin resultados -->
+    <div class="actas-content" *ngIf="!loading && !error">
+      <!-- Empty state -->
       <div class="empty-state" *ngIf="actasFiltradas.length === 0">
-        <div class="empty-icon">
-          <i class="fas fa-file-alt"></i>
-        </div>
+        <i class="pi pi-file"></i>
         <h3>No hay actas</h3>
-        <p *ngIf="actas.length === 0">Aún no se han creado actas de entrega para {{ tituloTipo }}</p>
-        <p *ngIf="actas.length > 0">No se encontraron actas con los filtros seleccionados</p>
-        <button class="btn btn-primary" (click)="irACrearActa()" *ngIf="actas.length === 0">
-          <i class="fas fa-plus"></i> Crear Primera Acta
+        <p *ngIf="actas.length === 0">Aún no se han creado actas de entrega</p>
+        <p *ngIf="actas.length > 0">No se encontraron actas con los filtros</p>
+        <button
+          class="btn btn-accent btn-compact"
+          (click)="irACrearActa()"
+          *ngIf="actas.length === 0"
+        >
+          <i class="pi pi-plus"></i> Crear Primera Acta
         </button>
       </div>
 
-      <!-- Cards de actas -->
-      <div
-        class="acta-card"
-        *ngFor="let acta of actasFiltradas"
-        (click)="verDetalle(acta)"
-        [class.selected]="actaSeleccionada?.id === acta.id"
-      >
-        <div class="acta-header">
-          <span class="acta-numero">{{ acta.numeroActa }}</span>
-          <span class="acta-estado" [ngClass]="getEstadoClass(acta.estado)">
-            <i class="fas" [ngClass]="getEstadoIcon(acta.estado)"></i>
-            {{ getEstadoLabel(acta.estado) }}
-          </span>
-        </div>
+      <!-- Grid de actas -->
+      <div class="actas-grid" *ngIf="actasFiltradas.length > 0">
+        <div
+          class="acta-card"
+          *ngFor="let acta of actasFiltradas"
+          (click)="verDetalle(acta)"
+          [class.selected]="actaSeleccionada?.id === acta.id"
+        >
+          <div class="acta-card-header">
+            <span class="acta-numero">{{ acta.numeroActa }}</span>
+            <span class="acta-estado" [ngClass]="getEstadoClass(acta.estado)">
+              <i class="pi" [ngClass]="getEstadoIcon(acta.estado)"></i>
+              {{ getEstadoLabel(acta.estado) }}
+            </span>
+          </div>
 
-        <div class="acta-body">
-          <div class="acta-receptor">
-            <i class="fas fa-user"></i>
-            <div class="receptor-info">
-              <strong>{{ acta.nombreReceptor }}</strong>
-              <span>{{ acta.cargoReceptor }}</span>
+          <div class="acta-card-body">
+            <div class="acta-receptor">
+              <i class="pi pi-user"></i>
+              <div>
+                <strong>{{ acta.nombreReceptor }}</strong>
+                <span>{{ acta.cargoReceptor }}</span>
+              </div>
+            </div>
+
+            <div class="acta-meta">
+              <span class="meta-item" *ngIf="acta.areaReceptor">
+                <i class="pi pi-building"></i> {{ acta.areaReceptor }}
+              </span>
+              <span class="meta-item">
+                <i class="pi pi-box"></i>
+                {{ getTotalArticulos(acta) }} artículos
+              </span>
             </div>
           </div>
 
-          <div class="acta-area" *ngIf="acta.areaReceptor">
-            <i class="fas fa-building"></i>
-            <span>{{ acta.areaReceptor }}</span>
-          </div>
-
-          <div class="acta-articulos">
-            <i class="fas fa-boxes"></i>
-            <span>{{ getTotalArticulos(acta) }} artículos ({{ acta.detalles?.length || 0 }} productos)</span>
-          </div>
-        </div>
-
-        <div class="acta-footer">
-          <span class="acta-fecha">
-            <i class="fas fa-calendar"></i>
-            {{ formatDate(acta.fechaEntrega) }}
-          </span>
-          <div class="acta-actions">
-            <button
-              class="btn-icon"
-              *ngIf="acta.estado === 'pendiente_firma'"
-              (click)="reenviarCorreo(acta); $event.stopPropagation()"
-              [disabled]="reenviandoCorreo[acta.id!]"
-              title="Reenviar correo"
-            >
-              <i class="fas" [ngClass]="reenviandoCorreo[acta.id!] ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
-            </button>
-            <button class="btn-icon" title="Ver detalle">
-              <i class="fas fa-eye"></i>
-            </button>
+          <div class="acta-card-footer">
+            <span class="acta-fecha">
+              <i class="pi pi-calendar"></i>
+              {{ formatDate(acta.fechaEntrega) }}
+            </span>
+            <div class="acta-actions">
+              <button
+                class="btn-icon"
+                *ngIf="acta.estado === 'pendiente_firma'"
+                (click)="reenviarCorreo(acta); $event.stopPropagation()"
+                [disabled]="reenviandoCorreo[acta.id!]"
+                title="Reenviar correo"
+              >
+                <i
+                  class="pi"
+                  [ngClass]="
+                    reenviandoCorreo[acta.id!]
+                      ? 'pi-spin pi-spinner'
+                      : 'pi-send'
+                  "
+                ></i>
+              </button>
+              <button class="btn-icon" title="Ver detalle">
+                <i class="pi pi-eye"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -179,116 +188,163 @@
   <div class="detalle-panel" [class.open]="actaSeleccionada !== null">
     <div class="detalle-overlay" (click)="cerrarDetalle()"></div>
     <div class="detalle-content" *ngIf="actaSeleccionada">
-      <div class="detalle-header" [style.background]="'linear-gradient(135deg, ' + colorTema + ' 0%, ' + colorTema + 'cc 100%)'">
-        <button class="btn-close" (click)="cerrarDetalle()">
-          <i class="fas fa-times"></i>
-        </button>
-        <div class="detalle-titulo">
+      <!-- Header del panel -->
+      <div class="detalle-header">
+        <div class="detalle-title">
           <span class="acta-badge">{{ actaSeleccionada.numeroActa }}</span>
-          <span class="estado-badge" [ngClass]="getEstadoClass(actaSeleccionada.estado)">
-            <i class="fas" [ngClass]="getEstadoIcon(actaSeleccionada.estado)"></i>
+          <span
+            class="estado-badge"
+            [ngClass]="getEstadoClass(actaSeleccionada.estado)"
+          >
+            <i
+              class="pi"
+              [ngClass]="getEstadoIcon(actaSeleccionada.estado)"
+            ></i>
             {{ getEstadoLabel(actaSeleccionada.estado) }}
           </span>
         </div>
+        <button class="btn-close" (click)="cerrarDetalle()">
+          <i class="pi pi-times"></i>
+        </button>
       </div>
 
+      <!-- Body del panel -->
       <div class="detalle-body" *ngIf="!loadingDetalle">
         <!-- Receptor -->
         <div class="detalle-section">
-          <h4><i class="fas fa-user"></i> Receptor</h4>
+          <h4><i class="pi pi-user"></i> Receptor</h4>
           <div class="info-grid">
             <div class="info-item">
-              <span class="info-label">Nombre</span>
-              <span class="info-value">{{ actaSeleccionada.nombreReceptor }}</span>
+              <span class="label">Nombre</span>
+              <span class="value">{{ actaSeleccionada.nombreReceptor }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Cargo</span>
-              <span class="info-value">{{ actaSeleccionada.cargoReceptor }}</span>
+              <span class="label">Cargo</span>
+              <span class="value">{{ actaSeleccionada.cargoReceptor }}</span>
             </div>
             <div class="info-item" *ngIf="actaSeleccionada.areaReceptor">
-              <span class="info-label">Área</span>
-              <span class="info-value">{{ actaSeleccionada.areaReceptor }}</span>
+              <span class="label">Área</span>
+              <span class="value">{{ actaSeleccionada.areaReceptor }}</span>
             </div>
-            <div class="info-item">
-              <span class="info-label">Correo</span>
-              <span class="info-value email">{{ actaSeleccionada.correoReceptor }}</span>
+            <div class="info-item full">
+              <span class="label">Correo</span>
+              <span class="value email">{{
+                actaSeleccionada.correoReceptor
+              }}</span>
             </div>
           </div>
         </div>
 
         <!-- Fechas -->
         <div class="detalle-section">
-          <h4><i class="fas fa-calendar"></i> Fechas</h4>
+          <h4><i class="pi pi-calendar"></i> Fechas</h4>
           <div class="info-grid">
             <div class="info-item">
-              <span class="info-label">Fecha Entrega</span>
-              <span class="info-value">{{ formatDate(actaSeleccionada.fechaEntrega) }}</span>
+              <span class="label">Entrega</span>
+              <span class="value">{{
+                formatDate(actaSeleccionada.fechaEntrega)
+              }}</span>
             </div>
             <div class="info-item" *ngIf="actaSeleccionada.fechaFirma">
-              <span class="info-label">Fecha Firma</span>
-              <span class="info-value">{{ formatDate(actaSeleccionada.fechaFirma) }}</span>
+              <span class="label">Firma</span>
+              <span class="value">{{
+                formatDate(actaSeleccionada.fechaFirma)
+              }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Artículos entregados -->
+        <!-- Artículos -->
         <div class="detalle-section">
-          <h4><i class="fas fa-boxes"></i> Artículos Entregados ({{ actaSeleccionada.detalles?.length || 0 }})</h4>
-          <div class="articulos-lista">
-            <div class="articulo-item" *ngFor="let detalle of actaSeleccionada.detalles">
+          <h4>
+            <i class="pi pi-box"></i> Artículos ({{
+              actaSeleccionada.detalles?.length || 0
+            }})
+          </h4>
+          <div class="articulos-list">
+            <div
+              class="articulo-row"
+              *ngFor="let detalle of actaSeleccionada.detalles"
+            >
               <div class="articulo-icon">
-                <i class="fas" [ngClass]="getCategoriaIcon(detalle.consumible?.categoria)"></i>
+                <i
+                  class="pi"
+                  [ngClass]="getCategoriaIcon(detalle.consumible?.categoria)"
+                ></i>
               </div>
               <div class="articulo-info">
-                <strong>{{ detalle.consumible?.nombre || 'Artículo' }}</strong>
-                <span class="articulo-cantidad">
-                  <i class="fas fa-cubes"></i> {{ detalle.cantidad }} {{ detalle.unidadMedida }}s
-                </span>
-                <span class="articulo-obs" *ngIf="detalle.observaciones">
-                  {{ detalle.observaciones }}
-                </span>
+                <strong>{{ detalle.consumible?.nombre || "Artículo" }}</strong>
+                <span>{{ detalle.cantidad }} {{ detalle.unidadMedida }}</span>
               </div>
+              <span class="articulo-obs" *ngIf="detalle.observaciones">{{
+                detalle.observaciones
+              }}</span>
             </div>
           </div>
         </div>
 
         <!-- Observaciones -->
         <div class="detalle-section" *ngIf="actaSeleccionada.observaciones">
-          <h4><i class="fas fa-comment"></i> Observaciones</h4>
-          <p class="observaciones-text">{{ actaSeleccionada.observaciones }}</p>
+          <h4><i class="pi pi-comment"></i> Observaciones</h4>
+          <p class="obs-text">{{ actaSeleccionada.observaciones }}</p>
         </div>
 
-        <!-- Motivo de rechazo -->
-        <div class="detalle-section rechazo" *ngIf="actaSeleccionada.estado === 'rechazada' && actaSeleccionada.motivoRechazo">
-          <h4><i class="fas fa-ban"></i> Motivo de Rechazo</h4>
+        <!-- Rechazo -->
+        <div
+          class="detalle-section rechazo"
+          *ngIf="
+            actaSeleccionada.estado === 'rechazada' &&
+            actaSeleccionada.motivoRechazo
+          "
+        >
+          <h4><i class="pi pi-ban"></i> Motivo de Rechazo</h4>
           <p class="rechazo-text">{{ actaSeleccionada.motivoRechazo }}</p>
         </div>
 
         <!-- Firma -->
-        <div class="detalle-section firma" *ngIf="actaSeleccionada.estado === 'firmada' && actaSeleccionada.firmaReceptor">
-          <h4><i class="fas fa-signature"></i> Firma del Receptor</h4>
+        <div
+          class="detalle-section"
+          *ngIf="
+            actaSeleccionada.estado === 'firmada' &&
+            actaSeleccionada.firmaReceptor
+          "
+        >
+          <h4><i class="pi pi-pencil"></i> Firma</h4>
           <div class="firma-preview">
-            <img [src]="actaSeleccionada.firmaReceptor" alt="Firma del receptor" />
+            <img [src]="actaSeleccionada.firmaReceptor" alt="Firma" />
           </div>
         </div>
       </div>
 
-      <!-- Loading detalle -->
+      <!-- Loading -->
       <div class="detalle-loading" *ngIf="loadingDetalle">
         <div class="spinner"></div>
-        <p>Cargando detalle...</p>
+        <span>Cargando...</span>
       </div>
 
-      <!-- Acciones -->
-      <div class="detalle-actions" *ngIf="!loadingDetalle">
+      <!-- Footer acciones -->
+      <div
+        class="detalle-footer"
+        *ngIf="!loadingDetalle && actaSeleccionada.estado === 'pendiente_firma'"
+      >
         <button
-          class="btn btn-secondary"
-          *ngIf="actaSeleccionada.estado === 'pendiente_firma'"
+          class="btn btn-accent btn-compact"
           (click)="reenviarCorreo(actaSeleccionada)"
           [disabled]="reenviandoCorreo[actaSeleccionada.id!]"
         >
-          <i class="fas" [ngClass]="reenviandoCorreo[actaSeleccionada.id!] ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
-          {{ reenviandoCorreo[actaSeleccionada.id!] ? 'Enviando...' : 'Reenviar Correo' }}
+          <i
+            class="pi"
+            [ngClass]="
+              reenviandoCorreo[actaSeleccionada.id!]
+                ? 'pi-spin pi-spinner'
+                : 'pi-send'
+            "
+          ></i>
+          {{
+            reenviandoCorreo[actaSeleccionada.id!]
+              ? "Enviando..."
+              : "Reenviar Correo"
+          }}
         </button>
       </div>
     </div>

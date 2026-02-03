@@ -1,26 +1,53 @@
 <app-navbar></app-navbar>
 
 <div class="mobiliario-container">
-  <div class="form-wrapper">
-    <!-- Header -->
-    <header class="page-header">
-      <div class="header-content">
-        <button class="btn-back" (click)="cancelar()" aria-label="Volver">
-          <i class="pi pi-arrow-left"></i>
-        </button>
-        <div class="header-info">
-          <div class="header-badge">
-            <i class="pi pi-building"></i>
-            <span>Mobiliario</span>
-          </div>
-          <h1>Registrar Mobiliario</h1>
-          <p class="subtitle">Agregue un nuevo tipo de mobiliario al inventario con su stock inicial</p>
+  <!-- Header Compacto -->
+  <header class="page-header">
+    <div class="header-content">
+      <button class="btn-back" (click)="cancelar()" aria-label="Volver">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div class="header-info">
+        <div class="header-badge">
+          <i class="pi pi-building"></i>
+          <span>Mobiliario</span>
         </div>
+        <h1>Registrar Mobiliario</h1>
+        <p class="subtitle">
+          Agregue un nuevo tipo de mobiliario al inventario con su stock inicial
+        </p>
       </div>
-    </header>
+    </div>
 
-    <form [formGroup]="mobiliarioForm" (ngSubmit)="onSubmit()">
-      <!-- Sección: Información Básica -->
+    <!-- Botones en el header para ahorrar espacio -->
+    <div class="header-actions">
+      <button type="button" class="btn btn-secondary" (click)="cancelar()">
+        <i class="pi pi-times"></i> Cancelar
+      </button>
+      <button
+        type="submit"
+        form="mobiliarioForm"
+        class="btn btn-accent"
+        [disabled]="loading || mobiliarioForm.invalid"
+      >
+        <i
+          class="pi"
+          [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-save'"
+        ></i>
+        {{ loading ? "Guardando..." : "Guardar" }}
+      </button>
+    </div>
+  </header>
+
+  <form
+    [formGroup]="mobiliarioForm"
+    (ngSubmit)="onSubmit()"
+    id="mobiliarioForm"
+    class="form-grid"
+  >
+    <!-- COLUMNA IZQUIERDA -->
+    <div class="form-column">
+      <!-- Información Básica -->
       <section class="section-card">
         <div class="section-card-header">
           <h3><i class="pi pi-info-circle"></i> Información Básica</h3>
@@ -28,14 +55,12 @@
         <div class="section-card-body">
           <div class="form-row">
             <div class="form-group">
-              <label for="nombre">
-                Nombre del Mobiliario <span class="required">*</span>
-              </label>
+              <label for="nombre">Nombre <span class="required">*</span></label>
               <input
                 type="text"
                 id="nombre"
                 formControlName="nombre"
-                placeholder="Ej: Silla ergonómica de oficina"
+                placeholder="Ej: Silla ergonómica"
                 class="custom-input"
                 [class.invalid]="isFieldInvalid('nombre')"
               />
@@ -46,9 +71,9 @@
             </div>
 
             <div class="form-group">
-              <label for="categoria">
-                Categoría <span class="required">*</span>
-              </label>
+              <label for="categoria"
+                >Categoría <span class="required">*</span></label
+              >
               <div class="custom-select-wrapper">
                 <select
                   id="categoria"
@@ -56,54 +81,50 @@
                   class="custom-select"
                   [class.invalid]="isFieldInvalid('categoria')"
                 >
-                  <option value="">Seleccione una categoría</option>
+                  <option value="">Seleccione</option>
                   <option *ngFor="let cat of categorias" [value]="cat.value">
                     {{ cat.label }}
                   </option>
                 </select>
                 <i class="pi pi-chevron-down select-arrow"></i>
               </div>
-              <span class="error-message" *ngIf="isFieldInvalid('categoria')">
-                <i class="pi pi-exclamation-circle"></i>
-                {{ getFieldError("categoria") }}
-              </span>
             </div>
           </div>
 
-          <div class="form-row full-width">
-            <div class="form-group">
-              <label for="descripcion">Descripción</label>
-              <textarea
-                id="descripcion"
-                formControlName="descripcion"
-                rows="2"
-                placeholder="Descripción detallada del mobiliario (opcional)"
-                class="custom-textarea"
-              ></textarea>
-            </div>
+          <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <textarea
+              id="descripcion"
+              formControlName="descripcion"
+              rows="2"
+              placeholder="Descripción detallada (opcional)"
+              class="custom-textarea"
+            ></textarea>
           </div>
         </div>
       </section>
 
-      <!-- Sección: Stock y Unidades -->
+      <!-- Stock y Ubicación COMBINADOS -->
       <section class="section-card">
         <div class="section-card-header">
-          <h3><i class="pi pi-chart-bar"></i> Control de Stock</h3>
+          <h3><i class="pi pi-chart-bar"></i> Stock y Ubicación</h3>
         </div>
         <div class="section-card-body">
-          <div class="form-row two-columns">
+          <div class="form-row four-columns">
             <div class="form-group">
-              <label for="unidadMedida">
-                Unidad de Medida <span class="required">*</span>
-              </label>
+              <label for="unidadMedida"
+                >Unidad <span class="required">*</span></label
+              >
               <div class="custom-select-wrapper">
                 <select
                   id="unidadMedida"
                   formControlName="unidadMedida"
                   class="custom-select"
-                  [class.invalid]="isFieldInvalid('unidadMedida')"
                 >
-                  <option *ngFor="let unidad of unidadesMedida" [value]="unidad.value">
+                  <option
+                    *ngFor="let unidad of unidadesMedida"
+                    [value]="unidad.value"
+                  >
                     {{ unidad.label }}
                   </option>
                 </select>
@@ -112,9 +133,9 @@
             </div>
 
             <div class="form-group">
-              <label for="stockActual">
-                Stock Inicial <span class="required">*</span>
-              </label>
+              <label for="stockActual"
+                >Stock <span class="required">*</span></label
+              >
               <input
                 type="number"
                 id="stockActual"
@@ -123,57 +144,10 @@
                 class="custom-input"
                 [class.invalid]="isFieldInvalid('stockActual')"
               />
-              <span class="error-message" *ngIf="isFieldInvalid('stockActual')">
-                <i class="pi pi-exclamation-circle"></i>
-                {{ getFieldError("stockActual") }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Sección: Ubicación y Proveedor -->
-      <section class="section-card">
-        <div class="section-card-header">
-          <h3><i class="pi pi-map-marker"></i> Ubicación y Proveedor</h3>
-        </div>
-        <div class="section-card-body">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="ubicacionAlmacen">
-                <i class="pi pi-map-marker label-icon"></i>
-                Ubicación en Almacén
-              </label>
-              <input
-                type="text"
-                id="ubicacionAlmacen"
-                formControlName="ubicacionAlmacen"
-                placeholder="Ej: Bodega 2, Pasillo A, Estante 3"
-                class="custom-input"
-              />
             </div>
 
             <div class="form-group">
-              <label for="proveedor">
-                <i class="pi pi-truck label-icon"></i>
-                Proveedor
-              </label>
-              <input
-                type="text"
-                id="proveedor"
-                formControlName="proveedor"
-                placeholder="Nombre del proveedor"
-                class="custom-input"
-              />
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="precioUnitario">
-                <i class="pi pi-dollar label-icon"></i>
-                Precio Unitario
-              </label>
+              <label for="precioUnitario">Precio</label>
               <input
                 type="number"
                 id="precioUnitario"
@@ -183,36 +157,54 @@
                 placeholder="0.00"
                 class="custom-input"
               />
-              <span class="helper-text">Precio por unidad (opcional)</span>
             </div>
+
+            <div class="form-group">
+              <label for="ubicacionAlmacen">Ubicación</label>
+              <input
+                type="text"
+                id="ubicacionAlmacen"
+                formControlName="ubicacionAlmacen"
+                placeholder="Bodega, Estante..."
+                class="custom-input"
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="proveedor">Proveedor</label>
+            <input
+              type="text"
+              id="proveedor"
+              formControlName="proveedor"
+              placeholder="Nombre del proveedor"
+              class="custom-input"
+            />
           </div>
         </div>
       </section>
+    </div>
 
-      <!-- Sección: Imagen -->
-      <section class="section-card">
+    <!-- COLUMNA DERECHA -->
+    <div class="form-column">
+      <!-- Imagen -->
+      <section class="section-card section-image">
         <div class="section-card-header">
-          <h3><i class="pi pi-camera"></i> Imagen (Opcional)</h3>
+          <h3><i class="pi pi-camera"></i> Imagen</h3>
         </div>
         <div class="section-card-body">
           <div class="image-upload-container">
-            <!-- Preview de imagen -->
             <div class="image-preview" *ngIf="imagenPreview">
-              <img [src]="imagenPreview" alt="Preview del mobiliario" />
+              <img [src]="imagenPreview" alt="Preview" />
               <button
                 type="button"
                 class="btn-remove-image"
                 (click)="removeImage()"
-                aria-label="Eliminar imagen"
               >
                 <i class="pi pi-times"></i>
               </button>
-              <div class="image-overlay">
-                <span>Click para cambiar</span>
-              </div>
             </div>
 
-            <!-- Área de carga -->
             <label class="upload-area" for="imagen" *ngIf="!imagenPreview">
               <input
                 type="file"
@@ -222,53 +214,32 @@
                 hidden
               />
               <div class="upload-content">
-                <div class="upload-icon">
-                  <i class="pi pi-cloud-upload"></i>
-                </div>
-                <span class="upload-text">Haga clic o arrastre una imagen</span>
-                <span class="upload-hint">JPG, PNG, GIF (máx. 5MB)</span>
+                <i class="pi pi-cloud-upload"></i>
+                <span>Click para subir imagen</span>
+                <span class="upload-hint">JPG, PNG (máx. 5MB)</span>
               </div>
             </label>
           </div>
         </div>
       </section>
 
-      <!-- Sección: Observaciones -->
+      <!-- Observaciones -->
       <section class="section-card">
         <div class="section-card-header">
           <h3><i class="pi pi-bookmark"></i> Observaciones</h3>
         </div>
         <div class="section-card-body">
-          <div class="form-group">
-            <label for="observaciones">Notas adicionales</label>
+          <div class="form-group no-margin">
             <textarea
               id="observaciones"
               formControlName="observaciones"
               rows="3"
-              placeholder="Notas adicionales sobre el mobiliario..."
+              placeholder="Notas adicionales..."
               class="custom-textarea"
             ></textarea>
           </div>
         </div>
       </section>
-
-      <!-- Botones de acción -->
-      <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="cancelar()">
-          <i class="pi pi-times"></i> Cancelar
-        </button>
-        <button
-          type="submit"
-          class="btn btn-accent"
-          [disabled]="loading || mobiliarioForm.invalid"
-        >
-          <i
-            class="pi"
-            [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-save'"
-          ></i>
-          {{ loading ? "Guardando..." : "Guardar Mobiliario" }}
-        </button>
-      </div>
-    </form>
-  </div>
+    </div>
+  </form>
 </div>

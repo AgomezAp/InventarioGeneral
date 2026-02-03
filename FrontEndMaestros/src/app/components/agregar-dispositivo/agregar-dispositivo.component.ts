@@ -26,8 +26,12 @@ export class AgregarDispositivoComponent {
     condicion: 'bueno',
     ubicacion: 'Almacén Principal',
     observaciones: '',
-  };
-  hoveredCategoria: string = '';
+  };  
+  // Control de tipo de registro
+  tipoRegistro: 'individual' | 'stock' = 'individual';
+  cantidad: number = 1;
+  stockMinimo: number = 0;
+    hoveredCategoria: string = '';
   fotos: File[] = [];
   fotosPreview: string[] = [];
   loading = false;
@@ -104,6 +108,26 @@ export class AgregarDispositivoComponent {
     );
   }
 
+  // Categorías que permiten registro por stock/cantidad
+  permiteStock(): boolean {
+    return (
+      this.dispositivo.categoria === 'cargador' ||
+      this.dispositivo.categoria === 'accesorio' ||
+      this.dispositivo.categoria === 'otro'
+    );
+  }
+
+  // Al cambiar categoría, ajustar tipo de registro automáticamente
+  onCategoriaChange(): void {
+    if (this.permiteStock()) {
+      // Sugerir stock para accesorios/cargadores
+      this.tipoRegistro = 'stock';
+    } else {
+      // Forzar individual para dispositivos únicos
+      this.tipoRegistro = 'individual';
+    }
+  }
+
   validarFormulario(): boolean {
     if (!this.dispositivo.nombre?.trim()) {
       this.errorMessage = 'El nombre es requerido';
@@ -134,6 +158,13 @@ export class AgregarDispositivoComponent {
         formData.append(key, value);
       }
     });
+
+    // Agregar tipo de registro y cantidad
+    formData.append('tipoRegistro', this.tipoRegistro);
+    if (this.tipoRegistro === 'stock') {
+      formData.append('cantidad', this.cantidad.toString());
+      formData.append('stockMinimo', this.stockMinimo.toString());
+    }
 
     // Agregar usuario
     formData.append('Uid', localStorage.getItem('userId') || '');

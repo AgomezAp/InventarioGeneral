@@ -1,196 +1,433 @@
+<app-navbar></app-navbar>
+
 <div class="crear-devolucion-container">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <h1><i class="fas fa-undo-alt"></i> Nueva Acta de Devolución</h1>
-      <p>Registre la devolución de equipos</p>
-    </div>
-    <button class="btn-secondary" (click)="cancelar()">
-      <i class="fas fa-arrow-left"></i> Volver
-    </button>
-  </div>
-
-  <!-- Mensajes -->
-  <div *ngIf="errorMessage" class="alert alert-error">
-    <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
-  </div>
-
-  <div *ngIf="successMessage" class="alert alert-success">
-    <i class="fas fa-check-circle"></i> {{ successMessage }}
-  </div>
-
-  <!-- Formulario -->
-  <div class="form-container" *ngIf="!actaCreada">
-    <div class="form-grid">
-      
-      <!-- Sección: Quien devuelve -->
-      <div class="form-section">
-        <h3><i class="fas fa-user-minus"></i> Quien Devuelve (Empleado)</h3>
-        <div class="form-group">
-          <label>Nombre completo *</label>
-          <input type="text" [(ngModel)]="entrega.nombre" placeholder="Nombre del empleado que devuelve">
+  <div class="form-wrapper">
+    <!-- Header Compacto -->
+    <header class="page-header">
+      <div class="header-content">
+        <button class="btn-back" (click)="cancelar()" aria-label="Volver">
+          <i class="pi pi-arrow-left"></i>
+        </button>
+        <div class="header-info">
+          <h1><i class="pi pi-replay"></i> Nueva Acta de Devolución</h1>
         </div>
-        <div class="form-group">
-          <label>Cargo *</label>
-          <input type="text" [(ngModel)]="entrega.cargo" placeholder="Cargo del empleado">
-        </div>
-        <div class="form-group">
-          <label>Correo electrónico * (para firma)</label>
-          <input type="email" [(ngModel)]="entrega.correo" placeholder="Correo para enviar solicitud de firma">
+        <div class="header-steps">
+          <span
+            class="step"
+            [class.completed]="entrega.nombre && entrega.correo"
+          >
+            <i class="pi pi-user"></i>
+          </span>
+          <span class="step" [class.completed]="receptor.nombre">
+            <i class="pi pi-user-plus"></i>
+          </span>
+          <span
+            class="step"
+            [class.completed]="dispositivosSeleccionados.length > 0"
+          >
+            <i class="pi pi-mobile"></i>
+          </span>
+          <span class="step" [class.completed]="firmaReceptorData">
+            <i class="pi pi-pencil"></i>
+          </span>
         </div>
       </div>
+    </header>
 
-      <!-- Sección: Quien recibe -->
-      <div class="form-section">
-        <h3><i class="fas fa-user-plus"></i> Quien Recibe (Sistemas)</h3>
-        <div class="form-group">
-          <label>Nombre completo *</label>
-          <input type="text" [(ngModel)]="receptor.nombre" placeholder="Nombre de quien recibe">
-        </div>
-        <div class="form-group">
-          <label>Cargo</label>
-          <input type="text" [(ngModel)]="receptor.cargo" placeholder="Cargo">
-        </div>
-        <div class="form-group">
-          <label>Correo electrónico (opcional)</label>
-          <input type="email" [(ngModel)]="receptor.correo" placeholder="Correo para enviar copia">
-        </div>
-        
-        <!-- Firma del receptor (sistemas) -->
-        <div class="form-group firma-group">
-          <label>Firma de quien recibe *</label>
-          <div class="signature-container">
-            <canvas #signatureCanvasReceptor class="signature-canvas"></canvas>
-          </div>
-          <button type="button" class="btn-limpiar-firma" (click)="limpiarFirmaReceptor()">
-            <i class="fas fa-eraser"></i> Limpiar firma
-          </button>
-        </div>
-      </div>
+    <!-- Alertas -->
+    <div class="alert alert-error" *ngIf="errorMessage">
+      <i class="pi pi-exclamation-circle"></i>
+      <span>{{ errorMessage }}</span>
+      <button class="alert-close" (click)="errorMessage = ''">
+        <i class="pi pi-times"></i>
+      </button>
     </div>
 
-    <!-- Sección: Seleccionar dispositivos -->
-    <div class="form-section full-width">
-      <h3><i class="fas fa-mobile-alt"></i> Dispositivos a Devolver</h3>
-      
-      <div class="dispositivos-grid">
-        <!-- Lista de dispositivos entregados (disponibles para devolver) -->
-        <div class="dispositivos-disponibles">
-          <h4>Dispositivos Entregados</h4>
-          <div *ngIf="loadingDispositivos" class="loading-small">
-            <i class="fas fa-spinner fa-spin"></i> Cargando...
-          </div>
-          <div *ngIf="!loadingDispositivos && dispositivosEntregados.length === 0" class="empty-message">
-            No hay dispositivos entregados disponibles para devolver
-          </div>
-          <div class="dispositivos-list">
-            <div *ngFor="let disp of dispositivosEntregados" 
-                 class="dispositivo-item disponible"
-                 (click)="agregarDispositivo(disp)">
-              <i class="fas" [ngClass]="getCategoriaIcon(disp.categoria)"></i>
-              <div class="dispositivo-info">
-                <strong>{{ disp.nombre }}</strong>
-                <span>{{ disp.marca }} {{ disp.modelo }}</span>
-                <span class="serial">S/N: {{ disp.serial || 'N/A' }}</span>
-                <span *ngIf="disp.imei" class="imei">IMEI: {{ disp.imei }}</span>
-              </div>
-              <i class="fas fa-plus add-icon"></i>
+    <div class="alert alert-success" *ngIf="successMessage && !actaCreada">
+      <i class="pi pi-check-circle"></i>
+      <span>{{ successMessage }}</span>
+      <button class="alert-close" (click)="successMessage = ''">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <!-- Formulario Principal -->
+    <div class="form-content" *ngIf="!actaCreada">
+      <div class="form-grid-main">
+        <!-- COLUMNA IZQUIERDA -->
+        <div class="form-column">
+          <!-- Quien Devuelve -->
+          <section class="section-card section-compact">
+            <div class="section-header-inline">
+              <i class="pi pi-user section-icon-sm devuelve"></i>
+              <h3>Quien Devuelve</h3>
             </div>
-          </div>
-        </div>
 
-        <!-- Dispositivos seleccionados para devolución -->
-        <div class="dispositivos-seleccionados">
-          <h4>Seleccionados para Devolución ({{ dispositivosSeleccionados.length }})</h4>
-          <div *ngIf="dispositivosSeleccionados.length === 0" class="empty-message">
-            Haga clic en un dispositivo para agregarlo
-          </div>
-          <div class="seleccionados-list">
-            <div *ngFor="let item of dispositivosSeleccionados; let i = index" class="item-seleccionado">
-              <div class="item-header">
-                <div class="item-info">
-                  <i class="fas" [ngClass]="getCategoriaIcon(item.dispositivo.categoria)"></i>
-                  <div>
-                    <strong>{{ item.dispositivo.nombre }}</strong>
-                    <span>{{ item.dispositivo.marca }} {{ item.dispositivo.modelo }}</span>
-                    <span *ngIf="item.dispositivo.imei" class="imei">IMEI: {{ item.dispositivo.imei }}</span>
-                  </div>
-                </div>
-                <button class="btn-remove" (click)="quitarDispositivo(i)" title="Quitar">
-                  <i class="fas fa-times"></i>
+            <div class="form-group-compact">
+              <label>Nombre <span class="required">*</span></label>
+              <input
+                type="text"
+                [(ngModel)]="entrega.nombre"
+                placeholder="Nombre del empleado"
+                class="input-compact"
+              />
+            </div>
+
+            <div class="form-row-compact">
+              <div class="form-group-compact">
+                <label>Cargo <span class="required">*</span></label>
+                <input
+                  type="text"
+                  [(ngModel)]="entrega.cargo"
+                  placeholder="Cargo"
+                  class="input-compact"
+                />
+              </div>
+              <div class="form-group-compact">
+                <label>Correo <span class="required">*</span></label>
+                <input
+                  type="email"
+                  [(ngModel)]="entrega.correo"
+                  placeholder="correo@ejemplo.com"
+                  class="input-compact"
+                />
+              </div>
+            </div>
+
+            <div class="field-hint">
+              <i class="pi pi-info-circle"></i>
+              <span>Se enviará un enlace para firmar digitalmente</span>
+            </div>
+          </section>
+
+          <!-- Quien Recibe -->
+          <section class="section-card section-compact">
+            <div class="section-header-inline">
+              <i class="pi pi-user-plus section-icon-sm recibe"></i>
+              <h3>Quien Recibe (Sistemas)</h3>
+            </div>
+
+            <div class="form-row-compact">
+              <div class="form-group-compact">
+                <label>Nombre <span class="required">*</span></label>
+                <input
+                  type="text"
+                  [(ngModel)]="receptor.nombre"
+                  placeholder="Nombre"
+                  class="input-compact"
+                />
+              </div>
+              <div class="form-group-compact">
+                <label>Cargo</label>
+                <input
+                  type="text"
+                  [(ngModel)]="receptor.cargo"
+                  placeholder="Cargo"
+                  class="input-compact"
+                />
+              </div>
+            </div>
+
+            <div class="form-group-compact">
+              <label>Correo (opcional)</label>
+              <input
+                type="email"
+                [(ngModel)]="receptor.correo"
+                placeholder="Para enviar copia"
+                class="input-compact"
+              />
+            </div>
+
+            <!-- Firma del receptor -->
+            <div class="firma-section">
+              <label class="firma-label">
+                <i class="pi pi-pencil"></i>
+                Firma de quien recibe <span class="required">*</span>
+              </label>
+              <div class="signature-wrapper">
+                <canvas
+                  #signatureCanvasReceptor
+                  class="signature-canvas"
+                ></canvas>
+                <button
+                  type="button"
+                  class="btn-limpiar-firma"
+                  (click)="limpiarFirmaReceptor()"
+                >
+                  <i class="pi pi-trash"></i>
                 </button>
               </div>
-              
-              <div class="item-details">
-                <div class="detail-row">
-                  <label>Estado de devolución:</label>
-                  <select [(ngModel)]="item.estadoDevolucion">
-                    <option *ngFor="let estado of estadosDevolucion" [value]="estado.value">
-                      {{ estado.label }}
-                    </option>
-                  </select>
+            </div>
+          </section>
+
+          <!-- Observaciones -->
+          <section class="section-card section-compact">
+            <div class="section-header-inline">
+              <i class="pi pi-comment section-icon-sm"></i>
+              <h3>Observaciones</h3>
+            </div>
+            <textarea
+              [(ngModel)]="observaciones"
+              rows="3"
+              placeholder="Observaciones generales sobre la devolución..."
+              class="textarea-compact"
+            ></textarea>
+          </section>
+        </div>
+
+        <!-- COLUMNA DERECHA - Dispositivos -->
+        <div class="form-column column-devices">
+          <section class="section-card section-compact section-devices">
+            <div class="section-header-inline">
+              <i class="pi pi-mobile section-icon-sm"></i>
+              <h3>Dispositivos a Devolver</h3>
+              <span
+                class="badge-count"
+                *ngIf="dispositivosSeleccionados.length > 0"
+              >
+                {{ dispositivosSeleccionados.length }}
+              </span>
+            </div>
+
+            <!-- Disponibles -->
+            <div class="disponibles-area">
+              <label class="mini-label">Dispositivos entregados:</label>
+
+              <div class="loading-inline" *ngIf="loadingDispositivos">
+                <div class="spinner-sm"></div>
+                <span>Cargando...</span>
+              </div>
+
+              <div
+                class="disponibles-scroll"
+                *ngIf="
+                  !loadingDispositivos && dispositivosEntregados.length > 0
+                "
+              >
+                <div
+                  class="disp-chip"
+                  *ngFor="let disp of dispositivosEntregados"
+                  (click)="agregarDispositivo(disp)"
+                >
+                  <i
+                    class="pi"
+                    [ngClass]="getCategoriaIcon(disp.categoria)"
+                  ></i>
+                  <div class="disp-chip-info">
+                    <span class="disp-chip-name">{{ disp.nombre }}</span>
+                    <span class="disp-chip-detail">{{ disp.marca }}</span>
+                  </div>
+                  <i class="pi pi-plus add-icon"></i>
                 </div>
-                <div class="detail-row">
-                  <label>Condición física:</label>
-                  <select [(ngModel)]="item.condicion">
-                    <option *ngFor="let cond of condiciones" [value]="cond.value">
-                      {{ cond.label }}
-                    </option>
-                  </select>
-                </div>
-                <div class="detail-row">
-                  <label>Observaciones:</label>
-                  <input type="text" [(ngModel)]="item.observaciones" placeholder="Observaciones del dispositivo">
-                </div>
-                
-                <!-- Fotos -->
-                <div class="detail-row fotos-row">
-                  <label>Fotos (opcional):</label>
-                  <div class="fotos-container">
-                    <div *ngFor="let preview of item.fotosPreview; let j = index" class="foto-preview">
-                      <img [src]="preview" alt="Foto">
-                      <button class="btn-remove-foto" (click)="eliminarFoto(i, j)">
-                        <i class="fas fa-times"></i>
-                      </button>
+              </div>
+
+              <div
+                class="empty-mini"
+                *ngIf="
+                  !loadingDispositivos && dispositivosEntregados.length === 0
+                "
+              >
+                <i class="pi pi-inbox"></i>
+                <span>No hay dispositivos para devolver</span>
+              </div>
+            </div>
+
+            <!-- Seleccionados -->
+            <div
+              class="seleccionados-area"
+              *ngIf="dispositivosSeleccionados.length > 0"
+            >
+              <label class="mini-label success">
+                <i class="pi pi-check-circle"></i>
+                Seleccionados ({{ dispositivosSeleccionados.length }}):
+              </label>
+
+              <div class="seleccionados-list">
+                <div
+                  class="disp-card"
+                  *ngFor="let item of dispositivosSeleccionados; let i = index"
+                >
+                  <div class="disp-card-header">
+                    <div class="disp-card-icon">
+                      <i
+                        class="pi"
+                        [ngClass]="getCategoriaIcon(item.dispositivo.categoria)"
+                      ></i>
                     </div>
-                    <label *ngIf="item.fotos.length < 5" class="btn-add-foto">
-                      <i class="fas fa-camera"></i>
-                      <input type="file" accept="image/*" multiple (change)="onFotosSelected($event, i)" hidden>
-                    </label>
+                    <div class="disp-card-title">
+                      <h4>{{ item.dispositivo.nombre }}</h4>
+                      <span
+                        >{{ item.dispositivo.marca }}
+                        {{ item.dispositivo.modelo }}</span
+                      >
+                    </div>
+                    <button
+                      type="button"
+                      class="btn-remove-card"
+                      (click)="quitarDispositivo(i)"
+                    >
+                      <i class="pi pi-times"></i>
+                    </button>
+                  </div>
+
+                  <div
+                    class="disp-card-identifiers"
+                    *ngIf="item.dispositivo.imei || item.dispositivo.serial"
+                  >
+                    <div class="identifier" *ngIf="item.dispositivo.imei">
+                      <i class="pi pi-mobile"></i>
+                      <span>IMEI: {{ item.dispositivo.imei }}</span>
+                    </div>
+                    <div class="identifier" *ngIf="item.dispositivo.serial">
+                      <i class="pi pi-hashtag"></i>
+                      <span>S/N: {{ item.dispositivo.serial }}</span>
+                    </div>
+                  </div>
+
+                  <div class="disp-card-form">
+                    <div class="form-row-device">
+                      <div class="form-field">
+                        <label>Estado devolución</label>
+                        <div class="select-device">
+                          <select [(ngModel)]="item.estadoDevolucion">
+                            <option
+                              *ngFor="let estado of estadosDevolucion"
+                              [value]="estado.value"
+                            >
+                              {{ estado.label }}
+                            </option>
+                          </select>
+                          <i class="pi pi-chevron-down"></i>
+                        </div>
+                      </div>
+                      <div class="form-field">
+                        <label>Condición</label>
+                        <div class="select-device">
+                          <select [(ngModel)]="item.condicion">
+                            <option
+                              *ngFor="let cond of condiciones"
+                              [value]="cond.value"
+                            >
+                              {{ cond.label }}
+                            </option>
+                          </select>
+                          <i class="pi pi-chevron-down"></i>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-field">
+                      <label>Observaciones</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="item.observaciones"
+                        placeholder="Daños, accesorios..."
+                        class="input-device"
+                      />
+                    </div>
+
+                    <div class="fotos-section">
+                      <label class="fotos-upload-btn" [for]="'fotos_' + i">
+                        <i class="pi pi-camera"></i>
+                        <span>Agregar fotos</span>
+                        <input
+                          type="file"
+                          [id]="'fotos_' + i"
+                          accept="image/*"
+                          multiple
+                          (change)="onFotosSelected($event, i)"
+                          hidden
+                        />
+                      </label>
+                      <div
+                        class="fotos-preview-grid"
+                        *ngIf="item.fotosPreview.length > 0"
+                      >
+                        <div
+                          class="foto-preview-item"
+                          *ngFor="
+                            let preview of item.fotosPreview;
+                            let j = index
+                          "
+                        >
+                          <img [src]="preview" alt="Foto" />
+                          <button
+                            type="button"
+                            class="foto-delete"
+                            (click)="eliminarFoto(i, j)"
+                          >
+                            <i class="pi pi-times"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+
+            <!-- Mensaje cuando no hay seleccionados -->
+            <div
+              class="empty-seleccionados"
+              *ngIf="dispositivosSeleccionados.length === 0"
+            >
+              <i class="pi pi-arrow-up"></i>
+              <p>Selecciona dispositivos de la lista superior</p>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="section-footer">
+              <button
+                type="button"
+                class="btn btn-secondary btn-compact"
+                (click)="cancelar()"
+              >
+                <i class="pi pi-times"></i> Cancelar
+              </button>
+              <button
+                type="button"
+                class="btn btn-accent btn-compact"
+                (click)="crearActaDevolucion()"
+                [disabled]="
+                  loading ||
+                  enviandoCorreo ||
+                  dispositivosSeleccionados.length === 0
+                "
+                [class.loading]="loading || enviandoCorreo"
+              >
+                <i
+                  class="pi"
+                  [ngClass]="
+                    loading || enviandoCorreo ? 'pi-spin pi-spinner' : 'pi-send'
+                  "
+                ></i>
+                {{
+                  loading
+                    ? "Creando..."
+                    : enviandoCorreo
+                      ? "Enviando..."
+                      : "Crear y Enviar"
+                }}
+              </button>
+            </div>
+          </section>
         </div>
       </div>
     </div>
 
-    <!-- Observaciones generales -->
-    <div class="form-section full-width">
-      <h3><i class="fas fa-comment-alt"></i> Observaciones Generales</h3>
-      <textarea [(ngModel)]="observaciones" rows="3" placeholder="Observaciones sobre la devolución..."></textarea>
+    <!-- Mensaje de éxito después de crear -->
+    <div class="success-container" *ngIf="actaCreada && successMessage">
+      <div class="success-card">
+        <div class="success-icon">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <h2>¡Acta Creada Exitosamente!</h2>
+        <p>{{ successMessage }}</p>
+        <div class="redirect-info">
+          <div class="spinner-sm"></div>
+          <span>Redirigiendo en 3 segundos...</span>
+        </div>
+      </div>
     </div>
-
-    <!-- Botones de acción -->
-    <div class="form-actions">
-      <button class="btn-secondary" (click)="cancelar()">
-        <i class="fas fa-times"></i> Cancelar
-      </button>
-      <button class="btn-primary" (click)="crearActaDevolucion()" [disabled]="loading || enviandoCorreo">
-        <i class="fas" [ngClass]="loading ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
-        {{ loading ? 'Creando...' : (enviandoCorreo ? 'Enviando correo...' : 'Crear y Enviar para Firma') }}
-      </button>
-    </div>
-  </div>
-
-  <!-- Mensaje de éxito después de crear -->
-  <div *ngIf="actaCreada && successMessage" class="success-container">
-    <div class="success-icon">
-      <i class="fas fa-check-circle"></i>
-    </div>
-    <h2>¡Acta Creada!</h2>
-    <p>{{ successMessage }}</p>
-    <p class="redirect-message">Redirigiendo en 3 segundos...</p>
   </div>
 </div>

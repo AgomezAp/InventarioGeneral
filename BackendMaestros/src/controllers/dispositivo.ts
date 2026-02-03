@@ -96,6 +96,9 @@ export const obtenerDispositivoPorId = async (req: Request, res: Response): Prom
 
 /**
  * Registrar nuevo dispositivo en el inventario
+ * Soporta dos modos:
+ * - individual: Dispositivos únicos con serial (celulares, tablets, computadores)
+ * - stock: Dispositivos por cantidad (cargadores, accesorios, cables)
  */
 export const registrarDispositivo = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -111,11 +114,16 @@ export const registrarDispositivo = async (req: Request, res: Response): Promise
       condicion,
       ubicacion,
       observaciones,
-      Uid
+      Uid,
+      tipoRegistro, // 'individual' o 'stock'
+      cantidad, // Para tipo 'stock'
+      stockMinimo
     } = req.body;
     
-    // Verificar serial único si se proporciona
-    if (serial) {
+    const tipo = tipoRegistro || 'individual';
+    
+    // Verificar serial único si se proporciona y es tipo individual
+    if (serial && tipo === 'individual') {
       const existeSerial = await Dispositivo.findOne({ where: { serial } });
       if (existeSerial) {
         res.status(400).json({ msg: 'Ya existe un dispositivo con ese número de serie' });
@@ -131,50 +139,116 @@ export const registrarDispositivo = async (req: Request, res: Response): Promise
       );
     }
     
-    // Crear dispositivo
-    const dispositivo = await Dispositivo.create({
-      nombre,
-      categoria,
-      marca,
-      modelo,
-      serial,
-      imei,
-      color,
-      descripcion,
-      estado: 'disponible',
-      condicion: condicion || 'bueno',
-      ubicacion: ubicacion || 'Almacén Principal',
-      fotos: JSON.stringify(fotos),
-      fechaIngreso: new Date(),
-      observaciones,
-      Uid
-    });
-    
-    // Registrar movimiento de ingreso
-    await MovimientoDispositivo.create({
-      dispositivoId: dispositivo.id,
-      tipoMovimiento: 'ingreso',
-      estadoAnterior: null,
-      estadoNuevo: 'disponible',
-      descripcion: `Dispositivo ${nombre} ingresado al inventario`,
-      fecha: new Date(),
-      Uid
-    });
-    
-    // Emitir evento WebSocket
-    try {
-      const io = getIO();
-      io.to('inventario').emit('dispositivo:created', { dispositivo });
-    } catch (e) {
-      console.log('WebSocket no disponible');
+    if (tipo === 'stock') {
+      // Registrar dispositivo de stock (cargadores, accesorios)
+      const cantidadStock = parseInt(cantidad) || 1;
+      
+      const dispositivo = await Dispositivo.create({
+        nombre,
+        categoria,
+        marca,
+        modelo,
+        serial: null, // No se usa serial para items de stock
+        imei: null,
+        color,
+        descripcion,
+        estado: 'disponible',
+        condicion: condicion || 'nuevo',
+        ubicacion: ubicacion || 'Almacén Principal',
+        fotos: JSON.stringify(fotos),
+        fechaIngreso: new Date(),
+        observaciones,
+        Uid,
+        tipoRegistro: 'stock',
+        stockActual: cantidadStock,
+        stockMinimo: stockMinimo || 0
+      });
+      
+      // Registrar movimiento de ingreso
+      await MovimientoDispositivo.create({
+        dispositivoId: dispositivo.id,
+        tipoMovimiento: 'ingreso',
+        estadoAnterior: null,
+        estadoNuevo: 'disponible',
+        descripcion: `Ingreso inicial de ${cantidadStock} unidades de ${nombre}`,
+        fecha: new Date(),
+        Uid
+      });
+      
+      // Emitir evento WebSocket
+      try {
+        const io = getIO();
+        io.to('inventario').emit('dispositivo:created', { dispositivo });
+      } catch (e) {
+        console.log('WebSocket no disponible');
+      }
+      
+      res.status(201).json({
+        msg: `Se registraron ${cantidadStock} unidades exitosamente`,
+        dispositivo
+      });
+      
+    } else {
+      // Registrar dispositivo individual (comportamiento original)
+      const dispositivo = await Dispositivo.create({
+        nombre,
+        categoria,
+        marca,
+        modelo,
+        serial,
+        imei,
+        color,
+        descripcion,
+        estado: 'disponible',
+        condicion: condicion || 'bueno',
+        ubicacion: ubicacion || 'Almacén Principal',
+        fotos: JSON.stringify(fotos),
+        fechaIngreso: new Date(),
+        observaciones,
+        Uid,
+        tipoRegistro: 'individual',
+        stockActual: 1,
+        stockMinimo: 0
+      });
+      
+      // Registrar movimiento de ingreso
+      await MovimientoDispositivo.create({
+        dispositivoId: dispositivo.id,
+        tipoMovimiento: 'ingreso',
+        estadoAnterior: null,
+        estadoNuevo: 'disponible',
+        descripcion: `Dispositivo ${nombre} ingresado al inventario`,
+        fecha: new Date(),
+        Uid
+      });
+      
+      // Emitir evento WebSocket
+      try {
+        const io = getIO();
+        io.to('inventario').emit('dispositivo:created', { dispositivo });
+      } catch (e) {
+        console.log('WebSocket no disponible');
+      }
+      
+      res.status(201).json({
+        msg: 'Dispositivo registrado exitosamente',
+        dispositivo
+      });
     }
     
-    res.status(201).json({
-      msg: 'Dispositivo registrado exitosamente',
-      dispositivo
-    });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error al registrar dispositivo:', error);
+    
+    // Manejo específico de errores de constraint unique
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const field = error.errors?.[0]?.path || 'campo';
+      res.status(400).json({ 
+        msg: `Ya existe un dispositivo con ese ${field}. Por favor verifica los datos.`,
+        error: 'duplicate_entry'
+      });
+      return;
+    }
+    
     res.status(500).json({ msg: 'Error al registrar el dispositivo' });
   }
 };
@@ -400,3 +474,117 @@ export const darDeBajaDispositivo = async (req: Request, res: Response): Promise
     res.status(500).json({ msg: 'Error al dar de baja el dispositivo' });
   }
 };
+
+/**
+ * Agregar stock a dispositivos tipo 'stock' (cargadores, accesorios)
+ */
+export const agregarStockDispositivo = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { cantidad, motivo, descripcion, Uid } = req.body;
+    
+    const dispositivo = await Dispositivo.findByPk(Number(id));
+    
+    if (!dispositivo) {
+      res.status(404).json({ msg: 'Dispositivo no encontrado' });
+      return;
+    }
+    
+    if (dispositivo.tipoRegistro !== 'stock') {
+      res.status(400).json({ msg: 'Esta operación solo aplica para dispositivos de stock' });
+      return;
+    }
+    
+    const cantidadNum = parseInt(cantidad);
+    if (!cantidadNum || cantidadNum <= 0) {
+      res.status(400).json({ msg: 'La cantidad debe ser mayor a 0' });
+      return;
+    }
+    
+    const stockAnterior = dispositivo.stockActual;
+    const stockNuevo = stockAnterior + cantidadNum;
+    
+    await dispositivo.update({ stockActual: stockNuevo });
+    
+    await MovimientoDispositivo.create({
+      dispositivoId: dispositivo.id,
+      tipoMovimiento: 'entrada_stock',
+      estadoAnterior: `stock: ${stockAnterior}`,
+      estadoNuevo: `stock: ${stockNuevo}`,
+      descripcion: descripcion || `Se agregaron ${cantidadNum} unidades. Motivo: ${motivo || 'compra'}`,
+      fecha: new Date(),
+      Uid
+    });
+    
+    res.json({
+      msg: `Se agregaron ${cantidadNum} unidades exitosamente`,
+      dispositivo,
+      stockAnterior,
+      stockNuevo
+    });
+  } catch (error) {
+    console.error('Error al agregar stock:', error);
+    res.status(500).json({ msg: 'Error al agregar stock' });
+  }
+};
+
+/**
+ * Retirar stock a dispositivos tipo 'stock'
+ */
+export const retirarStockDispositivo = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { cantidad, motivo, descripcion, Uid } = req.body;
+    
+    const dispositivo = await Dispositivo.findByPk(Number(id));
+    
+    if (!dispositivo) {
+      res.status(404).json({ msg: 'Dispositivo no encontrado' });
+      return;
+    }
+    
+    if (dispositivo.tipoRegistro !== 'stock') {
+      res.status(400).json({ msg: 'Esta operación solo aplica para dispositivos de stock' });
+      return;
+    }
+    
+    const cantidadNum = parseInt(cantidad);
+    if (!cantidadNum || cantidadNum <= 0) {
+      res.status(400).json({ msg: 'La cantidad debe ser mayor a 0' });
+      return;
+    }
+    
+    if (dispositivo.stockActual < cantidadNum) {
+      res.status(400).json({ 
+        msg: `Stock insuficiente. Disponible: ${dispositivo.stockActual} unidades` 
+      });
+      return;
+    }
+    
+    const stockAnterior = dispositivo.stockActual;
+    const stockNuevo = stockAnterior - cantidadNum;
+    
+    await dispositivo.update({ stockActual: stockNuevo });
+    
+    await MovimientoDispositivo.create({
+      dispositivoId: dispositivo.id,
+      tipoMovimiento: 'salida_stock',
+      estadoAnterior: `stock: ${stockAnterior}`,
+      estadoNuevo: `stock: ${stockNuevo}`,
+      descripcion: descripcion || `Se retiraron ${cantidadNum} unidades. Motivo: ${motivo || 'entrega'}`,
+      fecha: new Date(),
+      Uid
+    });
+    
+    res.json({
+      msg: `Se retiraron ${cantidadNum} unidades exitosamente`,
+      dispositivo,
+      stockAnterior,
+      stockNuevo
+    });
+  } catch (error) {
+    console.error('Error al retirar stock:', error);
+    res.status(500).json({ msg: 'Error al retirar stock' });
+  }
+};
+

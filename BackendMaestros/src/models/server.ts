@@ -167,6 +167,9 @@ class Server {
       // Migración: Cambiar 'prestado' a 'entregado' en el ENUM de estado
       await this.migrateEstadoEnum();
       
+      // Migración: Eliminar constraints UNIQUE incorrectas en mobiliario y consumibles
+      await this.removeIncorrectUniqueConstraints();
+      
       await User.sync();
       await Analista.sync();
       await Maestro.sync();
@@ -284,6 +287,58 @@ class Server {
       // Si falla, probablemente el ENUM no existe aún (primera vez)
       if (!error.message?.includes('does not exist')) {
         console.log('Error en migración de ENUM (puede ser primera ejecución):', error.message);
+      }
+    }
+  }
+
+  /**
+   * Migración para eliminar constraints UNIQUE incorrectas
+   * El nombre de mobiliario y consumibles NO debe ser único
+   */
+  async removeIncorrectUniqueConstraints() {
+    try {
+      // Verificar y eliminar constraint UNIQUE en mobiliario.nombre si existe
+      const [mobiliarioConstraints] = await sequelize.query(`
+        SELECT constraint_name
+        FROM information_schema.table_constraints
+        WHERE table_name = 'mobiliario'
+          AND constraint_type = 'UNIQUE'
+          AND constraint_name LIKE '%nombre%'
+      `);
+      
+      if (mobiliarioConstraints.length > 0) {
+        console.log('Eliminando constraint UNIQUE incorrecta en mobiliario.nombre...');
+        for (const constraint of mobiliarioConstraints as any[]) {
+          await sequelize.query(`
+            ALTER TABLE mobiliario DROP CONSTRAINT IF EXISTS "${constraint.constraint_name}";
+          `);
+        }
+        console.log('Constraint UNIQUE en mobiliario.nombre eliminada');
+      }
+
+      // Verificar y eliminar constraint UNIQUE en consumibles.nombre si existe
+      const [consumibleConstraints] = await sequelize.query(`
+        SELECT constraint_name
+        FROM information_schema.table_constraints
+        WHERE table_name = 'consumibles'
+          AND constraint_type = 'UNIQUE'
+          AND constraint_name LIKE '%nombre%'
+      `);
+      
+      if (consumibleConstraints.length > 0) {
+        console.log('Eliminando constraint UNIQUE incorrecta en consumibles.nombre...');
+        for (const constraint of consumibleConstraints as any[]) {
+          await sequelize.query(`
+            ALTER TABLE consumibles DROP CONSTRAINT IF EXISTS "${constraint.constraint_name}";
+          `);
+        }
+        console.log('Constraint UNIQUE en consumibles.nombre eliminada');
+      }
+      
+    } catch (error: any) {
+      // Si falla, probablemente las tablas no existen aún (primera vez)
+      if (!error.message?.includes('does not exist')) {
+        console.log('Error en migración de constraints UNIQUE:', error.message);
       }
     }
   }
