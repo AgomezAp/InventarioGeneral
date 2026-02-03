@@ -183,6 +183,10 @@ class Server {
       await Maestro.sync();
       await MovimientoMaestro.sync();
       await maestroBorrado.sync();
+      
+      // Migración: Agregar columnas de stock a dispositivos si no existen
+      await this.migrateDispositivoStockColumns();
+      
       // Nuevos modelos de inventario
       await Dispositivo.sync();
       await ActaEntrega.sync(); 
@@ -348,6 +352,48 @@ class Server {
       if (!error.message?.includes('does not exist')) {
         console.log('Error en migración de constraints UNIQUE:', error.message);
       }
+    }
+  }
+
+  /**
+   * Migración para agregar columnas de stock a la tabla dispositivos
+   * Estas columnas permiten manejar inventario por cantidad (para accesorios, cargadores, etc.)
+   */
+  async migrateDispositivoStockColumns() {
+    try {
+      // Verificar si la columna tipoRegistro existe
+      const [columns] = await sequelize.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'dispositivos' AND column_name = 'tipoRegistro'
+      `);
+      
+      if ((columns as any[]).length === 0) {
+        console.log('Agregando columnas de stock a dispositivos...');
+        
+        // Agregar columna tipoRegistro
+        await sequelize.query(`
+          ALTER TABLE dispositivos 
+          ADD COLUMN IF NOT EXISTS "tipoRegistro" VARCHAR(20) DEFAULT 'individual';
+        `);
+        
+        // Agregar columna stockActual
+        await sequelize.query(`
+          ALTER TABLE dispositivos 
+          ADD COLUMN IF NOT EXISTS "stockActual" INTEGER DEFAULT 1;
+        `);
+        
+        // Agregar columna stockMinimo
+        await sequelize.query(`
+          ALTER TABLE dispositivos 
+          ADD COLUMN IF NOT EXISTS "stockMinimo" INTEGER DEFAULT 0;
+        `);
+        
+        console.log('Columnas de stock agregadas a dispositivos');
+      }
+      
+    } catch (error: any) {
+      console.log('Error en migración de columnas de stock:', error.message);
     }
   }
 }
