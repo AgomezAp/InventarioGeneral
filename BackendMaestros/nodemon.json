@@ -1,8 +1,0 @@
-{
-  "watch": ["src"],
-  "ext": "ts,json",
-  "ignore": ["src/**/*.spec.ts", "node_modules"],
-  "exec": "npx tsc && node dist/index.js",
-  "delay": "500",
-  "verbose": true
-}
