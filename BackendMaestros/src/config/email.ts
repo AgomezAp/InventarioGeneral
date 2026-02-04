@@ -36,7 +36,7 @@ export async function enviarCorreoFirma(
   dispositivos: any[],
   comentarios?: string
 ): Promise<boolean> {
-  const frontendUrl = process.env.FRONTEND_URL || 'https://numerologiamexico.com';
+  const frontendUrl = process.env.FRONTEND_URL || 'https://inventarioap.com';
   const enlaceFirma = `${frontendUrl}/firmar/${token}`;
   
   // Crear lista de dispositivos para el correo
@@ -349,7 +349,7 @@ export async function enviarCorreoDevolucion(
   dispositivos: any[],
   comentarios?: string
 ): Promise<boolean> {
-  const frontendUrl = process.env.FRONTEND_URL || 'https://numerologiamexico.com';
+  const frontendUrl = process.env.FRONTEND_URL || 'https://inventarioap.com';
   const enlaceFirma = `${frontendUrl}/firmar-devolucion/${token}`;
   
   // Crear lista de dispositivos para el correo
@@ -582,7 +582,7 @@ export async function enviarCorreoFirmaConsumible(
   token: string,
   tipoInventario: string // 'aseo' o 'papeleria'
 ): Promise<boolean> {
-  const frontendUrl = process.env.FRONTEND_URL || 'https://numerologiamexico.com';
+  const frontendUrl = process.env.FRONTEND_URL || 'https://inventarioap.com';
   const enlaceFirma = `${frontendUrl}/firmar-consumible/${token}`;
   
   // Configuración según tipo

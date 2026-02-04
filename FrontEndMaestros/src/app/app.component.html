@@ -1,1 +1,7 @@
-<router-outlet></router-outlet>
+<!-- Navbar condicional -->
+<app-navbar *ngIf="showNavbar"></app-navbar>
+
+<!-- Contenido principal -->
+<main [class.with-navbar]="showNavbar" [class.full-height]="!showNavbar">
+  <router-outlet></router-outlet>
+</main>

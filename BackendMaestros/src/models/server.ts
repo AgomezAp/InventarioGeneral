@@ -107,7 +107,7 @@ class Server {
     // Configurar CORS con orígenes permitidos
     const allowedOrigins = process.env.CORS_ORIGIN 
       ? process.env.CORS_ORIGIN.split(',')
-      : ["https://numerologiachile.com", "http://localhost:4200"];
+      : ["https://inventarioap.com", "http://localhost:4200"];
     
     this.app.use(
       cors({

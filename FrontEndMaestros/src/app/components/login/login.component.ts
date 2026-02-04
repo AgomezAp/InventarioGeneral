@@ -12,7 +12,7 @@ import { SpinnerComponent } from '../../shared/spinner/spinner/spinner.component
 
 @Component({
   selector: 'app-login',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
