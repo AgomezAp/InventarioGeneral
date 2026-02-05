@@ -319,3 +319,63 @@
     </div>
   </div>
 </div>
+<!-- Modal de Eliminación/Baja de Mobiliario -->
+<div class="modal-overlay" *ngIf="modalEliminarAbierto" (click)="cerrarModalEliminar()">
+  <div class="modal-content modal-eliminar" (click)="$event.stopPropagation()">
+    <div class="modal-header header-eliminar">
+      <h2>
+        <i class="fa-solid fa-exclamation-triangle"></i>
+        Dar de Baja Mobiliario
+      </h2>
+      <button class="btn-cerrar" (click)="cerrarModalEliminar()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body" *ngIf="mobiliarioEliminar">
+      <div class="alerta-eliminacion">
+        <i class="fa-solid fa-info-circle"></i>
+        <p>Está a punto de dar de baja el siguiente mobiliario:</p>
+        <strong>{{ mobiliarioEliminar.nombre }}</strong>
+        <p class="stock-info">Stock actual: {{ mobiliarioEliminar.stockActual }} {{ mobiliarioEliminar.unidadMedida }}(s)</p>
+      </div>
+      
+      <div class="form-group">
+        <label>Motivo de baja: <span class="required">*</span></label>
+        <select [(ngModel)]="motivoEliminacion" required>
+          <option value="">Seleccione un motivo</option>
+          <option value="obsoleto">Obsoleto</option>
+          <option value="dañado">Dañado/Deteriorado</option>
+          <option value="extraviado">Extraviado</option>
+          <option value="reemplazo">Reemplazo</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Descripción adicional:</label>
+        <textarea 
+          [(ngModel)]="descripcionEliminacion" 
+          rows="3" 
+          placeholder="Describa las razones de la baja (opcional)"
+        ></textarea>
+      </div>
+      
+      <div class="advertencia-final">
+        <i class="fa-solid fa-exclamation-triangle"></i>
+        Esta acción marcará el mobiliario como inactivo en el sistema.
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="cerrarModalEliminar()">Cancelar</button>
+      <button 
+        class="btn-confirmar btn-eliminar" 
+        (click)="confirmarEliminacion()" 
+        [disabled]="!motivoEliminacion"
+      >
+        <i class="fa-solid fa-trash"></i> Confirmar Baja
+      </button>
+    </div>
+  </div>
+</div>

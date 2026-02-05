@@ -233,8 +233,16 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
   ejecutarMovimiento(): void {
     if (!this.mobiliarioSeleccionado) return;
 
+    // Prevenir múltiples llamadas simultáneas
+    if (this.loading) {
+      console.log('⏸️ Operación en progreso, ignorando llamada duplicada');
+      return;
+    }
+
     const id = this.mobiliarioSeleccionado.id!;
     const Uid = this.getUserId();
+
+    this.loading = true; // Bloquear nuevas llamadas
 
     switch (this.tipoMovimiento) {
       case 'entrada':
@@ -248,10 +256,12 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
           next: (res) => {
             this.toastr.success(res.msg, 'Stock actualizado');
             this.cerrarModal();
+            this.loading = false; // Liberar bloqueo
             this.cargarMobiliario(); // Recargar todo para evitar inconsistencias
             this.cargarEstadisticas();
           },
           error: (err) => {
+            this.loading = false; // Liberar bloqueo en error
             this.toastr.error(err.error?.msg || 'Error al agregar stock', 'Error');
           }
         });
@@ -267,10 +277,12 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
           next: (res) => {
             this.toastr.success(res.msg, 'Stock actualizado');
             this.cerrarModal();
+            this.loading = false;
             this.cargarMobiliario(); // Recargar todo para evitar inconsistencias
             this.cargarEstadisticas();
           },
           error: (err) => {
+            this.loading = false;
             this.toastr.error(err.error?.msg || 'Error al retirar stock', 'Error');
           }
         });
@@ -286,10 +298,12 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
           next: (res) => {
             this.toastr.success(res.msg, 'Stock ajustado');
             this.cerrarModal();
+            this.loading = false;
             this.cargarMobiliario(); // Recargar todo para evitar inconsistencias
             this.cargarEstadisticas();
           },
           error: (err) => {
+            this.loading = false;
             this.toastr.error(err.error?.msg || 'Error al ajustar stock', 'Error');
           }
         });

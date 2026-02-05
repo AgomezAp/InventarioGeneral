@@ -159,6 +159,9 @@
           </td>
           <td class="td-precio">{{ formatearPrecio(consumible.precioUnitario) }}</td>
           <td class="td-acciones">
+            <button class="btn-accion btn-editar" (click)="abrirModalEdicion(consumible)" title="Editar">
+              <i class="fa-solid fa-edit"></i>
+            </button>
             <button class="btn-accion btn-entrada" (click)="abrirModalStock(consumible, 'entrada')" title="Entrada de stock">
               <i class="fa-solid fa-plus"></i>
             </button>
@@ -256,6 +259,85 @@
       <button class="btn-cancelar" (click)="cerrarModalStock()">Cancelar</button>
       <button class="btn-confirmar" (click)="ejecutarOperacionStock()" [disabled]="cantidadStock <= 0 && tipoOperacionStock !== 'ajuste'">
         <i class="fa-solid fa-check"></i> Confirmar
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Modal de Edición de Consumible -->
+<div class="modal-overlay" *ngIf="mostrarModalEdicion" (click)="cerrarModalEdicion()">
+  <div class="modal-content modal-edicion" (click)="$event.stopPropagation()">
+    <div class="modal-header header-editar">
+      <h2>
+        <i class="fa-solid fa-edit"></i>
+        Editar {{ tipoInventarioCodigo === 'aseo' ? 'Producto de Aseo' : 'Artículo de Papelería' }}
+      </h2>
+      <button class="btn-cerrar" (click)="cerrarModalEdicion()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body" *ngIf="consumibleEditando">
+      <div class="form-grid">
+        <div class="form-grupo">
+          <label>Nombre: <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formularioEdicion.nombre" placeholder="Nombre del producto">
+        </div>
+        
+        <div class="form-grupo">
+          <label>Categoría: <span class="required">*</span></label>
+          <select [(ngModel)]="formularioEdicion.categoria">
+            <option *ngFor="let cat of categorias" [value]="cat">
+              {{ cat | titlecase }}
+            </option>
+          </select>
+        </div>
+        
+        <div class="form-grupo">
+          <label>Código Interno:</label>
+          <input type="text" [(ngModel)]="formularioEdicion.codigoInterno" placeholder="Código de barras o SKU">
+        </div>
+        
+        <div class="form-grupo">
+          <label>Unidad de Medida: <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="formularioEdicion.unidadMedida" placeholder="Ej: unidad, litro, paquete">
+        </div>
+        
+        <div class="form-grupo">
+          <label>Stock Mínimo: <span class="required">*</span></label>
+          <input type="number" [(ngModel)]="formularioEdicion.stockMinimo" min="0" placeholder="Cantidad mínima">
+        </div>
+        
+        <div class="form-grupo">
+          <label>Stock Máximo:</label>
+          <input type="number" [(ngModel)]="formularioEdicion.stockMaximo" min="0" placeholder="Cantidad máxima (opcional)">
+        </div>
+        
+        <div class="form-grupo">
+          <label>Proveedor:</label>
+          <input type="text" [(ngModel)]="formularioEdicion.proveedor" placeholder="Nombre del proveedor">
+        </div>
+        
+        <div class="form-grupo">
+          <label>Precio Unitario:</label>
+          <input type="number" [(ngModel)]="formularioEdicion.precioUnitario" min="0" step="0.01" placeholder="0.00">
+        </div>
+        
+        <div class="form-grupo form-grupo-completo">
+          <label>Descripción:</label>
+          <textarea [(ngModel)]="formularioEdicion.descripcion" rows="2" placeholder="Descripción del producto (opcional)"></textarea>
+        </div>
+        
+        <div class="form-grupo form-grupo-completo">
+          <label>Observaciones:</label>
+          <textarea [(ngModel)]="formularioEdicion.observaciones" rows="2" placeholder="Observaciones adicionales (opcional)"></textarea>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="cerrarModalEdicion()">Cancelar</button>
+      <button class="btn-confirmar btn-editar" (click)="guardarEdicion()" [disabled]="!formularioEdicion.nombre.trim()">
+        <i class="fa-solid fa-save"></i> Guardar Cambios
       </button>
     </div>
   </div>

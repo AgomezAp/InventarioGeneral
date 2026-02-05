@@ -588,3 +588,69 @@ export const retirarStockDispositivo = async (req: Request, res: Response): Prom
   }
 };
 
+/**
+ * Convertir un dispositivo individual a modo stock
+ * Útil para consolidar múltiples dispositivos idénticos
+ */
+export const convertirAStock = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { cantidad } = req.body;
+    const Uid = req.body.Uid;
+    
+    const dispositivo = await Dispositivo.findByPk(Number(id));
+    
+    if (!dispositivo) {
+      res.status(404).json({ msg: 'Dispositivo no encontrado' });
+      return;
+    }
+    
+    if (dispositivo.tipoRegistro === 'stock') {
+      res.status(400).json({ msg: 'Este dispositivo ya está en modo stock' });
+      return;
+    }
+    
+    const cantidadNum = parseInt(cantidad) || 1;
+    if (cantidadNum <= 0) {
+      res.status(400).json({ msg: 'La cantidad debe ser mayor a 0' });
+      return;
+    }
+    
+    const serialAnterior = dispositivo.serial;
+    const estadoAnterior = dispositivo.estado;
+    
+    // Convertir a modo stock
+    await dispositivo.update({
+      tipoRegistro: 'stock',
+      stockActual: cantidadNum,
+      stockMinimo: 1,
+      serial: null,
+      estado: 'disponible'
+    });
+    
+    // Registrar el movimiento de conversión
+    await MovimientoDispositivo.create({
+      dispositivoId: dispositivo.id,
+      tipoMovimiento: 'conversion_stock',
+      estadoAnterior: `individual (${estadoAnterior}, serial: ${serialAnterior})`,
+      estadoNuevo: `stock (${cantidadNum} unidades)`,
+      descripcion: `Dispositivo convertido de individual a stock. Cantidad inicial: ${cantidadNum}`,
+      fecha: new Date(),
+      Uid
+    });
+    
+    // Emitir evento WebSocket
+    const io = getIO();
+    io.emit('dispositivo_actualizado', dispositivo);
+    
+    res.json({
+      msg: `Dispositivo convertido a modo stock exitosamente`,
+      dispositivo,
+      stockActual: cantidadNum
+    });
+  } catch (error) {
+    console.error('Error al convertir a stock:', error);
+    res.status(500).json({ msg: 'Error al convertir el dispositivo' });
+  }
+};
+

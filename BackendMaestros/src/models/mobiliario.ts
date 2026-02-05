@@ -5,6 +5,7 @@ import { User } from './user.js';
 /**
  * Modelo Mobiliario - Inventario de muebles de oficina CON STOCK
  * Similar a consumibles - maneja cantidades, no items individuales
+ * Soporta modo híbrido: individual (con serial) o stock (por cantidad)
  */
 export class Mobiliario extends Model {
   public id!: number;
@@ -20,6 +21,10 @@ export class Mobiliario extends Model {
   public activo!: boolean;
   public observaciones!: string;
   public Uid!: number; // Usuario que registró
+  
+  // Campos para modo híbrido (igual que dispositivos)
+  public tipoRegistro!: string; // 'individual' o 'stock'
+  public serial!: string; // Serial único (solo para individual)
 }
 
 Mobiliario.init(
@@ -89,6 +94,17 @@ Mobiliario.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       comment: 'Usuario que registró'
+    },
+    tipoRegistro: {
+      type: DataTypes.ENUM('individual', 'stock'),
+      defaultValue: 'stock',
+      comment: 'individual: con serial único, stock: por cantidad (default)'
+    },
+    serial: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: false,
+      comment: 'Número de serie único (solo para tipoRegistro=individual)'
     }
   },
   {

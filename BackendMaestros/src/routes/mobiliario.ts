@@ -10,7 +10,8 @@ import {
   ajustarStock,
   obtenerEstadisticasMobiliario,
   desactivarMobiliario,
-  obtenerHistorialMobiliario
+  obtenerHistorialMobiliario,
+  convertirMobiliarioAStock
 } from '../controllers/mobiliario.js';
 import validateToken from './validateToken.js';
 import { upload } from '../config/multer.js';
@@ -29,6 +30,7 @@ router.post('/', validateToken, upload.single('foto'), registrarMobiliario);
 router.post('/:id/agregar-stock', validateToken, agregarStock);
 router.post('/:id/retirar-stock', validateToken, retirarStock);
 router.post('/:id/ajustar-stock', validateToken, ajustarStock);
+router.post('/:id/convertir-stock', validateToken, convertirMobiliarioAStock);
 
 // Rutas PUT/PATCH
 router.put('/:id', validateToken, upload.single('foto'), actualizarMobiliario);

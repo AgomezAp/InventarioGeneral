@@ -54,6 +54,22 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
   descripcionStock = '';
   numeroDocumentoStock = '';
 
+  // Modal de edición
+  mostrarModalEdicion = false;
+  consumibleEditando: Consumible | null = null;
+  formularioEdicion = {
+    nombre: '',
+    categoria: '',
+    descripcion: '',
+    codigoInterno: '',
+    unidadMedida: '',
+    stockMinimo: 0,
+    stockMaximo: 0,
+    proveedor: '',
+    precioUnitario: 0,
+    observaciones: ''
+  };
+
   // Subject de destrucción para takeUntil
   private destroy$ = new Subject<void>();
   
@@ -476,5 +492,65 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
 
   verHistorial(id: number): void {
     this.router.navigate(['/historial-consumible', id]);
+  }
+
+  // ==================== EDICIÓN DE CONSUMIBLE ====================
+
+  abrirModalEdicion(consumible: Consumible): void {
+    this.consumibleEditando = { ...consumible };
+    this.formularioEdicion = {
+      nombre: consumible.nombre,
+      categoria: consumible.categoria || '',
+      descripcion: consumible.descripcion || '',
+      codigoInterno: consumible.codigoInterno || '',
+      unidadMedida: consumible.unidadMedida,
+      stockMinimo: consumible.stockMinimo,
+      stockMaximo: consumible.stockMaximo || 0,
+      proveedor: consumible.proveedor || '',
+      precioUnitario: consumible.precioUnitario || 0,
+      observaciones: consumible.observaciones || ''
+    };
+    this.mostrarModalEdicion = true;
+  }
+
+  cerrarModalEdicion(): void {
+    this.mostrarModalEdicion = false;
+    this.consumibleEditando = null;
+  }
+
+  guardarEdicion(): void {
+    if (!this.consumibleEditando?.id || !this.formularioEdicion.nombre.trim()) {
+      return;
+    }
+
+    this.loading = true;
+    const datosActualizados = {
+      nombre: this.formularioEdicion.nombre.trim(),
+      categoria: this.formularioEdicion.categoria,
+      descripcion: this.formularioEdicion.descripcion?.trim(),
+      codigoInterno: this.formularioEdicion.codigoInterno?.trim(),
+      unidadMedida: this.formularioEdicion.unidadMedida,
+      stockMinimo: this.formularioEdicion.stockMinimo,
+      stockMaximo: this.formularioEdicion.stockMaximo || undefined,
+      proveedor: this.formularioEdicion.proveedor?.trim(),
+      precioUnitario: this.formularioEdicion.precioUnitario,
+      observaciones: this.formularioEdicion.observaciones?.trim()
+    };
+
+    this.consumibleService.actualizarConsumible(this.consumibleEditando.id, datosActualizados)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.cerrarModalEdicion();
+          this.cargarConsumibles();
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('Error al actualizar consumible:', err);
+          this.loading = false;
+          this.cdr.markForCheck();
+        }
+      });
   }
 }

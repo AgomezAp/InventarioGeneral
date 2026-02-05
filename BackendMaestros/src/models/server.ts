@@ -197,6 +197,10 @@ class Server {
       await ActaDevolucion.sync();
       await DetalleDevolucion.sync();
       await TokenDevolucion.sync();
+      
+      // Migración: Agregar modo híbrido a mobiliario
+      await this.migrateMobiliarioHybridMode();
+      
       // Nuevos modelos de inventario expandido
       await TipoInventario.sync();
       await Mobiliario.sync();
@@ -393,7 +397,43 @@ class Server {
       }
       
     } catch (error: any) {
-      console.log('Error en migración de columnas de stock:', error.message);
+      console.log('Error en migración de columnas de stock en dispositivos:', error.message);
+    }
+  }
+
+  /**
+   * Migración para agregar modo híbrido a mobiliario
+   * Permite registrar items individuales (con serial) o por stock (cantidad)
+   */
+  async migrateMobiliarioHybridMode() {
+    try {
+      // Verificar si la columna tipoRegistro existe
+      const [columns] = await sequelize.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'mobiliario' AND column_name = 'tipoRegistro'
+      `);
+      
+      if ((columns as any[]).length === 0) {
+        console.log('Agregando modo híbrido a mobiliario...');
+        
+        // Agregar columna tipoRegistro (default 'stock' para datos existentes)
+        await sequelize.query(`
+          ALTER TABLE mobiliario 
+          ADD COLUMN IF NOT EXISTS "tipoRegistro" VARCHAR(20) DEFAULT 'stock';
+        `);
+        
+        // Agregar columna serial (nullable para compatibilidad con datos existentes)
+        await sequelize.query(`
+          ALTER TABLE mobiliario 
+          ADD COLUMN IF NOT EXISTS "serial" VARCHAR(255) NULL;
+        `);
+        
+        console.log('✅ Modo híbrido agregado a mobiliario (datos existentes = stock)');
+      }
+      
+    } catch (error: any) {
+      console.log('Error en migración de modo híbrido en mobiliario:', error.message);
     }
   }
 }

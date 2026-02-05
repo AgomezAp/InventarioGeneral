@@ -22,12 +22,6 @@ export const obtenerConsumibles = async (req: Request, res: Response) => {
       where.categoria = categoria;
     }
     
-    if (stockBajo === 'true') {
-      where.stockActual = {
-        [Op.lte]: require('sequelize').literal('stock_minimo')
-      };
-    }
-    
     if (activo !== undefined) {
       where.activo = activo === 'true';
     } else {
@@ -43,13 +37,18 @@ export const obtenerConsumibles = async (req: Request, res: Response) => {
       ];
     }
     
-    const consumibles = await Consumible.findAll({
+    let consumibles = await Consumible.findAll({
       where,
       include: [
         { model: TipoInventario, as: 'tipoInventario', attributes: ['id', 'nombre', 'codigo'] }
       ],
       order: [['nombre', 'ASC']]
     });
+    
+    // Filtrar por stock bajo en memoria si es necesario
+    if (stockBajo === 'true') {
+      consumibles = consumibles.filter(c => c.stockActual <= c.stockMinimo);
+    }
     
     res.json(consumibles);
   } catch (error) {
@@ -85,12 +84,6 @@ export const obtenerConsumiblesPorTipo = async (req: Request, res: Response) => 
       where.categoria = categoria;
     }
     
-    if (stockBajo === 'true') {
-      where.stockActual = {
-        [Op.lte]: require('sequelize').literal('"stock_minimo"')
-      };
-    }
-    
     if (busqueda) {
       where[Op.or] = [
         { nombre: { [Op.iLike]: `%${busqueda}%` } },
@@ -100,13 +93,18 @@ export const obtenerConsumiblesPorTipo = async (req: Request, res: Response) => 
       ];
     }
     
-    const consumibles = await Consumible.findAll({
+    let consumibles = await Consumible.findAll({
       where,
       include: [
         { model: TipoInventario, as: 'tipoInventario', attributes: ['id', 'nombre', 'codigo'] }
       ],
       order: [['nombre', 'ASC']]
     });
+    
+    // Filtrar por stock bajo en memoria si es necesario
+    if (stockBajo === 'true') {
+      consumibles = consumibles.filter(c => c.stockActual <= c.stockMinimo);
+    }
     
     res.json(consumibles);
   } catch (error) {
@@ -515,23 +513,24 @@ export const obtenerAlertasStock = async (req: Request, res: Response) => {
     const { tipoInventarioId } = req.query;
     
     let where: any = {
-      activo: true,
-      stockActual: {
-        [Op.lte]: literal('"stock_minimo"')
-      }
+      activo: true
     };
     
     if (tipoInventarioId) {
       where.tipoInventarioId = Number(tipoInventarioId);
     }
     
-    const consumibles = await Consumible.findAll({
+    // Obtener todos y filtrar en memoria (más compatible)
+    const todosConsumibles = await Consumible.findAll({
       where,
       include: [
         { model: TipoInventario, as: 'tipoInventario', attributes: ['id', 'nombre', 'codigo'] }
       ],
       order: [['stockActual', 'ASC']]
     });
+    
+    // Filtrar los que tienen stock bajo
+    const consumibles = todosConsumibles.filter(c => c.stockActual <= c.stockMinimo);
     
     res.json(consumibles);
   } catch (error) {
@@ -552,53 +551,46 @@ export const obtenerEstadisticasConsumibles = async (req: Request, res: Response
       where.tipoInventarioId = Number(tipoInventarioId);
     }
     
+    // Total de productos
     const total = await Consumible.count({ where });
     
-    // Productos con stock bajo
-    const stockBajo = await Consumible.count({
-      where: {
-        ...where,
-        stockActual: {
-          [Op.lte]: literal('"stock_minimo"')
-        }
-      }
-    });
+    // Obtener todos los consumibles para calcular estadísticas
+    const consumibles = await Consumible.findAll({ where });
+    
+    // Calcular stock bajo (donde stockActual <= stockMinimo)
+    const stockBajo = consumibles.filter(c => c.stockActual <= c.stockMinimo).length;
     
     // Productos sin stock
-    const sinStock = await Consumible.count({
-      where: {
-        ...where,
-        stockActual: 0
-      }
-    });
+    const sinStock = consumibles.filter(c => c.stockActual === 0).length;
     
     // Valor total del inventario
-    const valorTotal = await Consumible.sum(
-      literal('"stock_actual" * "precio_unitario"') as any,
-      { where }
-    );
+    const valorTotal = consumibles.reduce((sum, c) => {
+      return sum + (c.stockActual * (c.precioUnitario || 0));
+    }, 0);
     
     // Por categoría
-    const porCategoria = await Consumible.findAll({
-      where,
-      attributes: [
-        'categoria',
-        [fn('COUNT', col('categoria')), 'cantidad'],
-        [fn('SUM', col('stock_actual')), 'totalStock']
-      ],
-      group: ['categoria']
+    const categoriaMap = new Map<string, { cantidad: number; totalStock: number }>();
+    consumibles.forEach(c => {
+      const cat = c.categoria || 'sin_categoria';
+      const existing = categoriaMap.get(cat) || { cantidad: 0, totalStock: 0 };
+      categoriaMap.set(cat, {
+        cantidad: existing.cantidad + 1,
+        totalStock: existing.totalStock + c.stockActual
+      });
     });
+    
+    const porCategoria = Array.from(categoriaMap.entries()).map(([categoria, data]) => ({
+      categoria,
+      cantidad: data.cantidad,
+      totalStock: data.totalStock
+    }));
     
     res.json({
       total,
       stockBajo,
       sinStock,
       valorTotal: valorTotal || 0,
-      porCategoria: porCategoria.map((item: any) => ({
-        categoria: item.categoria,
-        cantidad: parseInt(item.getDataValue('cantidad')),
-        totalStock: parseInt(item.getDataValue('totalStock')) || 0
-      }))
+      porCategoria
     });
   } catch (error) {
     console.error('Error al obtener estadísticas:', error);

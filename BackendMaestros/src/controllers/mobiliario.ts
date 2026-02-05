@@ -528,3 +528,70 @@ export const obtenerHistorialMobiliario = async (req: Request, res: Response): P
     res.status(500).json({ msg: 'Error al obtener el historial' });
   }
 };
+
+/**
+ * Convertir mobiliario individual a modo stock
+ * Útil para consolidar múltiples items idénticos
+ */
+export const convertirMobiliarioAStock = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { cantidad } = req.body;
+    const Uid = req.body.Uid;
+    
+    const mueble = await Mobiliario.findByPk(Number(id));
+    
+    if (!mueble) {
+      res.status(404).json({ msg: 'Mobiliario no encontrado' });
+      return;
+    }
+    
+    if (mueble.tipoRegistro === 'stock') {
+      res.status(400).json({ msg: 'Este mobiliario ya está en modo stock' });
+      return;
+    }
+    
+    const cantidadNum = parseInt(cantidad) || 1;
+    if (cantidadNum <= 0) {
+      res.status(400).json({ msg: 'La cantidad debe ser mayor a 0' });
+      return;
+    }
+    
+    const serialAnterior = mueble.serial;
+    const stockAnterior = mueble.stockActual || 1;
+    
+    // Convertir a modo stock
+    await mueble.update({
+      tipoRegistro: 'stock',
+      stockActual: cantidadNum,
+      stockMinimo: 1,
+      serial: null
+    });
+    
+    // Registrar el movimiento de conversión
+    await MovimientoMobiliario.create({
+      mobiliarioId: mueble.id,
+      tipoMovimiento: 'conversion_stock',
+      cantidad: cantidadNum - stockAnterior,
+      stockAnterior,
+      stockNuevo: cantidadNum,
+      motivo: 'conversion',
+      descripcion: `Mobiliario convertido de individual (serial: ${serialAnterior}) a stock. Cantidad: ${cantidadNum}`,
+      fecha: new Date(),
+      Uid
+    });
+    
+    // Emitir evento WebSocket
+    const io = getIO();
+    io.to('mobiliario').emit('mobiliario:updated', mueble);
+    
+    res.json({
+      msg: `Mobiliario convertido a modo stock exitosamente`,
+      mobiliario: mueble,
+      stockActual: cantidadNum
+    });
+  } catch (error) {
+    console.error('Error al convertir mobiliario a stock:', error);
+    res.status(500).json({ msg: 'Error al convertir el mobiliario' });
+  }
+};
