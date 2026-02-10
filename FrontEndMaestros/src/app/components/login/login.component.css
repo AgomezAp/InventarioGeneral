@@ -7,11 +7,9 @@
 
 /* ===== CONTENEDOR PRINCIPAL ===== */
 .login-page {
-  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-secondary);
   font-family: var(--font-family);
   position: relative;
   overflow: hidden;

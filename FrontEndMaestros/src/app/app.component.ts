@@ -18,6 +18,8 @@ export class AppComponent {
     '/signup',
     '/reestablecerContraseña',
     '/reset-password',
+    '/',
+
   ];
 
   constructor(private router: Router) {
