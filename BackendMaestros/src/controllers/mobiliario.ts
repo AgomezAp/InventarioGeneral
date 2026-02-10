@@ -1,9 +1,28 @@
 import { Request, Response } from 'express';
 import { Op, fn, col, literal } from 'sequelize';
+import jwt from 'jsonwebtoken';
+import sequelize from '../database/connection.js';
 import { Mobiliario } from '../models/mobiliario.js';
 import { MovimientoMobiliario } from '../models/movimientoMobiliario.js';
 import { User } from '../models/user.js';
 import { getIO } from '../models/server.js';
+
+/**
+ * Helper para extraer Uid del token JWT
+ */
+const getUidFromToken = (req: Request): number | null => {
+  try {
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.slice(7);
+      const decoded = jwt.verify(token, process.env.SECRET_KEY || 'DxVj971V5CxBQGB7hDqwOenbRbbH4mrS') as any;
+      return decoded.Uid || null;
+    }
+    return null;
+  } catch (error) {
+    return null;
+  }
+};
 
 /**
  * Obtener todo el mobiliario con filtros
@@ -229,18 +248,33 @@ export const actualizarMobiliario = async (req: Request, res: Response): Promise
  * Agregar stock (entrada)
  */
 export const agregarStock = async (req: Request, res: Response): Promise<void> => {
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
-    const { cantidad, motivo, descripcion, numeroDocumento, Uid } = req.body;
+    const { cantidad, motivo, descripcion, numeroDocumento } = req.body;
+    
+    // Obtener Uid del body o del token
+    let Uid = req.body.Uid;
+    if (!Uid || Uid === 0) {
+      Uid = getUidFromToken(req);
+    }
+    
+    if (!Uid) {
+      await t.rollback();
+      res.status(401).json({ msg: 'No se pudo identificar al usuario' });
+      return;
+    }
     
     if (!cantidad || cantidad <= 0) {
+      await t.rollback();
       res.status(400).json({ msg: 'La cantidad debe ser mayor a 0' });
       return;
     }
     
-    const mueble = await Mobiliario.findByPk(Number(id));
+    const mueble = await Mobiliario.findByPk(Number(id), { transaction: t });
     
     if (!mueble) {
+      await t.rollback();
       res.status(404).json({ msg: 'Mobiliario no encontrado' });
       return;
     }
@@ -248,7 +282,7 @@ export const agregarStock = async (req: Request, res: Response): Promise<void> =
     const stockAnterior = mueble.stockActual;
     const stockNuevo = stockAnterior + cantidad;
     
-    await mueble.update({ stockActual: stockNuevo });
+    await mueble.update({ stockActual: stockNuevo }, { transaction: t });
     
     // Registrar movimiento
     await MovimientoMobiliario.create({
@@ -262,7 +296,9 @@ export const agregarStock = async (req: Request, res: Response): Promise<void> =
       numeroDocumento,
       fecha: new Date(),
       Uid
-    });
+    }, { transaction: t });
+    
+    await t.commit();
     
     // Emitir evento WebSocket
     const io = getIO();
@@ -278,6 +314,7 @@ export const agregarStock = async (req: Request, res: Response): Promise<void> =
       stockNuevo
     });
   } catch (error) {
+    await t.rollback();
     console.error('Error al agregar stock:', error);
     res.status(500).json({ msg: 'Error al agregar stock' });
   }
@@ -287,23 +324,39 @@ export const agregarStock = async (req: Request, res: Response): Promise<void> =
  * Retirar stock (salida)
  */
 export const retirarStock = async (req: Request, res: Response): Promise<void> => {
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
-    const { cantidad, motivo, descripcion, actaEntregaId, Uid } = req.body;
+    const { cantidad, motivo, descripcion, actaEntregaId } = req.body;
+    
+    // Obtener Uid del body o del token
+    let Uid = req.body.Uid;
+    if (!Uid || Uid === 0) {
+      Uid = getUidFromToken(req);
+    }
+    
+    if (!Uid) {
+      await t.rollback();
+      res.status(401).json({ msg: 'No se pudo identificar al usuario' });
+      return;
+    }
     
     if (!cantidad || cantidad <= 0) {
+      await t.rollback();
       res.status(400).json({ msg: 'La cantidad debe ser mayor a 0' });
       return;
     }
     
-    const mueble = await Mobiliario.findByPk(Number(id));
+    const mueble = await Mobiliario.findByPk(Number(id), { transaction: t });
     
     if (!mueble) {
+      await t.rollback();
       res.status(404).json({ msg: 'Mobiliario no encontrado' });
       return;
     }
     
     if (mueble.stockActual < cantidad) {
+      await t.rollback();
       res.status(400).json({ 
         msg: `Stock insuficiente. Disponible: ${mueble.stockActual} ${mueble.unidadMedida}(s)` 
       });
@@ -313,7 +366,7 @@ export const retirarStock = async (req: Request, res: Response): Promise<void> =
     const stockAnterior = mueble.stockActual;
     const stockNuevo = stockAnterior - cantidad;
     
-    await mueble.update({ stockActual: stockNuevo });
+    await mueble.update({ stockActual: stockNuevo }, { transaction: t });
     
     // Registrar movimiento
     await MovimientoMobiliario.create({
@@ -327,7 +380,9 @@ export const retirarStock = async (req: Request, res: Response): Promise<void> =
       actaEntregaId,
       fecha: new Date(),
       Uid
-    });
+    }, { transaction: t });
+    
+    await t.commit();
     
     // Emitir evento WebSocket
     const io = getIO();
@@ -343,6 +398,7 @@ export const retirarStock = async (req: Request, res: Response): Promise<void> =
       stockNuevo
     });
   } catch (error) {
+    await t.rollback();
     console.error('Error al retirar stock:', error);
     res.status(500).json({ msg: 'Error al retirar stock' });
   }
@@ -352,25 +408,40 @@ export const retirarStock = async (req: Request, res: Response): Promise<void> =
  * Ajustar stock (corrección de inventario)
  */
 export const ajustarStock = async (req: Request, res: Response): Promise<void> => {
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
-    const { nuevoStock, motivo, descripcion, Uid } = req.body;
+    const { nuevoStock, motivo, descripcion } = req.body;
+    
+    // Obtener Uid del body o del token
+    let Uid = req.body.Uid;
+    if (!Uid || Uid === 0) {
+      Uid = getUidFromToken(req);
+    }
+    
+    if (!Uid) {
+      await t.rollback();
+      res.status(401).json({ msg: 'No se pudo identificar al usuario' });
+      return;
+    }
     
     if (nuevoStock === undefined || nuevoStock < 0) {
+      await t.rollback();
       res.status(400).json({ msg: 'El nuevo stock debe ser un número válido mayor o igual a 0' });
       return;
     }
     
-    const mueble = await Mobiliario.findByPk(Number(id));
+    const mueble = await Mobiliario.findByPk(Number(id), { transaction: t });
     
     if (!mueble) {
+      await t.rollback();
       res.status(404).json({ msg: 'Mobiliario no encontrado' });
       return;
     }
     
     const stockAnterior = mueble.stockActual;
     
-    await mueble.update({ stockActual: nuevoStock });
+    await mueble.update({ stockActual: nuevoStock }, { transaction: t });
     
     // Registrar movimiento
     await MovimientoMobiliario.create({
@@ -383,7 +454,9 @@ export const ajustarStock = async (req: Request, res: Response): Promise<void> =
       descripcion: descripcion || `Ajuste de stock de ${stockAnterior} a ${nuevoStock}`,
       fecha: new Date(),
       Uid
-    });
+    }, { transaction: t });
+    
+    await t.commit();
     
     // Emitir evento WebSocket
     const io = getIO();
@@ -399,6 +472,7 @@ export const ajustarStock = async (req: Request, res: Response): Promise<void> =
       stockNuevo: nuevoStock
     });
   } catch (error) {
+    await t.rollback();
     console.error('Error al ajustar stock:', error);
     res.status(500).json({ msg: 'Error al ajustar el stock' });
   }
@@ -467,18 +541,32 @@ export const obtenerEstadisticasMobiliario = async (req: Request, res: Response)
  * Desactivar mobiliario (no eliminar)
  */
 export const desactivarMobiliario = async (req: Request, res: Response): Promise<void> => {
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
-    const { motivo, Uid } = req.body;
+    const { motivo } = req.body;
     
-    const mueble = await Mobiliario.findByPk(Number(id));
+    // Obtener Uid del body o del token
+    let Uid = req.body.Uid;
+    if (!Uid || Uid === 0) {
+      Uid = getUidFromToken(req);
+    }
+    
+    if (!Uid) {
+      await t.rollback();
+      res.status(401).json({ msg: 'No se pudo identificar al usuario' });
+      return;
+    }
+    
+    const mueble = await Mobiliario.findByPk(Number(id), { transaction: t });
     
     if (!mueble) {
+      await t.rollback();
       res.status(404).json({ msg: 'Mobiliario no encontrado' });
       return;
     }
     
-    await mueble.update({ activo: false });
+    await mueble.update({ activo: false }, { transaction: t });
     
     // Registrar movimiento de baja
     await MovimientoMobiliario.create({
@@ -491,7 +579,9 @@ export const desactivarMobiliario = async (req: Request, res: Response): Promise
       descripcion: 'Mobiliario dado de baja del inventario',
       fecha: new Date(),
       Uid
-    });
+    }, { transaction: t });
+    
+    await t.commit();
     
     // Emitir evento WebSocket
     const io = getIO();
@@ -502,6 +592,7 @@ export const desactivarMobiliario = async (req: Request, res: Response): Promise
       mobiliario: mueble
     });
   } catch (error) {
+    await t.rollback();
     console.error('Error al dar de baja el mobiliario:', error);
     res.status(500).json({ msg: 'Error al dar de baja el mobiliario' });
   }

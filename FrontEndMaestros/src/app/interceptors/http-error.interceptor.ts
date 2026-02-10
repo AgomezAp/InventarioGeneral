@@ -109,9 +109,19 @@ export class HttpErrorInterceptor implements HttpInterceptor {
     if (error.status === 400 || error.status === 422) {
       return false;
     }
+
+    // NUNCA reintentar peticiones que modifican datos (POST, PUT, PATCH, DELETE)
+    // Solo reintentar GET para evitar duplicar operaciones de escritura
+    const method = (error as any)?.url ? 'UNKNOWN' : 'UNKNOWN';
+    // No podemos acceder al method desde el error, así que solo reintentamos 502/503/504 (errores de gateway)
+    // NO reintentar 500 ya que indica error de lógica del servidor y reintentar causa datos duplicados
+    if (error.status === 500) {
+      return false;
+    }
     
-    // Reintentar errores de servidor y timeout
-    return this.retryableStatuses.includes(error.status) || error.status === 0;
+    // Reintentar solo errores de gateway/timeout (no errores internos del servidor)
+    const safeRetryStatuses = [408, 502, 503, 504];
+    return safeRetryStatuses.includes(error.status) || error.status === 0;
   }
 
   /**

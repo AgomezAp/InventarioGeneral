@@ -312,9 +312,9 @@
     
     <div class="modal-footer">
       <button class="btn-cancelar" (click)="cerrarModal()">Cancelar</button>
-      <button class="btn-confirmar" [ngClass]="'btn-' + tipoMovimiento" (click)="ejecutarMovimiento()" [disabled]="cantidadMovimiento < 1 && tipoMovimiento !== 'ajuste'">
-        {{ tipoMovimiento === 'entrada' ? 'Agregar' : 
-           tipoMovimiento === 'salida' ? 'Retirar' : 'Ajustar' }}
+      <button class="btn-confirmar" [ngClass]="'btn-' + tipoMovimiento" (click)="ejecutarMovimiento()" [disabled]="loading || (cantidadMovimiento < 1 && tipoMovimiento !== 'ajuste')">
+        {{ loading ? 'Procesando...' : (tipoMovimiento === 'entrada' ? 'Agregar' : 
+           tipoMovimiento === 'salida' ? 'Retirar' : 'Ajustar') }}
       </button>
     </div>
   </div>

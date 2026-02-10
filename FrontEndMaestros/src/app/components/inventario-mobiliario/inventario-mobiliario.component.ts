@@ -63,6 +63,9 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
   motivoEliminacion = '';
   descripcionEliminacion = '';
 
+  // Flag para ignorar WebSocket cuando la acción es propia
+  private ignorarWebSocketStock = false;
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -107,9 +110,14 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
     this.websocketService.onMobiliarioStockUpdated()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data: any) => {
+        // Ignorar si el evento es resultado de una acción propia
+        if (this.ignorarWebSocketStock) {
+          console.log('📦 Ignorando evento WebSocket propio');
+          return;
+        }
         console.log('📦 Stock actualizado desde otro usuario:', data);
         // Solo actualizar si el modal no está abierto (cambio de otro usuario)
-        if (!this.modalAbierto) {
+        if (!this.modalAbierto && !this.loading) {
           const index = this.mobiliario.findIndex(m => m.id === data.id);
           if (index !== -1) {
             this.mobiliario[index].stockActual = data.stockActual;
@@ -243,6 +251,24 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
     const Uid = this.getUserId();
 
     this.loading = true; // Bloquear nuevas llamadas
+    this.ignorarWebSocketStock = true; // Ignorar evento WebSocket propio
+
+    const finalizarOperacion = () => {
+      this.cerrarModal();
+      this.loading = false;
+      // Esperar un momento antes de reactivar WebSocket para evitar loop
+      setTimeout(() => {
+        this.ignorarWebSocketStock = false;
+      }, 1000);
+      this.cargarMobiliario();
+      this.cargarEstadisticas();
+    };
+
+    const manejarError = (err: any, operacion: string) => {
+      this.loading = false;
+      this.ignorarWebSocketStock = false;
+      this.toastr.error(err.error?.msg || `Error al ${operacion}`, 'Error');
+    };
 
     switch (this.tipoMovimiento) {
       case 'entrada':
@@ -255,15 +281,9 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
         }).subscribe({
           next: (res) => {
             this.toastr.success(res.msg, 'Stock actualizado');
-            this.cerrarModal();
-            this.loading = false; // Liberar bloqueo
-            this.cargarMobiliario(); // Recargar todo para evitar inconsistencias
-            this.cargarEstadisticas();
+            finalizarOperacion();
           },
-          error: (err) => {
-            this.loading = false; // Liberar bloqueo en error
-            this.toastr.error(err.error?.msg || 'Error al agregar stock', 'Error');
-          }
+          error: (err) => manejarError(err, 'agregar stock')
         });
         break;
 
@@ -276,15 +296,9 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
         }).subscribe({
           next: (res) => {
             this.toastr.success(res.msg, 'Stock actualizado');
-            this.cerrarModal();
-            this.loading = false;
-            this.cargarMobiliario(); // Recargar todo para evitar inconsistencias
-            this.cargarEstadisticas();
+            finalizarOperacion();
           },
-          error: (err) => {
-            this.loading = false;
-            this.toastr.error(err.error?.msg || 'Error al retirar stock', 'Error');
-          }
+          error: (err) => manejarError(err, 'retirar stock')
         });
         break;
 
@@ -297,15 +311,9 @@ export class InventarioMobiliarioComponent implements OnInit, OnDestroy {
         }).subscribe({
           next: (res) => {
             this.toastr.success(res.msg, 'Stock ajustado');
-            this.cerrarModal();
-            this.loading = false;
-            this.cargarMobiliario(); // Recargar todo para evitar inconsistencias
-            this.cargarEstadisticas();
+            finalizarOperacion();
           },
-          error: (err) => {
-            this.loading = false;
-            this.toastr.error(err.error?.msg || 'Error al ajustar stock', 'Error');
-          }
+          error: (err) => manejarError(err, 'ajustar stock')
         });
         break;
     }
