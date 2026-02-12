@@ -1092,3 +1092,222 @@
     height: 36px;
   }
 }
+
+/* ===== STOCK RÁPIDO (+1/-1) ===== */
+.td-acciones {
+  min-width: 220px;
+}
+
+.acciones-stock-rapido {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.btn-stock-rapido {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.btn-stock-rapido:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-sumar {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-sumar:hover:not(:disabled) {
+  background-color: #218838;
+  transform: scale(1.1);
+}
+
+.btn-restar {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-restar:hover:not(:disabled) {
+  background-color: #c82333;
+  transform: scale(1.1);
+}
+
+.btn-stock-rapido.animando {
+  animation: pulseButton 0.3s ease;
+}
+
+.stock-display {
+  min-width: 40px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 4px 8px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+  transition: all 0.3s ease;
+}
+
+.stock-display.stock-animando {
+  transform: scale(1.2);
+}
+
+.stock-display.sumando {
+  background-color: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+}
+
+.stock-display.restando {
+  background-color: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+}
+
+@keyframes pulseButton {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.acciones-botones {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+
+/* ===== BOTÓN ELIMINAR ===== */
+.btn-eliminar {
+  color: #dc3545 !important;
+}
+
+.btn-eliminar:hover {
+  background-color: rgba(220, 53, 69, 0.15) !important;
+}
+
+/* ===== MODAL DE EDICIÓN MEJORADO ===== */
+.modal-edicion {
+  max-width: 700px !important;
+}
+
+.modal-edicion .modal-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.modal-edicion .form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+}
+
+.modal-edicion .form-grupo-completo {
+  grid-column: 1 / -1;
+}
+
+.header-editar {
+  background-color: var(--color-primary) !important;
+  border-bottom-color: #17a2b8 !important;
+}
+
+.header-editar h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: #ffffff;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.header-editar h2 i {
+  color: var(--color-secondary);
+}
+
+.btn-editar.btn-confirmar {
+  background-color: #17a2b8;
+}
+
+.btn-editar.btn-confirmar:hover:not(:disabled) {
+  background-color: #138496;
+}
+
+.required {
+  color: #dc3545;
+}
+
+/* ===== MODAL DE ELIMINACIÓN ===== */
+.modal-eliminar {
+  max-width: 480px;
+}
+
+.header-eliminar {
+  background-color: #dc3545 !important;
+  border-bottom-color: #c82333 !important;
+}
+
+.header-eliminar h3 i {
+  color: #ffc107 !important;
+}
+
+.warning-message {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: rgba(220, 53, 69, 0.1);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-lg);
+  border-left: 4px solid #dc3545;
+}
+
+.warning-message i {
+  font-size: 2rem;
+  color: #dc3545;
+}
+
+.warning-message p {
+  margin: 0;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.producto-eliminar {
+  border-left-color: #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.05) !important;
+}
+
+.btn-danger {
+  background-color: #dc3545 !important;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #c82333 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4) !important;
+}
+
+/* ===== RESPONSIVE PARA ACCIONES ===== */
+@media (max-width: 768px) {
+  .modal-edicion .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .acciones-stock-rapido {
+    flex-direction: row;
+    gap: 2px;
+  }
+  
+  .acciones-botones {
+    flex-wrap: wrap;
+  }
+}

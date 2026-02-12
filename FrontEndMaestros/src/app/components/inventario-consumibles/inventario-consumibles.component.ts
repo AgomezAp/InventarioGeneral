@@ -70,6 +70,15 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
     observaciones: ''
   };
 
+  // Modal de eliminación
+  mostrarModalEliminar = false;
+  consumibleAEliminar: Consumible | null = null;
+  motivoEliminacion = '';
+
+  // Estado de stock rápido (para animación visual)
+  stockActualizando: Map<number, 'sumando' | 'restando'> = new Map();
+  operacionEnProceso = false;
+
   // Subject de destrucción para takeUntil
   private destroy$ = new Subject<void>();
   
@@ -94,6 +103,9 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
           this.tipoInventarioCodigo = data['tipoInventario'];
         }
       });
+    
+    // Restaurar filtros de sessionStorage
+    this.restaurarFiltros();
     
     this.cargarTipoInventario();
     this.conectarWebSocket();
@@ -524,6 +536,8 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
     }
 
     this.loading = true;
+    this.cdr.markForCheck();
+    
     const datosActualizados = {
       nombre: this.formularioEdicion.nombre.trim(),
       categoria: this.formularioEdicion.categoria,
@@ -548,9 +562,189 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error al actualizar consumible:', err);
+          this.error = err.error?.msg || 'Error al actualizar el producto';
           this.loading = false;
           this.cdr.markForCheck();
         }
       });
+  }
+
+  // ==================== PERSISTENCIA DE FILTROS ====================
+
+  private getStorageKey(): string {
+    return `filtros_consumibles_${this.tipoInventarioCodigo}`;
+  }
+
+  guardarFiltros(): void {
+    const filtros = {
+      categoria: this.filtroCategoria,
+      stockBajo: this.filtroStockBajo,
+      busqueda: this.filtroBusqueda
+    };
+    sessionStorage.setItem(this.getStorageKey(), JSON.stringify(filtros));
+  }
+
+  private restaurarFiltros(): void {
+    const filtrosGuardados = sessionStorage.getItem(this.getStorageKey());
+    if (filtrosGuardados) {
+      try {
+        const filtros = JSON.parse(filtrosGuardados);
+        this.filtroCategoria = filtros.categoria || 'todas';
+        this.filtroStockBajo = filtros.stockBajo || false;
+        this.filtroBusqueda = filtros.busqueda || '';
+      } catch (e) {
+        console.error('Error al restaurar filtros:', e);
+      }
+    }
+  }
+
+  // Override aplicarFiltros para guardar en sessionStorage
+  aplicarFiltrosYGuardar(): void {
+    this.aplicarFiltros();
+    this.guardarFiltros();
+  }
+
+  // ==================== STOCK RÁPIDO (+1 / -1) ====================
+
+  agregarStockRapido(consumible: Consumible, event: Event): void {
+    event.stopPropagation();
+    if (this.operacionEnProceso || !consumible.id) return;
+
+    this.operacionEnProceso = true;
+    this.stockActualizando.set(consumible.id, 'sumando');
+    this.cdr.markForCheck();
+
+    const Uid = this.getUserId();
+
+    // Optimistic update
+    const stockAnterior = consumible.stockActual;
+    consumible.stockActual += 1;
+    this.cdr.markForCheck();
+
+    this.consumibleService.agregarStock(consumible.id, {
+      cantidad: 1,
+      motivo: 'compra',
+      descripcion: 'Adición rápida de stock',
+      Uid
+    }).pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: () => {
+        this.finalizarOperacionStock(consumible.id!);
+        this.cargarEstadisticas();
+        this.cargarAlertas();
+      },
+      error: (err) => {
+        // Revertir
+        consumible.stockActual = stockAnterior;
+        this.finalizarOperacionStock(consumible.id!);
+        console.error('Error al agregar stock:', err);
+      }
+    });
+  }
+
+  restarStockRapido(consumible: Consumible, event: Event): void {
+    event.stopPropagation();
+    if (this.operacionEnProceso || !consumible.id || consumible.stockActual <= 0) return;
+
+    this.operacionEnProceso = true;
+    this.stockActualizando.set(consumible.id, 'restando');
+    this.cdr.markForCheck();
+
+    const Uid = this.getUserId();
+
+    // Optimistic update
+    const stockAnterior = consumible.stockActual;
+    consumible.stockActual -= 1;
+    this.cdr.markForCheck();
+
+    this.consumibleService.retirarStock(consumible.id, {
+      cantidad: 1,
+      motivo: 'entrega',
+      descripcion: 'Retiro rápido de stock',
+      Uid
+    }).pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: () => {
+        this.finalizarOperacionStock(consumible.id!);
+        this.cargarEstadisticas();
+        this.cargarAlertas();
+      },
+      error: (err) => {
+        // Revertir
+        consumible.stockActual = stockAnterior;
+        this.finalizarOperacionStock(consumible.id!);
+        console.error('Error al retirar stock:', err);
+      }
+    });
+  }
+
+  private finalizarOperacionStock(id: number): void {
+    setTimeout(() => {
+      this.stockActualizando.delete(id);
+      this.operacionEnProceso = false;
+      this.cdr.markForCheck();
+    }, 500);
+  }
+
+  esStockActualizando(id: number): boolean {
+    return this.stockActualizando.has(id);
+  }
+
+  getTipoActualizacion(id: number): string {
+    return this.stockActualizando.get(id) || '';
+  }
+
+  // ==================== ELIMINACIÓN DE CONSUMIBLE ====================
+
+  abrirModalEliminar(consumible: Consumible): void {
+    this.consumibleAEliminar = consumible;
+    this.motivoEliminacion = '';
+    this.mostrarModalEliminar = true;
+  }
+
+  cerrarModalEliminar(): void {
+    this.mostrarModalEliminar = false;
+    this.consumibleAEliminar = null;
+    this.motivoEliminacion = '';
+  }
+
+  confirmarEliminacion(): void {
+    if (!this.consumibleAEliminar?.id || !this.motivoEliminacion) return;
+
+    this.loading = true;
+    this.cdr.markForCheck();
+
+    const Uid = this.getUserId();
+
+    this.consumibleService.desactivarConsumible(this.consumibleAEliminar.id, this.motivoEliminacion, Uid)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.cerrarModalEliminar();
+          this.cargarConsumibles();
+          this.cargarEstadisticas();
+          this.cargarAlertas();
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('Error al eliminar consumible:', err);
+          this.error = err.error?.msg || 'Error al eliminar el producto';
+          this.loading = false;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  private getUserId(): number {
+    const user = localStorage.getItem('user');
+    if (user) {
+      try {
+        return JSON.parse(user).Uid || 0;
+      } catch {
+        return 0;
+      }
+    }
+    return Number(localStorage.getItem('userId')) || 0;
   }
 }

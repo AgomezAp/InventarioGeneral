@@ -73,7 +73,7 @@
   <div class="filtros-section">
     <div class="filtro-grupo">
       <label>Categoría:</label>
-      <select [(ngModel)]="filtroCategoria" (change)="aplicarFiltros()">
+      <select [(ngModel)]="filtroCategoria" (change)="aplicarFiltrosYGuardar()">
         <option value="todas">Todas las categorías</option>
         <option *ngFor="let cat of categorias" [value]="cat">
           {{ cat | titlecase }}
@@ -83,7 +83,7 @@
     
     <div class="filtro-grupo filtro-check">
       <label>
-        <input type="checkbox" [(ngModel)]="filtroStockBajo" (change)="aplicarFiltros()">
+        <input type="checkbox" [(ngModel)]="filtroStockBajo" (change)="aplicarFiltrosYGuardar()">
         Solo stock bajo
       </label>
     </div>
@@ -92,8 +92,9 @@
       <label>Buscar:</label>
       <input 
         type="text" 
-        [ngModel]="filtroBusqueda" 
+        [(ngModel)]="filtroBusqueda" 
         (ngModelChange)="onBusquedaChange($event)"
+        (blur)="guardarFiltros()"
         placeholder="Nombre, código, proveedor..."
       />
       <i class="fa-solid fa-search"></i>
@@ -159,21 +160,42 @@
           </td>
           <td class="td-precio">{{ formatearPrecio(consumible.precioUnitario) }}</td>
           <td class="td-acciones">
-            <button class="btn-accion btn-editar" (click)="abrirModalEdicion(consumible)" title="Editar">
-              <i class="fa-solid fa-edit"></i>
-            </button>
-            <button class="btn-accion btn-entrada" (click)="abrirModalStock(consumible, 'entrada')" title="Entrada de stock">
-              <i class="fa-solid fa-plus"></i>
-            </button>
-            <button class="btn-accion btn-salida" (click)="abrirModalStock(consumible, 'salida')" title="Salida de stock" [disabled]="esSinStock(consumible)">
-              <i class="fa-solid fa-minus"></i>
-            </button>
-            <button class="btn-accion btn-ajuste" (click)="abrirModalStock(consumible, 'ajuste')" title="Ajustar stock">
-              <i class="fa-solid fa-sliders"></i>
-            </button>
-            <button class="btn-accion btn-historial" (click)="verHistorial(consumible.id!)" title="Ver historial">
-              <i class="fa-solid fa-history"></i>
-            </button>
+            <div class="acciones-stock-rapido">
+              <button class="btn-stock-rapido btn-restar" 
+                      (click)="restarStockRapido(consumible, $event)" 
+                      [disabled]="esSinStock(consumible) || operacionEnProceso"
+                      [class.animando]="getTipoActualizacion(consumible.id!) === 'restando'"
+                      title="Retirar 1 unidad">
+                <i class="fa-solid fa-minus"></i>
+              </button>
+              <span class="stock-display" 
+                    [class.stock-animando]="esStockActualizando(consumible.id!)"
+                    [class.sumando]="getTipoActualizacion(consumible.id!) === 'sumando'"
+                    [class.restando]="getTipoActualizacion(consumible.id!) === 'restando'">
+                {{ consumible.stockActual }}
+              </span>
+              <button class="btn-stock-rapido btn-sumar" 
+                      (click)="agregarStockRapido(consumible, $event)"
+                      [disabled]="operacionEnProceso"
+                      [class.animando]="getTipoActualizacion(consumible.id!) === 'sumando'"
+                      title="Agregar 1 unidad">
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+            <div class="acciones-botones">
+              <button class="btn-accion btn-editar" (click)="abrirModalEdicion(consumible)" title="Editar">
+                <i class="fa-solid fa-edit"></i>
+              </button>
+              <button class="btn-accion btn-ajuste" (click)="abrirModalStock(consumible, 'ajuste')" title="Ajustar stock">
+                <i class="fa-solid fa-sliders"></i>
+              </button>
+              <button class="btn-accion btn-historial" (click)="verHistorial(consumible.id!)" title="Ver historial">
+                <i class="fa-solid fa-history"></i>
+              </button>
+              <button class="btn-accion btn-eliminar" (click)="abrirModalEliminar(consumible)" title="Eliminar">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -336,8 +358,55 @@
     
     <div class="modal-footer">
       <button class="btn-cancelar" (click)="cerrarModalEdicion()">Cancelar</button>
-      <button class="btn-confirmar btn-editar" (click)="guardarEdicion()" [disabled]="!formularioEdicion.nombre.trim()">
-        <i class="fa-solid fa-save"></i> Guardar Cambios
+      <button class="btn-confirmar btn-editar" (click)="guardarEdicion()" [disabled]="!formularioEdicion.nombre.trim() || loading">
+        <i class="fa-solid fa-save"></i> {{ loading ? 'Guardando...' : 'Guardar Cambios' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Eliminación -->
+<div class="modal-overlay" *ngIf="mostrarModalEliminar" (click)="cerrarModalEliminar()">
+  <div class="modal-content modal-eliminar" (click)="$event.stopPropagation()">
+    <div class="modal-header header-eliminar">
+      <h3>
+        <i class="fa-solid fa-exclamation-triangle"></i>
+        Eliminar Producto
+      </h3>
+      <button class="btn-cerrar" (click)="cerrarModalEliminar()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body" *ngIf="consumibleAEliminar">
+      <div class="warning-message">
+        <i class="fa-solid fa-warning"></i>
+        <p>¿Está seguro de eliminar este producto del inventario?</p>
+      </div>
+      
+      <div class="producto-info producto-eliminar">
+        <strong>{{ consumibleAEliminar.nombre }}</strong>
+        <span>Stock actual: {{ consumibleAEliminar.stockActual }} {{ consumibleAEliminar.unidadMedida }}(s)</span>
+        <span *ngIf="consumibleAEliminar.codigoInterno">Código: {{ consumibleAEliminar.codigoInterno }}</span>
+      </div>
+      
+      <div class="form-grupo">
+        <label>Motivo de eliminación: <span class="required">*</span></label>
+        <select [(ngModel)]="motivoEliminacion">
+          <option value="">Seleccionar motivo...</option>
+          <option value="obsoleto">Producto obsoleto</option>
+          <option value="descontinuado">Descontinuado por proveedor</option>
+          <option value="error_registro">Error de registro</option>
+          <option value="duplicado">Registro duplicado</option>
+          <option value="otro">Otro motivo</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-cancelar" (click)="cerrarModalEliminar()">Cancelar</button>
+      <button class="btn-confirmar btn-danger" (click)="confirmarEliminacion()" [disabled]="!motivoEliminacion || loading">
+        <i class="fa-solid fa-trash"></i> {{ loading ? 'Eliminando...' : 'Eliminar' }}
       </button>
     </div>
   </div>

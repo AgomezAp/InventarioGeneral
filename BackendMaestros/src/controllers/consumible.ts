@@ -184,8 +184,9 @@ export const registrarConsumible = async (req: Request, res: Response): Promise<
     }
     
     // Verificar código interno único si se proporciona
-    if (codigoInterno) {
-      const existente = await Consumible.findOne({ where: { codigoInterno } });
+    const codigoInternoFinal = codigoInterno?.trim() || null;
+    if (codigoInternoFinal) {
+      const existente = await Consumible.findOne({ where: { codigoInterno: codigoInternoFinal } });
       if (existente) {
         res.status(400).json({ msg: 'Ya existe un producto con ese código interno' });
         return;
@@ -199,21 +200,21 @@ export const registrarConsumible = async (req: Request, res: Response): Promise<
     }
     
     const nuevoConsumible = await Consumible.create({
-      nombre,
+      nombre: nombre?.trim(),
       tipoInventarioId: tipoInventario.id, // Usar el ID obtenido
       categoria,
-      descripcion,
+      descripcion: descripcion?.trim() || null,
       unidadMedida: unidadMedida || 'unidad',
       stockActual: stockActual || 0,
       stockMinimo: stockMinimo || 5,
       stockMaximo,
-      proveedor,
+      proveedor: proveedor?.trim() || null,
       precioUnitario: precioUnitario || 0,
-      ubicacionAlmacen,
-      codigoInterno,
+      ubicacionAlmacen: ubicacionAlmacen?.trim() || null,
+      codigoInterno: codigoInternoFinal,
       foto,
       activo: true,
-      observaciones,
+      observaciones: observaciones?.trim() || null,
       Uid
     });
     
@@ -284,9 +285,12 @@ export const actualizarConsumible = async (req: Request, res: Response): Promise
       return;
     }
     
-    // Verificar código interno único si se cambia
-    if (codigoInterno && codigoInterno !== consumible.codigoInterno) {
-      const existente = await Consumible.findOne({ where: { codigoInterno } });
+    // Convertir strings vacíos a null para evitar violación de unique constraint
+    const codigoInternoFinal = codigoInterno?.trim() || null;
+    
+    // Verificar código interno único si se cambia y no es null
+    if (codigoInternoFinal && codigoInternoFinal !== consumible.codigoInterno) {
+      const existente = await Consumible.findOne({ where: { codigoInterno: codigoInternoFinal } });
       if (existente) {
         res.status(400).json({ msg: 'Ya existe un producto con ese código interno' });
         return;
@@ -294,17 +298,17 @@ export const actualizarConsumible = async (req: Request, res: Response): Promise
     }
     
     await consumible.update({
-      nombre: nombre || consumible.nombre,
+      nombre: nombre?.trim() || consumible.nombre,
       categoria: categoria !== undefined ? categoria : consumible.categoria,
-      descripcion: descripcion !== undefined ? descripcion : consumible.descripcion,
+      descripcion: descripcion?.trim() || null,
       unidadMedida: unidadMedida || consumible.unidadMedida,
       stockMinimo: stockMinimo !== undefined ? stockMinimo : consumible.stockMinimo,
       stockMaximo: stockMaximo !== undefined ? stockMaximo : consumible.stockMaximo,
-      proveedor: proveedor !== undefined ? proveedor : consumible.proveedor,
+      proveedor: proveedor?.trim() || null,
       precioUnitario: precioUnitario !== undefined ? precioUnitario : consumible.precioUnitario,
-      ubicacionAlmacen: ubicacionAlmacen !== undefined ? ubicacionAlmacen : consumible.ubicacionAlmacen,
-      codigoInterno: codigoInterno !== undefined ? codigoInterno : consumible.codigoInterno,
-      observaciones: observaciones !== undefined ? observaciones : consumible.observaciones
+      ubicacionAlmacen: ubicacionAlmacen?.trim() || null,
+      codigoInterno: codigoInterno !== undefined ? codigoInternoFinal : consumible.codigoInterno,
+      observaciones: observaciones?.trim() || null
     });
     
     // Emitir evento WebSocket
