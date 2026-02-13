@@ -13,6 +13,9 @@ export interface DispositivoEntregado {
   imei?: string;
   descripcion?: string;
   condicion: string;
+  // Campos adicionales para preselección desde actas
+  actaId?: number;
+  receptor?: string;
 }
 
 export interface DetalleDevolucion {

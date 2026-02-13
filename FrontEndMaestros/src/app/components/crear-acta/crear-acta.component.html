@@ -133,6 +133,27 @@
             <div class="disponibles-area">
               <label class="mini-label">Disponibles:</label>
 
+              <!-- Buscador de dispositivos -->
+              <div class="buscador-dispositivos">
+                <i class="pi pi-search"></i>
+                <input 
+                  type="text" 
+                  [(ngModel)]="busquedaDispositivo"
+                  (input)="filtrarDispositivos()"
+                  placeholder="Buscar por nombre, marca, modelo, serial o IMEI..."
+                  class="input-busqueda"
+                  name="busquedaDispositivo"
+                />
+                <button 
+                  type="button"
+                  class="btn-limpiar-busqueda" 
+                  *ngIf="busquedaDispositivo"
+                  (click)="busquedaDispositivo = ''; filtrarDispositivos()"
+                >
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+
               <!-- Loading -->
               <div class="loading-inline" *ngIf="loadingDispositivos">
                 <div class="spinner-sm"></div>
@@ -143,12 +164,12 @@
               <div
                 class="disponibles-scroll"
                 *ngIf="
-                  !loadingDispositivos && dispositivosDisponibles.length > 0
+                  !loadingDispositivos && dispositivosDisponiblesFiltrados.length > 0
                 "
               >
                 <div
                   class="disp-chip"
-                  *ngFor="let disp of dispositivosDisponibles"
+                  *ngFor="let disp of dispositivosDisponiblesFiltrados"
                   (click)="agregarDispositivo(disp)"
                   tabindex="0"
                 >
@@ -160,15 +181,29 @@
                   <span class="disp-chip-detail" *ngIf="disp.marca">{{
                     disp.marca
                   }}</span>
+                  <span class="disp-chip-detail disp-chip-serial" *ngIf="disp.imei || disp.serial">
+                    {{ disp.imei || disp.serial }}
+                  </span>
                   <i class="pi pi-plus add-icon"></i>
                 </div>
+              </div>
+
+              <!-- Sin resultados de búsqueda -->
+              <div
+                class="empty-mini"
+                *ngIf="
+                  !loadingDispositivos && dispositivosDisponiblesFiltrados.length === 0 && busquedaDispositivo
+                "
+              >
+                <i class="pi pi-search"></i>
+                <span>No se encontraron dispositivos con "{{ busquedaDispositivo }}"</span>
               </div>
 
               <!-- Sin disponibles -->
               <div
                 class="empty-mini"
                 *ngIf="
-                  !loadingDispositivos && dispositivosDisponibles.length === 0
+                  !loadingDispositivos && dispositivosDisponibles.length === 0 && !busquedaDispositivo
                 "
               >
                 <i class="pi pi-inbox"></i>
@@ -244,6 +279,40 @@
                   <!-- Formulario del dispositivo -->
                   <div class="disp-card-form">
                     <div class="form-row-device">
+                      <!-- Campo de cantidad solo para dispositivos tipo stock -->
+                      <div class="form-field" *ngIf="item.dispositivo.tipoRegistro === 'stock'">
+                        <label>Cantidad a entregar</label>
+                        <div class="cantidad-input-group">
+                          <button 
+                            type="button"
+                            class="btn-cantidad btn-minus"
+                            (click)="item.cantidad = Math.max(1, item.cantidad - 1)"
+                            [disabled]="item.cantidad <= 1"
+                          >
+                            <i class="pi pi-minus"></i>
+                          </button>
+                          <input
+                            type="number"
+                            [(ngModel)]="item.cantidad"
+                            [name]="'cantidad_' + i"
+                            min="1"
+                            [max]="item.dispositivo.stockActual || 999"
+                            class="input-cantidad"
+                          />
+                          <button 
+                            type="button"
+                            class="btn-cantidad btn-plus"
+                            (click)="item.cantidad = Math.min(item.dispositivo.stockActual || 999, item.cantidad + 1)"
+                            [disabled]="item.cantidad >= (item.dispositivo.stockActual || 999)"
+                          >
+                            <i class="pi pi-plus"></i>
+                          </button>
+                          <span class="stock-disponible">
+                            / {{ item.dispositivo.stockActual || 0 }} disp.
+                          </span>
+                        </div>
+                      </div>
+                      
                       <div class="form-field">
                         <label>Condición al entregar</label>
                         <div class="select-device">

@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import {
   DevolucionService,
   DispositivoEntregado,
@@ -45,6 +45,8 @@ export class CrearDevolucionComponent implements OnInit, AfterViewInit {
 
   // Dispositivos
   dispositivosEntregados: DispositivoEntregado[] = [];
+  dispositivosEntregadosFiltrados: DispositivoEntregado[] = [];
+  busquedaDispositivo = '';
   dispositivosSeleccionados: {
     dispositivo: DispositivoEntregado;
     estadoDevolucion: string;
@@ -76,13 +78,23 @@ export class CrearDevolucionComponent implements OnInit, AfterViewInit {
     { value: 'perdido', label: 'Perdido' },
   ];
 
+  // ID del acta si viene desde la lista de actas
+  actaIdPreseleccionada: number | null = null;
+
   constructor(
     private devolucionService: DevolucionService,
     private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
-    this.cargarDispositivosEntregados();
+    // Verificar si viene con actaId para preseleccionar dispositivos
+    this.route.queryParams.subscribe(params => {
+      if (params['actaId']) {
+        this.actaIdPreseleccionada = Number(params['actaId']);
+      }
+      this.cargarDispositivosEntregados();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -97,8 +109,24 @@ export class CrearDevolucionComponent implements OnInit, AfterViewInit {
       const canvas = this.signatureCanvasReceptor.nativeElement;
       const container = canvas.parentElement;
       if (container) {
-        canvas.width = container.offsetWidth - 20;
-        canvas.height = 150;
+        // Establecer dimensiones exactas para evitar distorsión
+        const width = container.offsetWidth - 20;
+        const height = 150;
+        
+        // Establecer dimensiones CSS
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        
+        // Establecer dimensiones internas del canvas (resolución real)
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        
+        // Escalar el contexto para dispositivos de alta densidad
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.scale(dpr, dpr);
+        }
       }
       this.signaturePadReceptor = new SignaturePad(canvas, {
         backgroundColor: 'rgb(255, 255, 255)',
@@ -118,7 +146,13 @@ export class CrearDevolucionComponent implements OnInit, AfterViewInit {
     this.devolucionService.obtenerDispositivosEntregados().subscribe({
       next: (data) => {
         this.dispositivosEntregados = data;
+        this.dispositivosEntregadosFiltrados = data;
         this.loadingDispositivos = false;
+        
+        // Si viene con actaId, preseleccionar los dispositivos de esa acta
+        if (this.actaIdPreseleccionada) {
+          this.preseleccionarDispositivosDeActa(this.actaIdPreseleccionada);
+        }
       },
       error: (err) => {
         console.error('Error al cargar dispositivos:', err);
@@ -126,6 +160,40 @@ export class CrearDevolucionComponent implements OnInit, AfterViewInit {
         this.loadingDispositivos = false;
       },
     });
+  }
+
+  preseleccionarDispositivosDeActa(actaId: number): void {
+    // Filtrar dispositivos que pertenecen a esta acta y agregarlos
+    const dispositivosDelActa = this.dispositivosEntregados.filter(
+      (d: any) => d.actaId === actaId
+    );
+    
+    for (const dispositivo of dispositivosDelActa) {
+      this.agregarDispositivo(dispositivo);
+    }
+    
+    // Mostrar mensaje si se preseleccionaron dispositivos
+    if (dispositivosDelActa.length > 0) {
+      this.successMessage = `Se han preseleccionado ${dispositivosDelActa.length} dispositivo(s) del acta para devolución.`;
+    }
+  }
+
+  filtrarDispositivos(): void {
+    const busqueda = this.busquedaDispositivo.toLowerCase().trim();
+    if (!busqueda) {
+      this.dispositivosEntregadosFiltrados = this.dispositivosEntregados;
+      return;
+    }
+    
+    this.dispositivosEntregadosFiltrados = this.dispositivosEntregados.filter((d: any) => 
+      d.nombre?.toLowerCase().includes(busqueda) ||
+      d.marca?.toLowerCase().includes(busqueda) ||
+      d.modelo?.toLowerCase().includes(busqueda) ||
+      d.serial?.toLowerCase().includes(busqueda) ||
+      d.imei?.toLowerCase().includes(busqueda) ||
+      d.categoria?.toLowerCase().includes(busqueda) ||
+      (d.receptor && d.receptor.toLowerCase().includes(busqueda))
+    );
   }
 
   agregarDispositivo(dispositivo: DispositivoEntregado): void {
@@ -149,12 +217,14 @@ export class CrearDevolucionComponent implements OnInit, AfterViewInit {
     this.dispositivosEntregados = this.dispositivosEntregados.filter(
       (d) => d.id !== dispositivo.id,
     );
+    this.filtrarDispositivos();
   }
 
   quitarDispositivo(index: number): void {
     const item = this.dispositivosSeleccionados[index];
     this.dispositivosEntregados.push(item.dispositivo);
     this.dispositivosSeleccionados.splice(index, 1);
+    this.filtrarDispositivos();
   }
 
   onFotosSelected(event: Event, index: number): void {

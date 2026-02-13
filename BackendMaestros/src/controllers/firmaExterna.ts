@@ -287,21 +287,50 @@ export const firmarActaConToken = async (req: Request, res: Response): Promise<v
     
     // Actualizar estado de dispositivos a 'entregado'
     for (const detalle of acta.detalles) {
-      await Dispositivo.update(
-        { estado: 'entregado' },
-        { where: { id: detalle.dispositivoId }, transaction }
-      );
+      const dispositivo = detalle.dispositivo;
+      const cantidadEntregada = detalle.cantidad || 1; // Default a 1 si no se especificó
       
-      // Registrar movimiento
-      await MovimientoDispositivo.create({
-        dispositivoId: detalle.dispositivoId,
-        tipoMovimiento: 'firma_entrega',
-        estadoAnterior: 'disponible',
-        estadoNuevo: 'entregado',
-        descripcion: `Acta firmada digitalmente por ${acta.nombreReceptor} - ${acta.numeroActa}`,
-        actaId: acta.id,
-        fecha: ahora
-      }, { transaction });
+      // Si es un dispositivo de tipo stock, restar del stock
+      if (dispositivo.tipoRegistro === 'stock') {
+        const nuevoStock = Math.max(0, (dispositivo.stockActual || 0) - cantidadEntregada);
+        
+        await Dispositivo.update(
+          { 
+            stockActual: nuevoStock,
+            // Si el stock llega a 0, marcar como no disponible
+            estado: nuevoStock > 0 ? 'disponible' : 'entregado'
+          },
+          { where: { id: detalle.dispositivoId }, transaction }
+        );
+        
+        // Registrar movimiento de stock
+        await MovimientoDispositivo.create({
+          dispositivoId: detalle.dispositivoId,
+          tipoMovimiento: 'retirar_stock',
+          estadoAnterior: `stock: ${dispositivo.stockActual}`,
+          estadoNuevo: `stock: ${nuevoStock}`,
+          descripcion: `Stock reducido en ${cantidadEntregada} unidad(es) por entrega. Acta firmada por ${acta.nombreReceptor} - ${acta.numeroActa}`,
+          actaId: acta.id,
+          fecha: ahora
+        }, { transaction });
+      } else {
+        // Dispositivo individual - cambiar a entregado
+        await Dispositivo.update(
+          { estado: 'entregado' },
+          { where: { id: detalle.dispositivoId }, transaction }
+        );
+        
+        // Registrar movimiento
+        await MovimientoDispositivo.create({
+          dispositivoId: detalle.dispositivoId,
+          tipoMovimiento: 'firma_entrega',
+          estadoAnterior: 'disponible',
+          estadoNuevo: 'entregado',
+          descripcion: `Acta firmada digitalmente por ${acta.nombreReceptor} - ${acta.numeroActa}`,
+          actaId: acta.id,
+          fecha: ahora
+        }, { transaction });
+      }
     }
     
     await transaction.commit();

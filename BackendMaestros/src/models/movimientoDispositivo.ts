@@ -36,7 +36,7 @@ MovimientoDispositivo.init(
       comment: 'ID del dispositivo'
     },
     tipoMovimiento: {
-      type: DataTypes.ENUM('ingreso', 'reserva', 'prestamo', 'devolucion', 'cambio_estado', 'actualizacion', 'baja', 'firma_entrega'),
+      type: DataTypes.ENUM('ingreso', 'reserva', 'prestamo', 'devolucion', 'cambio_estado', 'actualizacion', 'baja', 'firma_entrega', 'entrada_stock', 'salida_stock', 'retirar_stock', 'conversion_stock'),
       allowNull: false,
       comment: 'Tipo de movimiento realizado'
     },

@@ -17,6 +17,11 @@ export interface Dispositivo {
   Uid?: number;
   createdAt?: Date;
   updatedAt?: Date;
+  
+  // Campos para manejo de stock (accesorios, cargadores, etc.)
+  tipoRegistro?: 'individual' | 'stock';
+  stockActual?: number;
+  stockMinimo?: number;
 }
 
 export interface ActaEntrega {

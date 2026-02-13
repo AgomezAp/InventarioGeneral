@@ -52,10 +52,14 @@ export class HttpErrorInterceptor implements HttpInterceptor {
         }
       }),
 
-      // Retry automático para errores recuperables
+      // Retry automático SOLO para peticiones GET con errores recuperables
       retry({
         count: this.maxRetries,
         delay: (error, retryCount) => {
+          // NUNCA reintentar POST, PUT, PATCH, DELETE
+          if (request.method !== 'GET') {
+            return throwError(() => error);
+          }
           if (this.shouldRetry(error)) {
             console.log(`🔄 Reintentando ${request.url} (${retryCount}/${this.maxRetries})`);
             return timer(this.retryDelay * retryCount);

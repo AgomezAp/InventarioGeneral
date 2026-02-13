@@ -177,7 +177,18 @@ export class InventarioComponent implements OnInit, OnDestroy {
   }
 
   contarPorEstado(estado: string): number {
-    return this.dispositivos.filter(d => d.estado === estado).length;
+    return this.dispositivos
+      .filter(d => d.estado === estado)
+      .reduce((total, d) => {
+        // Si es tipo stock, suma el stockActual, si no suma 1
+        return total + (d.tipoRegistro === 'stock' ? (d.stockActual || 0) : 1);
+      }, 0);
+  }
+
+  contarTotalDispositivos(): number {
+    return this.dispositivos.reduce((total, d) => {
+      return total + (d.tipoRegistro === 'stock' ? (d.stockActual || 0) : 1);
+    }, 0);
   }
 
   irAAgregar(): void {
@@ -216,5 +227,73 @@ export class InventarioComponent implements OnInit, OnDestroy {
         }
       });
     }
+  }
+
+  eliminarDispositivo(dispositivo: Dispositivo): void {
+    const cantidadInfo = dispositivo.tipoRegistro === 'stock' 
+      ? ` (${dispositivo.stockActual} unidades)` 
+      : '';
+    
+    const confirmar = confirm(
+      `¿Está seguro de eliminar el dispositivo "${dispositivo.nombre}"${cantidadInfo}?\n\n` +
+      `Categoría: ${dispositivo.categoria}\n` +
+      `Marca: ${dispositivo.marca || 'N/A'}\n` +
+      `Modelo: ${dispositivo.modelo || 'N/A'}\n\n` +
+      `Esta acción no se puede deshacer.`
+    );
+    
+    if (confirmar) {
+      this.inventarioService.eliminarDispositivo(dispositivo.id!, 'Eliminación del inventario').subscribe({
+        next: (response) => {
+          this.cargarDispositivos();
+          this.cargarEstadisticas();
+        },
+        error: (err) => {
+          alert(err.error?.msg || 'Error al eliminar el dispositivo');
+          console.error(err);
+        }
+      });
+    }
+  }
+
+  // Set para rastrear IDs de dispositivos con operaciones de stock en curso
+  stockEnProceso = new Set<number>();
+
+  sumarStock(dispositivo: Dispositivo): void {
+    const id = dispositivo.id!;
+    if (this.stockEnProceso.has(id)) return; // Evitar doble clic
+    
+    this.stockEnProceso.add(id);
+    this.inventarioService.agregarStock(id, 1).subscribe({
+      next: (response) => {
+        dispositivo.stockActual = response.stockActual;
+        this.stockEnProceso.delete(id);
+        this.cargarEstadisticas();
+      },
+      error: (err) => {
+        console.error(err);
+        this.stockEnProceso.delete(id);
+        this.cargarDispositivos();
+      }
+    });
+  }
+
+  restarStock(dispositivo: Dispositivo): void {
+    const id = dispositivo.id!;
+    if ((dispositivo.stockActual || 0) <= 0 || this.stockEnProceso.has(id)) return;
+    
+    this.stockEnProceso.add(id);
+    this.inventarioService.retirarStock(id, 1, 'Ajuste de inventario').subscribe({
+      next: (response) => {
+        dispositivo.stockActual = response.stockActual;
+        this.stockEnProceso.delete(id);
+        this.cargarEstadisticas();
+      },
+      error: (err) => {
+        console.error(err);
+        this.stockEnProceso.delete(id);
+        this.cargarDispositivos();
+      }
+    });
   }
 }

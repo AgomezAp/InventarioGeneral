@@ -520,7 +520,7 @@ export const agregarStockDispositivo = async (req: Request, res: Response): Prom
       msg: `Se agregaron ${cantidadNum} unidades exitosamente`,
       dispositivo,
       stockAnterior,
-      stockNuevo
+      stockActual: stockNuevo
     });
   } catch (error) {
     console.error('Error al agregar stock:', error);
@@ -580,7 +580,7 @@ export const retirarStockDispositivo = async (req: Request, res: Response): Prom
       msg: `Se retiraron ${cantidadNum} unidades exitosamente`,
       dispositivo,
       stockAnterior,
-      stockNuevo
+      stockActual: stockNuevo
     });
   } catch (error) {
     console.error('Error al retirar stock:', error);
@@ -651,6 +651,60 @@ export const convertirAStock = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error al convertir a stock:', error);
     res.status(500).json({ msg: 'Error al convertir el dispositivo' });
+  }
+};
+
+/**
+ * Eliminar un dispositivo del inventario
+ * Solo permite eliminar dispositivos que no estén entregados
+ */
+export const eliminarDispositivo = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { motivo, Uid } = req.body;
+    
+    const dispositivo = await Dispositivo.findByPk(Number(id));
+    
+    if (!dispositivo) {
+      res.status(404).json({ msg: 'Dispositivo no encontrado' });
+      return;
+    }
+    
+    // Guardar información antes de eliminar para el log
+    const infoDispositivo = {
+      id: dispositivo.id,
+      nombre: dispositivo.nombre,
+      categoria: dispositivo.categoria,
+      marca: dispositivo.marca,
+      modelo: dispositivo.modelo,
+      serial: dispositivo.serial,
+      imei: dispositivo.imei,
+      estado: dispositivo.estado,
+      tipoRegistro: dispositivo.tipoRegistro,
+      stockActual: dispositivo.stockActual
+    };
+    
+    // Eliminar los movimientos asociados al dispositivo
+    await MovimientoDispositivo.destroy({
+      where: { dispositivoId: dispositivo.id }
+    });
+    
+    // Eliminar el dispositivo
+    await dispositivo.destroy();
+    
+    console.log(`Dispositivo eliminado: ${JSON.stringify(infoDispositivo)}. Motivo: ${motivo || 'No especificado'}. Usuario: ${Uid}`);
+    
+    // Emitir evento WebSocket
+    const io = getIO();
+    io.emit('dispositivo_eliminado', infoDispositivo);
+    
+    res.json({
+      msg: 'Dispositivo eliminado correctamente',
+      dispositivo: infoDispositivo
+    });
+  } catch (error) {
+    console.error('Error al eliminar dispositivo:', error);
+    res.status(500).json({ msg: 'Error al eliminar el dispositivo' });
   }
 };
 

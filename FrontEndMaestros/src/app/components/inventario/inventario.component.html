@@ -23,7 +23,7 @@
     <div class="stat-card stat-total">
       <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
       <div class="stat-info">
-        <span class="stat-number">{{ dispositivos.length }}</span>
+        <span class="stat-number">{{ contarTotalDispositivos() }}</span>
         <span class="stat-label">Total Dispositivos</span>
       </div>
     </div>
@@ -122,6 +122,7 @@
           <th>Nombre</th>
           <th>Marca / Modelo</th>
           <th>Serial / IMEI</th>
+          <th>Cantidad</th>
           <th>Estado</th>
           <th>Condición</th>
           <th>Ubicación</th>
@@ -146,6 +147,35 @@
           <td class="td-serial">
             <span *ngIf="dispositivo.serial" class="serial">S/N: {{ dispositivo.serial }}</span>
             <span *ngIf="dispositivo.imei" class="imei">IMEI: {{ dispositivo.imei }}</span>
+            <span *ngIf="dispositivo.tipoRegistro === 'stock' && !dispositivo.serial && !dispositivo.imei" class="sin-serial">Por cantidad</span>
+          </td>
+          <td class="td-cantidad">
+            <span *ngIf="dispositivo.tipoRegistro === 'stock'" class="cantidad-badge" [class.stock-bajo]="dispositivo.stockActual! <= (dispositivo.stockMinimo || 0)">
+              <button 
+                class="btn-stock btn-restar" 
+                (click)="restarStock(dispositivo)"
+                [disabled]="dispositivo.stockActual! <= 0 || stockEnProceso.has(dispositivo.id!)"
+                title="Restar 1 unidad"
+              >
+                <i class="fa-solid" [ngClass]="stockEnProceso.has(dispositivo.id!) ? 'fa-spinner fa-spin' : 'fa-minus'"></i>
+              </button>
+              <span class="stock-numero">
+                <i class="fa-solid fa-cubes"></i>
+                {{ dispositivo.stockActual || 0 }}
+              </span>
+              <button 
+                class="btn-stock btn-sumar" 
+                (click)="sumarStock(dispositivo)"
+                [disabled]="stockEnProceso.has(dispositivo.id!)"
+                title="Agregar 1 unidad"
+              >
+                <i class="fa-solid" [ngClass]="stockEnProceso.has(dispositivo.id!) ? 'fa-spinner fa-spin' : 'fa-plus'"></i>
+              </button>
+              <span *ngIf="dispositivo.stockMinimo" class="stock-minimo">(mín: {{ dispositivo.stockMinimo }})</span>
+            </span>
+            <span *ngIf="dispositivo.tipoRegistro !== 'stock'" class="cantidad-individual">
+              <i class="fa-solid fa-cube"></i> 1
+            </span>
           </td>
           <td class="td-estado">
             <span class="estado-badge" [ngClass]="getEstadoClass(dispositivo.estado)">
@@ -176,15 +206,21 @@
               class="btn-accion btn-estado" 
               (click)="cambiarEstado(dispositivo)" 
               title="Cambiar estado"
-              *ngIf="dispositivo.estado !== 'entregado'"
             >
               <i class="fa-solid fa-exchange-alt"></i>
+            </button>
+            <button 
+              class="btn-accion btn-eliminar" 
+              (click)="eliminarDispositivo(dispositivo)" 
+              title="Eliminar dispositivo"
+            >
+              <i class="fa-solid fa-trash"></i>
             </button>
           </td>
         </tr>
         
         <tr *ngIf="dispositivosFiltrados.length === 0">
-          <td colspan="8" class="sin-datos">
+          <td colspan="9" class="sin-datos">
             <i class="fa-solid fa-inbox"></i>
             <p>No se encontraron dispositivos</p>
           </td>

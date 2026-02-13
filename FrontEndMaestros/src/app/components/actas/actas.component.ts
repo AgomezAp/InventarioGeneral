@@ -216,18 +216,10 @@ export class ActasComponent implements OnInit, OnDestroy {
 
   // Devolución
   abrirModalDevolucion(acta: ActaEntrega): void {
-    this.devolucionActa = acta;
-    this.devoluciones = (acta.detalles || [])
-      .filter((d) => !d.devuelto)
-      .map((d) => ({
-        detalle: d,
-        devolver: true,
-        estadoDevolucion: 'disponible',
-        condicionDevolucion: d.condicionEntrega || 'bueno',
-        observaciones: '',
-      }));
-    this.observacionesDevolucion = '';
-    this.mostrarModalDevolucion = true;
+    // Navegar a crear-devolucion con el ID del acta para preseleccionar dispositivos
+    this.router.navigate(['/crear-devolucion'], { 
+      queryParams: { actaId: acta.id }
+    });
   }
 
   cerrarModalDevolucion(): void {

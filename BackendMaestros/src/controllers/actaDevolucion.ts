@@ -36,15 +36,52 @@ const generarNumeroActaDevolucion = async (): Promise<string> => {
 
 /**
  * Obtener dispositivos entregados (disponibles para devolución)
+ * Incluye información del acta para poder preseleccionar
  */
 export const obtenerDispositivosEntregados = async (req: Request, res: Response) => {
   try {
+    // Obtener dispositivos entregados con información del acta
     const dispositivos = await Dispositivo.findAll({
       where: { estado: 'entregado' },
       order: [['nombre', 'ASC']]
     });
     
-    res.json(dispositivos);
+    // Para cada dispositivo, buscar el acta correspondiente
+    const dispositivosConActa = await Promise.all(
+      dispositivos.map(async (disp: any) => {
+        // Buscar el detalle de acta más reciente para este dispositivo
+        const detalleActa = await sequelize.query(`
+          SELECT da."actaId", ae."nombreReceptor" as receptor, ae.id as "actaEntregaId"
+          FROM detalles_acta da
+          INNER JOIN actas_entrega ae ON da."actaId" = ae.id
+          WHERE da."dispositivoId" = :dispositivoId 
+            AND da.devuelto = false
+          ORDER BY ae."fechaEntrega" DESC
+          LIMIT 1
+        `, {
+          replacements: { dispositivoId: disp.id },
+          type: 'SELECT' as any
+        }) as any[];
+        
+        const info = detalleActa[0] || {};
+        
+        return {
+          id: disp.id,
+          nombre: disp.nombre,
+          categoria: disp.categoria,
+          marca: disp.marca,
+          modelo: disp.modelo,
+          serial: disp.serial,
+          imei: disp.imei,
+          descripcion: disp.descripcion,
+          condicion: disp.condicion,
+          actaId: info.actaId || info.actaEntregaId || null,
+          receptor: info.receptor || null
+        };
+      })
+    );
+    
+    res.json(dispositivosConActa);
   } catch (error) {
     console.error('Error al obtener dispositivos entregados:', error);
     res.status(500).json({ msg: 'Error al obtener los dispositivos entregados' });

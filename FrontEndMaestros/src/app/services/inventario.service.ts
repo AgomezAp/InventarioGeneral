@@ -97,6 +97,37 @@ export class InventarioService {
   }
 
   /**
+   * Eliminar un dispositivo del inventario
+   */
+  eliminarDispositivo(id: number, motivo?: string): Observable<{ msg: string; dispositivo: Dispositivo }> {
+    return this.http.request<{ msg: string; dispositivo: Dispositivo }>(
+      'DELETE',
+      `${this.apiUrl}api/dispositivos/${id}`,
+      { body: { motivo, Uid: localStorage.getItem('userId') } }
+    );
+  }
+
+  /**
+   * Agregar stock a un dispositivo
+   */
+  agregarStock(id: number, cantidad: number): Observable<{ msg: string; dispositivo: Dispositivo; stockActual: number }> {
+    return this.http.post<{ msg: string; dispositivo: Dispositivo; stockActual: number }>(
+      `${this.apiUrl}api/dispositivos/${id}/agregar-stock`,
+      { cantidad, Uid: localStorage.getItem('userId') }
+    );
+  }
+
+  /**
+   * Retirar stock de un dispositivo
+   */
+  retirarStock(id: number, cantidad: number, motivo: string): Observable<{ msg: string; dispositivo: Dispositivo; stockActual: number }> {
+    return this.http.post<{ msg: string; dispositivo: Dispositivo; stockActual: number }>(
+      `${this.apiUrl}api/dispositivos/${id}/retirar-stock`,
+      { cantidad, motivo, Uid: localStorage.getItem('userId') }
+    );
+  }
+
+  /**
    * Obtener estadísticas del inventario
    */
   obtenerEstadisticas(): Observable<EstadisticasInventario> {

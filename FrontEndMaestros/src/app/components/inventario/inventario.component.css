@@ -450,6 +450,114 @@ body.dark-mode .filtro-grupo select {
   margin-bottom: 2px;
 }
 
+.td-serial .sin-serial {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Cantidad Badge */
+.td-cantidad {
+  text-align: center;
+}
+
+.td-cantidad .cantidad-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: var(--border-radius-md);
+  font-size: 0.875rem;
+  font-weight: 700;
+  background-color: rgba(33, 150, 243, 0.15);
+  color: var(--color-info);
+}
+
+.td-cantidad .cantidad-badge .btn-stock {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  font-size: 0.625rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.td-cantidad .cantidad-badge .btn-stock:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.td-cantidad .cantidad-badge .btn-restar {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+.td-cantidad .cantidad-badge .btn-restar:hover:not(:disabled) {
+  background-color: #c62828;
+  transform: scale(1.1);
+}
+
+.td-cantidad .cantidad-badge .btn-sumar {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.td-cantidad .cantidad-badge .btn-sumar:hover {
+  background-color: #388e3c;
+  transform: scale(1.1);
+}
+
+.td-cantidad .cantidad-badge .stock-numero {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  min-width: 45px;
+  justify-content: center;
+}
+
+.td-cantidad .cantidad-badge i {
+  font-size: 0.75rem;
+}
+
+.td-cantidad .cantidad-badge .stock-minimo {
+  font-size: 0.625rem;
+  font-weight: 500;
+  opacity: 0.8;
+  margin-left: 4px;
+}
+
+.td-cantidad .cantidad-badge.stock-bajo {
+  background-color: rgba(244, 67, 54, 0.15);
+  color: var(--color-danger);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.td-cantidad .cantidad-individual {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 6px 12px;
+  border-radius: var(--border-radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+}
+
+.td-cantidad .cantidad-individual i {
+  font-size: 0.75rem;
+}
+
 /* Estado Badge */
 .td-estado .estado-badge {
   display: inline-flex;
@@ -587,6 +695,11 @@ body.dark-mode .filtro-grupo select {
 
 .btn-accion.btn-estado:hover {
   background-color: var(--color-success);
+  color: #ffffff;
+}
+
+.btn-accion.btn-eliminar:hover {
+  background-color: var(--color-danger);
   color: #ffffff;
 }
 

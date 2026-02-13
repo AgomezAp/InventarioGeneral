@@ -193,38 +193,100 @@
             <div class="disponibles-area">
               <label class="mini-label">Dispositivos entregados:</label>
 
+              <!-- Buscador de dispositivos -->
+              <div class="buscador-dispositivos">
+                <i class="pi pi-search"></i>
+                <input
+                  type="text"
+                  [(ngModel)]="busquedaDispositivo"
+                  (input)="filtrarDispositivos()"
+                  placeholder="Buscar por nombre, marca, modelo, serial, IMEI o receptor..."
+                  class="input-busqueda"
+                  name="busquedaDispositivo"
+                />
+                <button
+                  type="button"
+                  class="btn-limpiar-busqueda"
+                  *ngIf="busquedaDispositivo"
+                  (click)="busquedaDispositivo = ''; filtrarDispositivos()"
+                >
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+
               <div class="loading-inline" *ngIf="loadingDispositivos">
                 <div class="spinner-sm"></div>
-                <span>Cargando...</span>
+                <span>Cargando dispositivos...</span>
               </div>
 
               <div
                 class="disponibles-scroll"
                 *ngIf="
-                  !loadingDispositivos && dispositivosEntregados.length > 0
+                  !loadingDispositivos &&
+                  dispositivosEntregadosFiltrados.length > 0
                 "
               >
                 <div
                   class="disp-chip"
-                  *ngFor="let disp of dispositivosEntregados"
+                  *ngFor="let disp of dispositivosEntregadosFiltrados"
                   (click)="agregarDispositivo(disp)"
+                  [title]="'Clic para agregar: ' + disp.nombre"
                 >
-                  <i
-                    class="pi"
-                    [ngClass]="getCategoriaIcon(disp.categoria)"
-                  ></i>
+                  <div class="disp-chip-icon-wrapper">
+                    <i
+                      class="pi"
+                      [ngClass]="getCategoriaIcon(disp.categoria)"
+                    ></i>
+                  </div>
                   <div class="disp-chip-info">
                     <span class="disp-chip-name">{{ disp.nombre }}</span>
-                    <span class="disp-chip-detail">{{ disp.marca }}</span>
+                    <span class="disp-chip-detail">
+                      {{ disp.marca }}
+                      <span *ngIf="disp.modelo"> — {{ disp.modelo }}</span>
+                    </span>
+                    <span
+                      class="disp-chip-serial"
+                      *ngIf="disp.imei || disp.serial"
+                    >
+                      <i class="pi pi-hashtag"></i>
+                      {{
+                        disp.imei ? "IMEI: " + disp.imei : "S/N: " + disp.serial
+                      }}
+                    </span>
                   </div>
-                  <i class="pi pi-plus add-icon"></i>
+                  <span class="disp-chip-receptor" *ngIf="disp.receptor">
+                    <i class="pi pi-user"></i> {{ disp.receptor }}
+                  </span>
+                  <div class="disp-chip-add">
+                    <i class="pi pi-plus"></i>
+                  </div>
                 </div>
+              </div>
+
+              <!-- Sin resultados de búsqueda -->
+              <div
+                class="empty-mini"
+                *ngIf="
+                  !loadingDispositivos &&
+                  dispositivosEntregadosFiltrados.length === 0 &&
+                  busquedaDispositivo
+                "
+              >
+                <i class="pi pi-search"></i>
+                <span
+                  >No se encontraron dispositivos con "<strong>{{
+                    busquedaDispositivo
+                  }}</strong
+                  >"</span
+                >
               </div>
 
               <div
                 class="empty-mini"
                 *ngIf="
-                  !loadingDispositivos && dispositivosEntregados.length === 0
+                  !loadingDispositivos &&
+                  dispositivosEntregados.length === 0 &&
+                  !busquedaDispositivo
                 "
               >
                 <i class="pi pi-inbox"></i>

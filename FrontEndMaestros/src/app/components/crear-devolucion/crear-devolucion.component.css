@@ -14,7 +14,7 @@
 }
 
 .form-wrapper {
-  max-width: 1200px;
+  max-width: 1400px;
   width: 100%;
   margin: 0 auto;
   height: 100%;
@@ -173,8 +173,8 @@
 
 .form-grid-main {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: var(--spacing-md);
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: var(--spacing-lg);
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -377,10 +377,9 @@
 }
 
 .signature-canvas {
-  width: 100%;
-  height: 120px;
   display: block;
   cursor: crosshair;
+  touch-action: none;
 }
 
 .btn-limpiar-firma {
@@ -422,19 +421,80 @@
   flex-shrink: 0;
 }
 
-/* Disponibles */
+/* ========================================
+   DISPONIBLES - ÁREA PRINCIPAL
+======================================== */
 .disponibles-area {
   flex-shrink: 0;
   margin-bottom: var(--spacing-md);
 }
 
+/* Buscador de dispositivos */
+.buscador-dispositivos {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.buscador-dispositivos > i.pi-search {
+  position: absolute;
+  left: 16px;
+  color: var(--text-muted);
+  font-size: 1rem;
+  z-index: 1;
+}
+
+.buscador-dispositivos .input-busqueda {
+  width: 100%;
+  padding: 14px 40px 14px 44px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-full);
+  font-size: 0.9375rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.buscador-dispositivos .input-busqueda:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.buscador-dispositivos .input-busqueda::placeholder {
+  color: var(--text-muted);
+}
+
+.buscador-dispositivos .btn-limpiar-busqueda {
+  position: absolute;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: var(--bg-secondary);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.buscador-dispositivos .btn-limpiar-busqueda:hover {
+  background: var(--color-danger);
+  color: white;
+}
+
+/* Labels */
 .mini-label {
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
   display: block;
 }
 
@@ -442,88 +502,180 @@
   color: var(--color-success);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .mini-label.success i {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
 }
 
+/* ========================================
+   SCROLL DE DISPOSITIVOS DISPONIBLES
+======================================== */
 .disponibles-scroll {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-xs);
-  max-height: 100px;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 280px;
   overflow-y: auto;
-  padding: var(--spacing-sm);
+  padding: var(--spacing-md);
   background: var(--bg-secondary);
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-color);
 }
 
+/* ========================================
+   CHIP DE DISPOSITIVO - GRANDE Y LEGIBLE
+======================================== */
 .disp-chip {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 14px;
+  padding: 14px 18px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-lg);
   cursor: pointer;
   transition: all var(--transition-fast);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
+  width: 100%;
+  min-height: 70px;
 }
 
 .disp-chip:hover {
   border-color: var(--color-secondary);
   background: var(--color-secondary-light);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
-.disp-chip > i:first-child {
+/* Ícono del dispositivo con fondo */
+.disp-chip-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  background: var(--color-secondary-light);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.disp-chip-icon-wrapper i {
   color: var(--color-secondary);
-  font-size: 1rem;
+  font-size: 1.375rem;
 }
 
+.disp-chip:hover .disp-chip-icon-wrapper {
+  background: var(--color-secondary);
+}
+
+.disp-chip:hover .disp-chip-icon-wrapper i {
+  color: var(--color-primary);
+}
+
+/* Info del chip */
 .disp-chip-info {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
 }
 
 .disp-chip-name {
   color: var(--text-primary);
-  font-weight: 500;
-  font-size: 0.8125rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
 .disp-chip-detail {
   color: var(--text-secondary);
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
+  line-height: 1.3;
 }
 
-.disp-chip .add-icon {
-  color: var(--color-success);
+.disp-chip-serial {
+  font-family: "Courier New", Courier, monospace;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: fit-content;
+  color: var(--text-secondary);
+}
+
+.disp-chip-serial i {
+  font-size: 0.65rem;
+  color: var(--color-secondary);
+}
+
+/* Receptor badge */
+.disp-chip-receptor {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.08);
+  padding: 6px 12px;
+  border-radius: var(--border-radius-full);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.disp-chip-receptor i {
   font-size: 0.75rem;
+}
+
+/* Botón agregar */
+.disp-chip-add {
+  width: 36px;
+  height: 36px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   opacity: 0;
-  transition: opacity var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
-.disp-chip:hover .add-icon {
+.disp-chip-add i {
+  color: var(--color-success);
+  font-size: 1rem;
+}
+
+.disp-chip:hover .disp-chip-add {
   opacity: 1;
+  background: rgba(76, 175, 80, 0.2);
 }
 
+/* Loading */
 .loading-inline {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  padding: var(--spacing-md);
+  padding: var(--spacing-lg);
   color: var(--text-secondary);
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
+  justify-content: center;
 }
 
 .spinner-sm {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border: 2px solid var(--border-color);
   border-top-color: var(--color-secondary);
   border-radius: 50%;
@@ -536,23 +688,31 @@
   }
 }
 
+/* Empty states */
 .empty-mini {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) var(--spacing-xl);
   background: var(--bg-secondary);
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-lg);
   color: var(--text-secondary);
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
+  border: 1px dashed var(--border-color);
 }
 
 .empty-mini i {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   opacity: 0.5;
 }
 
-/* Seleccionados */
+.empty-mini strong {
+  color: var(--text-primary);
+}
+
+/* ========================================
+   SELECCIONADOS
+======================================== */
 .seleccionados-area {
   flex: 1;
   min-height: 0;
@@ -591,7 +751,7 @@
 }
 
 .empty-seleccionados p {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   margin: 0;
 }
 
@@ -621,10 +781,10 @@
 }
 
 .disp-card-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   background: var(--color-secondary);
-  border-radius: var(--border-radius-sm);
+  border-radius: var(--border-radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -633,7 +793,7 @@
 
 .disp-card-icon i {
   color: var(--color-primary);
-  font-size: 0.9375rem;
+  font-size: 1.0625rem;
 }
 
 .disp-card-title {
@@ -643,7 +803,7 @@
 
 .disp-card-title h4 {
   color: #fff;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   margin: 0;
   white-space: nowrap;
@@ -653,12 +813,12 @@
 
 .disp-card-title span {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .btn-remove-card {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   border: none;
@@ -677,14 +837,14 @@
 }
 
 .btn-remove-card i {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
 }
 
 .disp-card-identifiers {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) var(--spacing-md);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
 }
@@ -692,21 +852,22 @@
 .identifier {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
+  gap: 6px;
+  padding: 4px 10px;
   background: var(--bg-card);
   border-radius: var(--border-radius-full);
-  font-size: 0.6875rem;
+  font-size: 0.8125rem;
   color: var(--text-secondary);
+  font-family: "Courier New", Courier, monospace;
 }
 
 .identifier i {
   color: var(--color-secondary);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
 }
 
 .disp-card-form {
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-md);
 }
 
 .form-row-device {
@@ -729,13 +890,13 @@
 .select-device select {
   appearance: none;
   width: 100%;
-  padding: 8px 28px 8px 10px;
+  padding: 10px 32px 10px 12px;
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
+  border-radius: var(--border-radius-md);
   background: var(--bg-card);
   color: var(--text-primary);
   font-family: var(--font-family);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -747,23 +908,23 @@
 
 .select-device i {
   position: absolute;
-  right: 8px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.625rem;
+  font-size: 0.6875rem;
   color: var(--text-secondary);
   pointer-events: none;
 }
 
 .input-device {
   width: 100%;
-  padding: 8px 10px;
+  padding: 10px 12px;
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
+  border-radius: var(--border-radius-md);
   background: var(--bg-card);
   color: var(--text-primary);
   font-family: var(--font-family);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   transition: all var(--transition-fast);
 }
 
@@ -777,7 +938,9 @@
   opacity: 0.6;
 }
 
-/* Fotos */
+/* ========================================
+   FOTOS
+======================================== */
 .fotos-section {
   display: flex;
   align-items: center;
@@ -791,13 +954,13 @@
 .fotos-upload-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 8px;
+  padding: 8px 14px;
   background: var(--bg-secondary);
   border: 1px dashed var(--border-color);
-  border-radius: var(--border-radius-sm);
+  border-radius: var(--border-radius-md);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--text-secondary);
   transition: all var(--transition-fast);
 }
@@ -810,21 +973,21 @@
 }
 
 .fotos-upload-btn i {
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .fotos-preview-grid {
   display: flex;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
 }
 
 .foto-preview-item {
   position: relative;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--border-radius-sm);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--border-radius-md);
   overflow: hidden;
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color);
 }
 
 .foto-preview-item img {
@@ -837,8 +1000,8 @@
   position: absolute;
   top: 2px;
   right: 2px;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--color-danger);
   border: none;
@@ -847,7 +1010,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.5rem;
+  font-size: 0.5625rem;
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
@@ -874,12 +1037,12 @@
    BOTONES
 ======================================== */
 .btn-compact {
-  padding: 8px 16px;
-  font-size: 0.8125rem;
+  padding: 10px 20px;
+  font-size: 0.875rem;
   border-radius: var(--border-radius-md);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -888,7 +1051,7 @@
 }
 
 .btn-compact i {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 .btn.btn-secondary.btn-compact {
@@ -1020,6 +1183,10 @@ body.dark-mode .disp-chip {
   background: var(--bg-secondary);
 }
 
+body.dark-mode .disp-chip-serial {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 body.dark-mode .disponibles-scroll {
   background: rgba(0, 0, 0, 0.2);
 }
@@ -1040,6 +1207,14 @@ body.dark-mode .fotos-upload-btn {
   background: rgba(0, 0, 0, 0.2);
 }
 
+body.dark-mode .disp-chip-icon-wrapper {
+  background: rgba(255, 214, 0, 0.15);
+}
+
+body.dark-mode .empty-mini {
+  background: rgba(0, 0, 0, 0.2);
+}
+
 /* ========================================
    RESPONSIVE
 ======================================== */
@@ -1053,6 +1228,7 @@ body.dark-mode .fotos-upload-btn {
   .form-wrapper {
     height: auto;
     overflow: visible;
+    max-width: 100%;
   }
 
   .form-content {
@@ -1074,8 +1250,12 @@ body.dark-mode .fotos-upload-btn {
   }
 
   .seleccionados-list {
-    max-height: 400px;
+    max-height: 500px;
     overflow-y: auto;
+  }
+
+  .disponibles-scroll {
+    max-height: 350px;
   }
 }
 
@@ -1107,6 +1287,38 @@ body.dark-mode .fotos-upload-btn {
   }
 
   .disp-chip {
-    width: 100%;
+    padding: 12px 14px;
+    min-height: 60px;
+    flex-wrap: wrap;
+  }
+
+  .disp-chip-icon-wrapper {
+    width: 38px;
+    height: 38px;
+  }
+
+  .disp-chip-icon-wrapper i {
+    font-size: 1.125rem;
+  }
+
+  .disp-chip-receptor {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+  }
+
+  .disp-chip-add {
+    width: 30px;
+    height: 30px;
+    opacity: 1;
+  }
+
+  .buscador-dispositivos .input-busqueda {
+    padding: 12px 36px 12px 40px;
+    font-size: 0.875rem;
+  }
+
+  .disponibles-scroll {
+    max-height: 300px;
+    padding: var(--spacing-sm);
   }
 }

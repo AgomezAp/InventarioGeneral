@@ -212,6 +212,7 @@ export const crearActaEntrega = async (req: Request, res: Response): Promise<voi
       await DetalleActa.create({
         actaId: acta.id,
         dispositivoId: item.dispositivoId,
+        cantidad: item.cantidad || 1, // Guardar la cantidad especificada
         estadoEntrega: dispositivo?.estado,
         condicionEntrega: item.condicionEntrega || dispositivo?.condicion,
         fotosEntrega: JSON.stringify(fotosMap[item.dispositivoId] || []),

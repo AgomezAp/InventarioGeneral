@@ -12,7 +12,8 @@ import {
   darDeBajaDispositivo,
   agregarStockDispositivo,
   retirarStockDispositivo,
-  convertirAStock
+  convertirAStock,
+  eliminarDispositivo
 } from '../controllers/dispositivo.js';
 import validateToken from './validateToken.js';
 
@@ -37,5 +38,8 @@ router.patch('/:id/baja', validateToken, darDeBajaDispositivo);
 router.post('/:id/agregar-stock', validateToken, agregarStockDispositivo);
 router.post('/:id/retirar-stock', validateToken, retirarStockDispositivo);
 router.post('/:id/convertir-stock', validateToken, convertirAStock);
+
+// Ruta para eliminar dispositivo
+router.delete('/:id', validateToken, eliminarDispositivo);
 
 export default router;

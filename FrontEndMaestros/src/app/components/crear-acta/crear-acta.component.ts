@@ -15,6 +15,9 @@ import { NavbarComponent } from '../navbar/navbar.component';
   styleUrls: ['./crear-acta.component.css'],
 })
 export class CrearActaComponent implements OnInit, OnDestroy {
+  // Exponer Math para usar en el template
+  Math = Math;
+  
   // Datos del receptor
   receptor = {
     nombre: '',
@@ -26,8 +29,11 @@ export class CrearActaComponent implements OnInit, OnDestroy {
 
   // Dispositivos
   dispositivosDisponibles: Dispositivo[] = [];
+  dispositivosDisponiblesFiltrados: Dispositivo[] = [];
+  busquedaDispositivo = '';
   dispositivosSeleccionados: {
     dispositivo: Dispositivo;
+    cantidad: number; // Cantidad a entregar (para dispositivos tipo stock)
     condicion: string;
     observaciones: string;
     fotos: File[];
@@ -69,6 +75,7 @@ export class CrearActaComponent implements OnInit, OnDestroy {
     this.inventarioService.obtenerDisponibles().subscribe({
       next: (data) => {
         this.dispositivosDisponibles = data;
+        this.dispositivosDisponiblesFiltrados = data;
         this.loadingDispositivos = false;
       },
       error: (err) => {
@@ -76,6 +83,23 @@ export class CrearActaComponent implements OnInit, OnDestroy {
         this.loadingDispositivos = false;
       },
     });
+  }
+
+  filtrarDispositivos(): void {
+    const busqueda = this.busquedaDispositivo.toLowerCase().trim();
+    if (!busqueda) {
+      this.dispositivosDisponiblesFiltrados = this.dispositivosDisponibles;
+      return;
+    }
+    
+    this.dispositivosDisponiblesFiltrados = this.dispositivosDisponibles.filter(d => 
+      d.nombre?.toLowerCase().includes(busqueda) ||
+      d.marca?.toLowerCase().includes(busqueda) ||
+      d.modelo?.toLowerCase().includes(busqueda) ||
+      d.serial?.toLowerCase().includes(busqueda) ||
+      d.imei?.toLowerCase().includes(busqueda) ||
+      d.categoria?.toLowerCase().includes(busqueda)
+    );
   }
 
   agregarDispositivo(dispositivo: Dispositivo): void {
@@ -90,22 +114,34 @@ export class CrearActaComponent implements OnInit, OnDestroy {
 
     this.dispositivosSeleccionados.push({
       dispositivo,
+      cantidad: 1, // Por defecto 1 unidad
       condicion: dispositivo.condicion || 'bueno',
       observaciones: '',
       fotos: [],
       fotosPreview: [],
     });
 
-    // Remover de disponibles
-    this.dispositivosDisponibles = this.dispositivosDisponibles.filter(
-      (d) => d.id !== dispositivo.id,
-    );
+    // Si es tipo individual, remover de disponibles
+    // Si es tipo stock, mantener en disponibles
+    if (dispositivo.tipoRegistro !== 'stock') {
+      this.dispositivosDisponibles = this.dispositivosDisponibles.filter(
+        (d) => d.id !== dispositivo.id,
+      );
+    }
+    this.filtrarDispositivos();
   }
 
   quitarDispositivo(index: number): void {
     const item = this.dispositivosSeleccionados[index];
-    this.dispositivosDisponibles.push(item.dispositivo);
+    
+    // Si es tipo individual, devolver a disponibles
+    // Si es tipo stock, solo verificar que no esté duplicado
+    if (item.dispositivo.tipoRegistro !== 'stock') {
+      this.dispositivosDisponibles.push(item.dispositivo);
+    }
+    
     this.dispositivosSeleccionados.splice(index, 1);
+    this.filtrarDispositivos();
   }
 
   onFotosSelected(event: Event, index: number): void {
@@ -189,6 +225,7 @@ export class CrearActaComponent implements OnInit, OnDestroy {
     // Dispositivos
     const dispositivos = this.dispositivosSeleccionados.map((item) => ({
       dispositivoId: item.dispositivo.id,
+      cantidad: item.cantidad || 1, // Incluir la cantidad
       condicionEntrega: item.condicion,
       observaciones: item.observaciones,
     }));

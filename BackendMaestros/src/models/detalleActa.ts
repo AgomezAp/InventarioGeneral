@@ -11,6 +11,7 @@ export class DetalleActa extends Model {
   public id!: number;
   public actaId!: number;
   public dispositivoId!: number;
+  public cantidad!: number; // Cantidad entregada (para dispositivos tipo stock)
   public estadoEntrega!: string; // Estado del dispositivo al entregar
   public condicionEntrega!: string; // nuevo, bueno, regular, malo
   public fotosEntrega!: string; // JSON array de fotos al entregar
@@ -47,6 +48,11 @@ DetalleActa.init(
         key: 'id'
       },
       comment: 'ID del dispositivo entregado'
+    },
+    cantidad: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
+      comment: 'Cantidad entregada (para dispositivos tipo stock)'
     },
     estadoEntrega: {
       type: DataTypes.STRING,

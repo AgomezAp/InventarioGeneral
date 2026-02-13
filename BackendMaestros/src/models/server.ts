@@ -191,6 +191,7 @@ class Server {
       await Dispositivo.sync();
       await ActaEntrega.sync(); 
       await DetalleActa.sync();
+      await this.migrateDetalleActaCantidad();
       await MovimientoDispositivo.sync();
       await TokenFirma.sync();
       // Modelos de devolución
@@ -298,6 +299,24 @@ class Server {
         `);
         console.log('Tipos de movimiento agregados');
       }
+
+      // Agregar tipos de movimiento para stock
+      if (!movLabels.includes('entrada_stock')) {
+        console.log('Agregando tipos de movimiento de stock...');
+        await sequelize.query(`
+          ALTER TYPE "enum_movimientos_dispositivo_tipoMovimiento" ADD VALUE IF NOT EXISTS 'entrada_stock';
+        `);
+        await sequelize.query(`
+          ALTER TYPE "enum_movimientos_dispositivo_tipoMovimiento" ADD VALUE IF NOT EXISTS 'salida_stock';
+        `);
+        await sequelize.query(`
+          ALTER TYPE "enum_movimientos_dispositivo_tipoMovimiento" ADD VALUE IF NOT EXISTS 'retirar_stock';
+        `);
+        await sequelize.query(`
+          ALTER TYPE "enum_movimientos_dispositivo_tipoMovimiento" ADD VALUE IF NOT EXISTS 'conversion_stock';
+        `);
+        console.log('Tipos de movimiento de stock agregados');
+      }
       
     } catch (error: any) {
       // Si falla, probablemente el ENUM no existe aún (primera vez)
@@ -398,6 +417,30 @@ class Server {
       
     } catch (error: any) {
       console.log('Error en migración de columnas de stock en dispositivos:', error.message);
+    }
+  }
+
+  /**
+   * Migración para agregar columna cantidad a detalle_acta
+   */
+  async migrateDetalleActaCantidad() {
+    try {
+      const [columns] = await sequelize.query(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'detalles_acta' AND column_name = 'cantidad'
+      `);
+
+      if ((columns as any[]).length === 0) {
+        console.log('Agregando columna cantidad a detalles_acta...');
+        await sequelize.query(`
+          ALTER TABLE detalles_acta 
+          ADD COLUMN IF NOT EXISTS "cantidad" INTEGER DEFAULT 1;
+        `);
+        console.log('Columna cantidad agregada a detalles_acta');
+      }
+    } catch (error: any) {
+      console.log('Error en migración de cantidad en detalle_acta:', error.message);
     }
   }
 
