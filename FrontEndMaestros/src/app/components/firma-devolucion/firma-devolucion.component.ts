@@ -80,12 +80,23 @@ export class FirmaDevolucionComponent implements OnInit, AfterViewInit {
   inicializarSignaturePad(): void {
     if (this.signatureCanvas && this.signatureCanvas.nativeElement) {
       const canvas = this.signatureCanvas.nativeElement;
-      
-      // Ajustar tamaño del canvas
       const container = canvas.parentElement;
-      if (container) {
-        canvas.width = container.offsetWidth - 20;
-        canvas.height = 200;
+      const width = container ? container.offsetWidth - 20 : 500;
+      const height = 200;
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Establecer dimensiones CSS (tamaño visual)
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      
+      // Establecer dimensiones internas (resolución real)
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      
+      // Escalar contexto para HiDPI
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.scale(dpr, dpr);
       }
       
       this.signaturePad = new SignaturePad(canvas, {

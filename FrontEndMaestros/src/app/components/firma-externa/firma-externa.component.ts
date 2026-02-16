@@ -140,10 +140,24 @@ export class FirmaExternaComponent implements OnInit, AfterViewInit {
     if (!this.signatureCanvas) return;
     
     const canvas = this.signatureCanvas.nativeElement;
+    const container = canvas.parentElement;
+    const width = container ? container.clientWidth : 500;
+    const height = 200;
+    const dpr = window.devicePixelRatio || 1;
     
-    // Configurar dimensiones fijas
-    canvas.width = 500;
-    canvas.height = 200;
+    // Establecer dimensiones CSS (tamaño visual)
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    
+    // Establecer dimensiones internas (resolución real)
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    
+    // Escalar contexto para HiDPI
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.scale(dpr, dpr);
+    }
     
     this.signaturePad = new SignaturePad(canvas, {
       backgroundColor: 'rgb(255, 255, 255)',

@@ -95,11 +95,21 @@ export class ActaDevolucionComponent
         const container = canvas.parentElement;
         const width = container ? container.clientWidth - 20 : 500;
         const height = 200;
+        const dpr = window.devicePixelRatio || 1;
 
-        canvas.width = width;
-        canvas.height = height;
+        // Establecer dimensiones CSS (tamaño visual)
         canvas.style.width = width + 'px';
         canvas.style.height = height + 'px';
+
+        // Establecer dimensiones internas (resolución real)
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+
+        // Escalar contexto para HiDPI
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.scale(dpr, dpr);
+        }
 
         this.signaturePad = new SignaturePad(canvas, {
           backgroundColor: 'rgb(255, 255, 255)',
@@ -120,13 +130,23 @@ export class ActaDevolucionComponent
     const container = canvas.parentElement;
     const width = container ? container.clientWidth - 20 : 500;
     const height = 200;
+    const dpr = window.devicePixelRatio || 1;
 
     const data = this.signaturePad.toData();
 
-    canvas.width = width;
-    canvas.height = height;
+    // Establecer dimensiones CSS (tamaño visual)
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
+
+    // Establecer dimensiones internas (resolución real)
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+
+    // Escalar contexto para HiDPI
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.scale(dpr, dpr);
+    }
 
     this.signaturePad.clear();
     if (data && data.length > 0) {

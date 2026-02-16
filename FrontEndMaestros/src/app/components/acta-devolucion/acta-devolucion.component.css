@@ -918,9 +918,6 @@
 
 .firma-canvas {
   display: block;
-  width: 100%;
-  max-width: 500px;
-  height: 200px;
   background-color: var(--bg-secondary);
   border: 2px dashed var(--border-color);
   border-radius: var(--border-radius-md);
@@ -1209,7 +1206,7 @@
   }
 
   .firma-canvas {
-    height: 150px;
+    max-width: 100%;
   }
 
   .acta-info-banner {
