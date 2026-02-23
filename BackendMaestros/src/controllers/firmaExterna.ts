@@ -290,26 +290,15 @@ export const firmarActaConToken = async (req: Request, res: Response): Promise<v
       const dispositivo = detalle.dispositivo;
       const cantidadEntregada = detalle.cantidad || 1; // Default a 1 si no se especificó
       
-      // Si es un dispositivo de tipo stock, restar del stock
+      // Si es un dispositivo de tipo stock, el stock ya fue reducido al crear el acta.
+      // Solo registrar la confirmación de firma.
       if (dispositivo.tipoRegistro === 'stock') {
-        const nuevoStock = Math.max(0, (dispositivo.stockActual || 0) - cantidadEntregada);
-        
-        await Dispositivo.update(
-          { 
-            stockActual: nuevoStock,
-            // Si el stock llega a 0, marcar como no disponible
-            estado: nuevoStock > 0 ? 'disponible' : 'entregado'
-          },
-          { where: { id: detalle.dispositivoId }, transaction }
-        );
-        
-        // Registrar movimiento de stock
         await MovimientoDispositivo.create({
           dispositivoId: detalle.dispositivoId,
-          tipoMovimiento: 'retirar_stock',
+          tipoMovimiento: 'firma_entrega' as any,
           estadoAnterior: `stock: ${dispositivo.stockActual}`,
-          estadoNuevo: `stock: ${nuevoStock}`,
-          descripcion: `Stock reducido en ${cantidadEntregada} unidad(es) por entrega. Acta firmada por ${acta.nombreReceptor} - ${acta.numeroActa}`,
+          estadoNuevo: `stock: ${dispositivo.stockActual}`,
+          descripcion: `Confirmado por firma digital de ${acta.nombreReceptor} - ${acta.numeroActa} (${cantidadEntregada} und.)`,
           actaId: acta.id,
           fecha: ahora
         }, { transaction });
@@ -399,32 +388,68 @@ export const rechazarActaConToken = async (req: Request, res: Response): Promise
       include: [
         {
           model: ActaEntrega,
-          as: 'acta'
+          as: 'acta',
+          include: [
+            {
+              model: DetalleActa,
+              as: 'detalles',
+              include: [
+                {
+                  model: Dispositivo,
+                  as: 'dispositivo'
+                }
+              ]
+            }
+          ]
         }
       ],
       transaction
     });
-    
+
     if (!tokenFirma) {
       await transaction.rollback();
       res.status(404).json({ msg: 'Token inválido' });
       return;
     }
-    
+
     if (tokenFirma.estado !== 'pendiente') {
       await transaction.rollback();
       res.status(400).json({ msg: 'Este enlace ya no es válido' });
       return;
     }
-    
+
     const acta = tokenFirma.acta as any;
-    
+
     // Actualizar token
     await tokenFirma.update({
       estado: 'rechazado',
       motivoRechazo: motivo
     }, { transaction });
-    
+
+    // Restaurar el estado de los dispositivos al rechazar el acta
+    if (acta?.detalles) {
+      for (const detalle of acta.detalles) {
+        const dispositivo = detalle.dispositivo;
+        if (!dispositivo) continue;
+        const cantidadEntregada = detalle.cantidad || 1;
+
+        if (dispositivo.tipoRegistro === 'stock') {
+          // Devolver el stock que se redujo al crear el acta
+          const stockRestaurado = (dispositivo.stockActual || 0) + cantidadEntregada;
+          await Dispositivo.update(
+            { stockActual: stockRestaurado, estado: 'disponible' },
+            { where: { id: detalle.dispositivoId }, transaction }
+          );
+        } else {
+          // Dispositivo individual: volver a disponible
+          await Dispositivo.update(
+            { estado: 'disponible' },
+            { where: { id: detalle.dispositivoId }, transaction }
+          );
+        }
+      }
+    }
+
     // Actualizar estado del acta
     await ActaEntrega.update({
       estado: 'rechazada',

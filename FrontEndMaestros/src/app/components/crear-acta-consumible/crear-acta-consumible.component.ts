@@ -40,6 +40,8 @@ export class CrearActaConsumibleComponent implements OnInit {
 
   // Artículos
   articulosDisponibles: Consumible[] = [];
+  articulosFiltrados: Consumible[] = [];
+  busquedaArticulo = '';
   articulosSeleccionados: ArticuloSeleccionado[] = [];
 
   loading = false;
@@ -104,9 +106,10 @@ export class CrearActaConsumibleComponent implements OnInit {
     this.consumibleService.obtenerConsumiblesDisponibles().subscribe({
       next: (data) => {
         // Filtrar por tipo y que tengan stock
-        this.articulosDisponibles = data.filter(c => 
+        this.articulosDisponibles = data.filter(c =>
           c.tipoInventario?.codigo === this.tipoInventario && c.stockActual > 0
         );
+        this.articulosFiltrados = this.articulosDisponibles;
         this.loadingArticulos = false;
       },
       error: (err) => {
@@ -116,6 +119,7 @@ export class CrearActaConsumibleComponent implements OnInit {
         this.consumibleService.obtenerConsumiblesPorTipo(this.tipoInventario).subscribe({
           next: (data) => {
             this.articulosDisponibles = data.filter(c => c.stockActual > 0);
+            this.articulosFiltrados = this.articulosDisponibles;
           },
           error: () => {
             this.errorMessage = 'Error al cargar los artículos disponibles';
@@ -123,6 +127,19 @@ export class CrearActaConsumibleComponent implements OnInit {
         });
       }
     });
+  }
+
+  filtrarArticulos(): void {
+    const busqueda = this.busquedaArticulo.toLowerCase().trim();
+    if (!busqueda) {
+      this.articulosFiltrados = this.articulosDisponibles;
+      return;
+    }
+    this.articulosFiltrados = this.articulosDisponibles.filter(a =>
+      a.nombre?.toLowerCase().includes(busqueda) ||
+      a.categoria?.toLowerCase().includes(busqueda) ||
+      a.unidadMedida?.toLowerCase().includes(busqueda)
+    );
   }
 
   agregarArticulo(consumible: Consumible): void {
@@ -139,15 +156,17 @@ export class CrearActaConsumibleComponent implements OnInit {
 
     // Remover de disponibles
     this.articulosDisponibles = this.articulosDisponibles.filter(a => a.id !== consumible.id);
+    this.filtrarArticulos();
   }
 
   quitarArticulo(index: number): void {
     const articulo = this.articulosSeleccionados[index];
     this.articulosDisponibles.push(articulo.consumible);
     this.articulosSeleccionados.splice(index, 1);
-    
+
     // Ordenar disponibles por nombre
     this.articulosDisponibles.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    this.filtrarArticulos();
   }
 
   validarCantidad(index: number): void {

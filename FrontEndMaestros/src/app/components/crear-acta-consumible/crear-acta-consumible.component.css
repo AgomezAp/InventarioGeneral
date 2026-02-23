@@ -496,7 +496,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-xs);
-  max-height: 100px;
+  max-height: 220px;
   overflow-y: auto;
   padding: var(--spacing-sm);
   background: var(--bg-secondary);
@@ -1086,4 +1086,63 @@ body.dark-mode .btn-qty {
     width: 100%;
     justify-content: center;
   }
+}
+
+/* ========================================
+   BUSCADOR DE ARTÍCULOS
+======================================== */
+.buscador-dispositivos {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.buscador-dispositivos > i.pi-search {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.buscador-dispositivos .input-busqueda {
+  width: 100%;
+  padding: 10px 36px 10px 36px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-full);
+  font-size: 0.875rem;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.buscador-dispositivos .input-busqueda:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+}
+
+.buscador-dispositivos .input-busqueda::placeholder {
+  color: var(--text-muted);
+}
+
+.buscador-dispositivos .btn-limpiar-busqueda {
+  position: absolute;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: var(--bg-secondary);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.buscador-dispositivos .btn-limpiar-busqueda:hover {
+  background: var(--color-danger);
+  color: white;
 }

@@ -166,9 +166,27 @@ export const crearActaEntrega = async (req: Request, res: Response): Promise<voi
     const noDisponibles = dispositivosDB.filter(d => d.estado !== 'disponible');
     if (noDisponibles.length > 0) {
       await transaction.rollback();
-      res.status(400).json({ 
+      res.status(400).json({
         msg: 'Algunos dispositivos no están disponibles',
         dispositivos: noDisponibles.map(d => d.nombre)
+      });
+      return;
+    }
+
+    // Para dispositivos tipo stock, verificar que haya suficiente stock
+    const sinStockSuficiente = dispositivos.filter((item: any) => {
+      const dispoDb = dispositivosDB.find((d: any) => d.id === item.dispositivoId);
+      return dispoDb?.tipoRegistro === 'stock' && (dispoDb.stockActual || 0) < (item.cantidad || 1);
+    });
+    if (sinStockSuficiente.length > 0) {
+      await transaction.rollback();
+      const nombres = sinStockSuficiente.map((item: any) => {
+        const d = dispositivosDB.find((d: any) => d.id === item.dispositivoId);
+        return `${d?.nombre} (necesita ${item.cantidad}, disponible: ${d?.stockActual})`;
+      });
+      res.status(400).json({
+        msg: 'Stock insuficiente para algunos dispositivos',
+        dispositivos: nombres
       });
       return;
     }
@@ -220,23 +238,47 @@ export const crearActaEntrega = async (req: Request, res: Response): Promise<voi
         devuelto: false
       }, { transaction });
       
-      // Actualizar estado del dispositivo a reservado (pendiente de firma)
-      await Dispositivo.update(
-        { estado: 'reservado' },
-        { where: { id: item.dispositivoId }, transaction }
-      );
-      
-      // Registrar movimiento
-      await MovimientoDispositivo.create({
-        dispositivoId: item.dispositivoId,
-        tipoMovimiento: 'reserva' as any,
-        estadoAnterior: 'disponible',
-        estadoNuevo: 'reservado',
-        descripcion: `Reservado para ${nombreReceptor} (${cargoReceptor}) - Acta ${numeroActa} pendiente de firma`,
-        actaId: acta.id,
-        fecha: new Date(),
-        Uid
-      }, { transaction });
+      if (dispositivo?.tipoRegistro === 'stock') {
+        // Dispositivo tipo stock: reducir stock inmediatamente, sigue disponible si queda stock
+        const cantidadEntregada = item.cantidad || 1;
+        const nuevoStock = Math.max(0, (dispositivo.stockActual || 0) - cantidadEntregada);
+
+        await Dispositivo.update(
+          {
+            stockActual: nuevoStock,
+            estado: nuevoStock > 0 ? 'disponible' : 'entregado'
+          },
+          { where: { id: item.dispositivoId }, transaction }
+        );
+
+        await MovimientoDispositivo.create({
+          dispositivoId: item.dispositivoId,
+          tipoMovimiento: 'retirar_stock' as any,
+          estadoAnterior: `stock: ${dispositivo.stockActual}`,
+          estadoNuevo: `stock: ${nuevoStock}`,
+          descripcion: `Entregado a ${nombreReceptor} (${cargoReceptor}) - ${cantidadEntregada} uds - Acta ${numeroActa} (pendiente firma)`,
+          actaId: acta.id,
+          fecha: new Date(),
+          Uid
+        }, { transaction });
+      } else {
+        // Dispositivo individual: reservar hasta que el receptor firme
+        await Dispositivo.update(
+          { estado: 'reservado' },
+          { where: { id: item.dispositivoId }, transaction }
+        );
+
+        await MovimientoDispositivo.create({
+          dispositivoId: item.dispositivoId,
+          tipoMovimiento: 'reserva' as any,
+          estadoAnterior: 'disponible',
+          estadoNuevo: 'reservado',
+          descripcion: `Reservado para ${nombreReceptor} (${cargoReceptor}) - Acta ${numeroActa} pendiente de firma`,
+          actaId: acta.id,
+          fecha: new Date(),
+          Uid
+        }, { transaction });
+      }
     }
     
     await transaction.commit();
