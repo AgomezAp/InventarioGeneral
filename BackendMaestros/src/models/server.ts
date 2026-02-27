@@ -175,6 +175,9 @@ class Server {
       // Migración: Cambiar 'prestado' a 'entregado' en el ENUM de estado
       await this.migrateEstadoEnum();
       
+      // Migración: Agregar 'cancelada' a los ENUMs de estado de actas
+      await this.migrateCanceladaEstado();
+
       // Migración: Eliminar constraints UNIQUE incorrectas en mobiliario y consumibles
       await this.removeIncorrectUniqueConstraints();
       
@@ -479,6 +482,52 @@ class Server {
       console.log('Error en migración de modo híbrido en mobiliario:', error.message);
     }
   }
+  /**
+   * Migración para agregar 'cancelada' a los ENUMs de estado de actas
+   */
+  async migrateCanceladaEstado() {
+    try {
+      // Agregar 'cancelada' al ENUM de actas_entrega
+      const [actaEntregaResults] = await sequelize.query(`
+        SELECT enumlabel
+        FROM pg_enum
+        WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_actas_entrega_estado')
+      `);
+
+      const actaEntregaLabels = (actaEntregaResults as any[]).map(r => r.enumlabel);
+
+      if (!actaEntregaLabels.includes('cancelada')) {
+        console.log('Agregando estado cancelada a actas_entrega...');
+        await sequelize.query(`
+          ALTER TYPE "enum_actas_entrega_estado" ADD VALUE IF NOT EXISTS 'cancelada';
+        `);
+        console.log('Estado cancelada agregado a actas_entrega');
+      }
+
+      // Agregar 'cancelada' al ENUM de actas_consumibles
+      const [actaConsumibleResults] = await sequelize.query(`
+        SELECT enumlabel
+        FROM pg_enum
+        WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_actas_consumibles_estado')
+      `);
+
+      const actaConsumibleLabels = (actaConsumibleResults as any[]).map(r => r.enumlabel);
+
+      if (!actaConsumibleLabels.includes('cancelada')) {
+        console.log('Agregando estado cancelada a actas_consumibles...');
+        await sequelize.query(`
+          ALTER TYPE "enum_actas_consumibles_estado" ADD VALUE IF NOT EXISTS 'cancelada';
+        `);
+        console.log('Estado cancelada agregado a actas_consumibles');
+      }
+
+    } catch (error: any) {
+      if (!error.message?.includes('does not exist')) {
+        console.log('Error en migración de cancelada ENUM:', error.message);
+      }
+    }
+  }
+
 }
 
 export default Server;

@@ -37,7 +37,7 @@ export interface ActaEntrega {
   fechaFirma?: Date | string;
   fechaDevolucionEsperada?: Date | string;
   fechaDevolucionReal?: Date | string;
-  estado: 'pendiente_firma' | 'activa' | 'devuelta_parcial' | 'devuelta_completa' | 'vencida' | 'rechazada';
+  estado: 'pendiente_firma' | 'activa' | 'devuelta_parcial' | 'devuelta_completa' | 'vencida' | 'rechazada' | 'cancelada';
   observacionesEntrega?: string;
   observacionesDevolucion?: string;
   Uid?: number;

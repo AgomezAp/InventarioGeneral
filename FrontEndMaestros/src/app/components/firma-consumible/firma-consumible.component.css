@@ -672,6 +672,128 @@ body.dark-mode .signature-container {
   gap: var(--spacing-md);
 }
 
+/* ========================================
+   TABS DE MODO DE FIRMA
+   ======================================== */
+.firma-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+
+.firma-tab {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: none;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  transition: all var(--transition-fast);
+}
+
+.firma-tab:not(:last-child) {
+  border-right: 1px solid var(--border-color);
+}
+
+.firma-tab:hover:not(.active) {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.firma-tab.active {
+  background: var(--color-secondary);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* ========================================
+   UPLOAD DE IMAGEN DE FIRMA
+   ======================================== */
+.firma-upload-area {
+  margin-bottom: var(--spacing-lg);
+}
+
+.firma-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius-lg);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.firma-upload-label:hover {
+  border-color: var(--color-secondary);
+  background: rgba(255, 214, 0, 0.05);
+}
+
+.firma-upload-label .upload-icon {
+  font-size: 2.5rem;
+  color: var(--text-secondary);
+}
+
+.firma-upload-label .upload-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.firma-upload-label .upload-hint {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.firma-imagen-preview {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.firma-imagen-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  background: #ffffff;
+  padding: var(--spacing-sm);
+  object-fit: contain;
+}
+
+.btn-cambiar-imagen {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: var(--font-family);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-cambiar-imagen:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
 .btn-cancelar {
   background-color: transparent;
   color: var(--text-primary);

@@ -88,7 +88,7 @@ ActaEntrega.init(
       comment: 'Fecha real de devolución completa'
     },
     estado: {
-      type: DataTypes.ENUM('pendiente_firma', 'activa', 'devuelta_parcial', 'devuelta_completa', 'vencida', 'rechazada'),
+      type: DataTypes.ENUM('pendiente_firma', 'activa', 'devuelta_parcial', 'devuelta_completa', 'vencida', 'rechazada', 'cancelada'),
       defaultValue: 'pendiente_firma',
       comment: 'Estado del acta de entrega'
     },

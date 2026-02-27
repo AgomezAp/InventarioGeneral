@@ -15,7 +15,7 @@ export interface ActaConsumible {
   firmaReceptor?: string;
   fechaEntrega: Date;
   fechaFirma?: Date;
-  estado: 'pendiente_firma' | 'firmada' | 'rechazada';
+  estado: 'pendiente_firma' | 'firmada' | 'rechazada' | 'cancelada';
   observaciones?: string;
   motivoRechazo?: string;
   Uid?: number;
@@ -162,7 +162,18 @@ export class ActaConsumibleService {
   obtenerEstadisticas(tipoInventarioCodigo?: string): Observable<EstadisticasActas> {
     let params = new HttpParams();
     if (tipoInventarioCodigo) params = params.set('tipoInventarioCodigo', tipoInventarioCodigo);
-    
+
     return this.http.get<EstadisticasActas>(`${this.apiUrl}api/actas-consumibles/estadisticas`, { params });
+  }
+
+  /**
+   * Cancelar acta pendiente de firma
+   */
+  cancelarActa(id: number): Observable<{ msg: string }> {
+    return this.http.request<{ msg: string }>(
+      'DELETE',
+      `${this.apiUrl}api/actas-consumibles/${id}`,
+      { body: { Uid: localStorage.getItem('userId') } }
+    );
   }
 }

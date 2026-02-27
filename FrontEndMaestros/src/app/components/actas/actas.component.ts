@@ -45,6 +45,9 @@ export class ActasComponent implements OnInit, OnDestroy {
   // Reenvío de correo
   reenviandoCorreo: { [id: number]: boolean } = {};
 
+  // Cancelación de acta
+  cancelandoActa: { [id: number]: boolean } = {};
+
   estados = [
     'pendiente_firma',
     'activa',
@@ -52,6 +55,7 @@ export class ActasComponent implements OnInit, OnDestroy {
     'devuelta_completa',
     'vencida',
     'rechazada',
+    'cancelada',
   ];
 
   // Suscripciones WebSocket
@@ -167,6 +171,7 @@ export class ActasComponent implements OnInit, OnDestroy {
       completada: 'badge-completada',
       devuelta: 'badge-devuelta',
       rechazada: 'badge-rechazada',
+      cancelada: 'badge-cancelada',
     };
     return clases[estado] || 'badge-activa';
   }
@@ -179,6 +184,7 @@ export class ActasComponent implements OnInit, OnDestroy {
       completada: 'pi-check-circle',
       devuelta: 'pi-check-circle',
       rechazada: 'pi-times-circle',
+      cancelada: 'pi-ban',
     };
     return iconos[estado] || 'pi-file';
   }
@@ -191,6 +197,7 @@ export class ActasComponent implements OnInit, OnDestroy {
       completada: 'Completada',
       devuelta: 'Devuelta',
       rechazada: 'Rechazada',
+      cancelada: 'Cancelada',
     };
     return labels[estado] || estado;
   }
@@ -300,6 +307,10 @@ export class ActasComponent implements OnInit, OnDestroy {
     return this.actas.filter((a) => a.estado === 'rechazada').length;
   }
 
+  contarCanceladas(): number {
+    return this.actas.filter((a) => a.estado === 'cancelada').length;
+  }
+
   // Reenviar correo de firma
   reenviarCorreo(acta: ActaEntrega): void {
     if (!acta.id) return;
@@ -333,6 +344,33 @@ export class ActasComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.reenviandoCorreo[acta.id!] = false;
         alert(err.error?.msg || 'Error al enviar el correo');
+      },
+    });
+  }
+
+  // Cancelar acta pendiente de firma
+  cancelarActa(acta: ActaEntrega): void {
+    if (!acta.id) return;
+
+    const confirmado = confirm(
+      `¿Está seguro de cancelar el acta ${acta.numeroActa}?\n\nEsto restaurará los dispositivos al inventario y el enlace de firma quedará inválido.`
+    );
+    if (!confirmado) return;
+
+    this.cancelandoActa[acta.id] = true;
+
+    this.inventarioService.cancelarActa(acta.id).subscribe({
+      next: () => {
+        this.cancelandoActa[acta.id!] = false;
+        alert('Acta cancelada exitosamente. El inventario ha sido restaurado.');
+        this.cargarActas();
+        if (this.actaSeleccionada?.id === acta.id) {
+          this.cerrarDetalle();
+        }
+      },
+      error: (err) => {
+        this.cancelandoActa[acta.id!] = false;
+        alert(err.error?.msg || 'Error al cancelar el acta');
       },
     });
   }

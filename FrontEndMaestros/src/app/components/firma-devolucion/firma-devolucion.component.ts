@@ -29,6 +29,10 @@ export class FirmaDevolucionComponent implements OnInit, AfterViewInit {
   actaYaFirmada = false;
   actaRechazada = false;
   firmaExitosa = false;
+  firmaVacia = true;
+  modoFirma: 'dibujar' | 'imagen' = 'dibujar';
+  imagenFirmaBase64: string | null = null;
+  imagenFirmaPreview: string | null = null;
   
   constructor(
     private route: ActivatedRoute,
@@ -101,7 +105,14 @@ export class FirmaDevolucionComponent implements OnInit, AfterViewInit {
       
       this.signaturePad = new SignaturePad(canvas, {
         backgroundColor: 'rgb(255, 255, 255)',
-        penColor: 'rgb(0, 0, 0)'
+        penColor: 'rgb(0, 0, 0)',
+        minWidth: 1,
+        maxWidth: 2.5
+      });
+
+      // Escuchar cambios en la firma
+      this.signaturePad.addEventListener('beginStroke', () => {
+        this.firmaVacia = false;
       });
     }
   }
@@ -109,20 +120,71 @@ export class FirmaDevolucionComponent implements OnInit, AfterViewInit {
   limpiarFirma(): void {
     if (this.signaturePad) {
       this.signaturePad.clear();
+      this.firmaVacia = true;
     }
+  }
+
+  cambiarModoFirma(modo: 'dibujar' | 'imagen'): void {
+    this.modoFirma = modo;
+    if (modo === 'dibujar') {
+      this.imagenFirmaBase64 = null;
+      this.imagenFirmaPreview = null;
+      setTimeout(() => this.inicializarSignaturePad(), 100);
+    } else {
+      if (this.signaturePad) {
+        this.signaturePad.clear();
+      }
+      this.firmaVacia = true;
+    }
+  }
+
+  onImagenFirmaSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    if (!file.type.startsWith('image/')) {
+      alert('Solo se permiten archivos de imagen (JPG, PNG, etc.)');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen no debe superar los 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.imagenFirmaBase64 = e.target?.result as string;
+      this.imagenFirmaPreview = this.imagenFirmaBase64;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  eliminarImagenFirma(): void {
+    this.imagenFirmaBase64 = null;
+    this.imagenFirmaPreview = null;
   }
   
   firmar(): void {
-    if (!this.signaturePad || this.signaturePad.isEmpty()) {
-      this.error = 'Por favor, firme en el recuadro antes de continuar';
-      return;
+    let firmaEntrega: string;
+
+    if (this.modoFirma === 'dibujar') {
+      if (!this.signaturePad || this.signaturePad.isEmpty()) {
+        this.error = 'Por favor, firme en el recuadro antes de continuar';
+        return;
+      }
+      firmaEntrega = this.signaturePad.toDataURL('image/png');
+    } else {
+      if (!this.imagenFirmaBase64) {
+        this.error = 'Por favor, suba una imagen de su firma antes de continuar';
+        return;
+      }
+      firmaEntrega = this.imagenFirmaBase64;
     }
-    
+
     this.firmando = true;
     this.error = '';
-    
-    const firmaEntrega = this.signaturePad.toDataURL('image/png');
-    
+
     this.devolucionService.firmarActa(this.token, firmaEntrega).subscribe({
       next: (response: any) => {
         console.log('Respuesta de firma:', response);

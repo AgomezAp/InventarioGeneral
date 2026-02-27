@@ -50,6 +50,9 @@ export class CrearActaConsumibleComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
+  // Descripciones expandidas
+  descripcionExpandida: Set<number> = new Set();
+
   // Áreas predefinidas
   areas = [
     'Administración',
@@ -266,6 +269,14 @@ export class CrearActaConsumibleComponent implements OnInit {
 
   cancelar(): void {
     this.router.navigate([`/inventario-${this.tipoInventario}`]);
+  }
+
+  toggleDescripcion(id: number): void {
+    if (this.descripcionExpandida.has(id)) {
+      this.descripcionExpandida.delete(id);
+    } else {
+      this.descripcionExpandida.add(id);
+    }
   }
 
   getCategoriaIcon(categoria?: string): string {

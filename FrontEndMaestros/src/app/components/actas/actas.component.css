@@ -86,7 +86,6 @@
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
@@ -184,6 +183,18 @@
 
 .stat-rechazadas .stat-icon i {
   color: var(--color-danger);
+}
+
+.stat-canceladas {
+  border-left-color: #9e9e9e;
+}
+
+.stat-canceladas .stat-icon {
+  background-color: rgba(158, 158, 158, 0.15);
+}
+
+.stat-canceladas .stat-icon i {
+  color: #9e9e9e;
 }
 
 /* ========================================
@@ -340,7 +351,7 @@
 .actas-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 /* ========================================
@@ -359,7 +370,7 @@
 }
 
 .acta-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
   border-color: var(--color-secondary);
 }
@@ -398,6 +409,10 @@
 
 .acta-estado-rechazada::before {
   background-color: var(--color-danger);
+}
+
+.acta-estado-cancelada::before {
+  background-color: #9e9e9e;
 }
 
 .acta-card-header {
@@ -489,6 +504,59 @@
   font-weight: 500;
 }
 
+/* Product list inside cards */
+.card-productos {
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px dashed var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card-producto-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 4px 8px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.8125rem;
+}
+
+.card-producto-item > i {
+  font-size: 0.75rem;
+  color: var(--color-secondary);
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.card-producto-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.card-producto-nombre {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-producto-detalle {
+  color: var(--text-secondary);
+  font-size: 0.6875rem;
+}
+
+.card-producto-item .badge-sm {
+  padding: 2px 6px;
+  font-size: 0.625rem;
+}
+
 .acta-card-footer {
   padding: var(--spacing-md) var(--spacing-lg);
   background-color: var(--bg-secondary);
@@ -543,6 +611,11 @@
 .badge-rechazada {
   background-color: rgba(244, 67, 54, 0.15);
   color: var(--color-danger);
+}
+
+.badge-cancelada {
+  background-color: rgba(158, 158, 158, 0.15);
+  color: #9e9e9e;
 }
 
 .badge-devuelto {
@@ -846,6 +919,144 @@
   font-size: 0.75rem;
 }
 
+/* Expanded device item */
+.dispositivo-item-expanded {
+  padding: var(--spacing-md);
+  background-color: var(--bg-secondary);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.dispositivo-item-expanded.devuelto {
+  opacity: 0.75;
+}
+
+.dispositivo-header-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.dispositivo-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+}
+
+.dispositivo-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dispositivo-detail-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.dispositivo-detail-value {
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.badge-condicion {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--border-radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  width: fit-content;
+}
+
+.condicion-nuevo {
+  background-color: rgba(76, 175, 80, 0.15);
+  color: var(--color-success);
+}
+
+.condicion-bueno {
+  background-color: rgba(33, 150, 243, 0.15);
+  color: var(--color-info);
+}
+
+.condicion-regular {
+  background-color: rgba(255, 152, 0, 0.15);
+  color: var(--color-warning);
+}
+
+.condicion-malo {
+  background-color: rgba(244, 67, 54, 0.15);
+  color: var(--color-danger);
+}
+
+.dispositivo-obs,
+.dispositivo-desc {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  padding: var(--spacing-xs) 0;
+}
+
+.dispositivo-obs i,
+.dispositivo-desc i {
+  font-size: 0.75rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.dispositivo-devolucion-info {
+  margin-top: var(--spacing-xs);
+}
+
+.devolucion-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.devolucion-divider::before,
+.devolucion-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--border-color);
+}
+
+.devolucion-divider span {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.detail-email {
+  color: var(--color-secondary);
+  word-break: break-all;
+}
+
+.obs-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.modal-header .badge {
+  flex-shrink: 0;
+}
+
 /* ========================================
    FIRMA CONTAINER (Modal)
    ======================================== */
@@ -1144,6 +1355,17 @@
   background-color: #43a047;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--color-danger);
+  color: #ffffff;
 }
 
 /* ========================================

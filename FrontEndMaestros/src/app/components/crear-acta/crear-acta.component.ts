@@ -45,6 +45,9 @@ export class CrearActaComponent implements OnInit, OnDestroy {
   errorMessage = '';
   successMessage = '';
 
+  // Descripciones expandidas
+  descripcionExpandida: Set<number> = new Set();
+
   // Estado del proceso
   actaCreada: any = null;
   enviandoCorreo = false;
@@ -283,6 +286,14 @@ export class CrearActaComponent implements OnInit, OnDestroy {
 
   cancelar(): void {
     this.router.navigate(['/inventario']);
+  }
+
+  toggleDescripcion(id: number): void {
+    if (this.descripcionExpandida.has(id)) {
+      this.descripcionExpandida.delete(id);
+    } else {
+      this.descripcionExpandida.add(id);
+    }
   }
 
   getCategoriaIcon(categoria: string): string {

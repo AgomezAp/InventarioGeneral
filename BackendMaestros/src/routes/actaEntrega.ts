@@ -6,7 +6,8 @@ import {
   crearActaEntrega,
   registrarDevolucion,
   obtenerActasActivas,
-  obtenerHistorialDispositivo
+  obtenerHistorialDispositivo,
+  cancelarActaEntrega
 } from '../controllers/actaEntrega.js';
 import validateToken from './validateToken.js';
 
@@ -23,5 +24,8 @@ router.post('/', validateToken, upload.any(), crearActaEntrega);
 
 // Registrar devolución
 router.post('/:id/devolucion', validateToken, upload.any(), registrarDevolucion);
+
+// Cancelar acta pendiente de firma
+router.delete('/:id', validateToken, cancelarActaEntrega);
 
 export default router;

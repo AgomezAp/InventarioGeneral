@@ -204,4 +204,15 @@ export class InventarioService {
   obtenerHistorialDispositivo(dispositivoId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}api/actas/historial/${dispositivoId}`);
   }
+
+  /**
+   * Cancelar acta pendiente de firma
+   */
+  cancelarActa(id: number): Observable<{ msg: string }> {
+    return this.http.request<{ msg: string }>(
+      'DELETE',
+      `${this.apiUrl}api/actas/${id}`,
+      { body: { Uid: localStorage.getItem('userId') } }
+    );
+  }
 }

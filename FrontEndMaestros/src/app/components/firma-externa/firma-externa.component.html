@@ -141,25 +141,80 @@
 
     <!-- Panel de firma -->
     <section *ngIf="mostrarFirma" class="seccion panel-firma">
-      <h2>✍️ Su Firma Digital</h2>
-      <p class="instruccion">Dibuje su firma en el recuadro usando el mouse o su dedo si está en un dispositivo táctil.</p>
-      
-      <div class="firma-container">
-        <canvas #signatureCanvas class="signature-canvas"></canvas>
-        <div class="firma-linea">
-          <span>Firma del Receptor</span>
+      <h2>Su Firma Digital</h2>
+
+      <!-- Tabs para elegir modo de firma -->
+      <div class="firma-tabs">
+        <button
+          type="button"
+          class="firma-tab"
+          [class.active]="modoFirma === 'dibujar'"
+          (click)="cambiarModoFirma('dibujar')"
+        >
+          <span class="tab-icon">&#9997;</span> Dibujar firma
+        </button>
+        <button
+          type="button"
+          class="firma-tab"
+          [class.active]="modoFirma === 'imagen'"
+          (click)="cambiarModoFirma('imagen')"
+        >
+          <span class="tab-icon">&#128247;</span> Subir imagen
+        </button>
+      </div>
+
+      <!-- Modo dibujar -->
+      <div *ngIf="modoFirma === 'dibujar'">
+        <p class="instruccion">Dibuje su firma en el recuadro usando el mouse o su dedo si esta en un dispositivo tactil.</p>
+        <div class="firma-container">
+          <canvas #signatureCanvas class="signature-canvas"></canvas>
+          <div class="firma-linea">
+            <span>Firma del Receptor</span>
+          </div>
         </div>
       </div>
-      
+
+      <!-- Modo imagen -->
+      <div *ngIf="modoFirma === 'imagen'">
+        <p class="instruccion">Suba una imagen de su firma (JPG, PNG). Maximo 5MB.</p>
+        <div class="firma-upload-area" *ngIf="!imagenFirmaPreview">
+          <label class="firma-upload-label" for="firmaImageInput">
+            <span class="upload-icon">&#128228;</span>
+            <span class="upload-text">Haga clic para seleccionar imagen</span>
+            <span class="upload-hint">JPG, PNG - Max 5MB</span>
+          </label>
+          <input
+            type="file"
+            id="firmaImageInput"
+            accept="image/*"
+            (change)="onImagenFirmaSelected($event)"
+            hidden
+          />
+        </div>
+        <div class="firma-imagen-preview" *ngIf="imagenFirmaPreview">
+          <img [src]="imagenFirmaPreview" alt="Vista previa de firma" />
+          <button type="button" class="btn-remove-imagen" (click)="eliminarImagenFirma()">
+            Cambiar imagen
+          </button>
+          <div class="firma-linea">
+            <span>Firma del Receptor</span>
+          </div>
+        </div>
+      </div>
+
       <div class="firma-acciones">
-        <button class="btn btn-outline" (click)="limpiarFirma()">
-          🗑️ Limpiar
+        <button class="btn btn-outline" *ngIf="modoFirma === 'dibujar'" (click)="limpiarFirma()">
+          Limpiar
         </button>
         <button class="btn btn-secondary" (click)="cancelar()">
-          ← Cancelar
+          Cancelar
         </button>
-        <button class="btn btn-primary" (click)="confirmarFirma()" [disabled]="firmando || firmaVacia">
-          <span *ngIf="!firmando">✅ Confirmar Firma</span>
+        <button
+          class="btn btn-primary"
+          (click)="confirmarFirma()"
+          [disabled]="firmando || (modoFirma === 'dibujar' && firmaVacia) || (modoFirma === 'imagen' && !imagenFirmaBase64)"
+        >
+          <span *ngIf="!firmando">Confirmar Firma</span>
           <span *ngIf="firmando">Procesando...</span>
         </button>
       </div>

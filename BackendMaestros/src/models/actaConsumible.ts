@@ -89,7 +89,7 @@ ActaConsumible.init(
       comment: 'Fecha y hora cuando se firmó digitalmente'
     },
     estado: {
-      type: DataTypes.ENUM('pendiente_firma', 'firmada', 'rechazada'),
+      type: DataTypes.ENUM('pendiente_firma', 'firmada', 'rechazada', 'cancelada'),
       defaultValue: 'pendiente_firma',
       comment: 'Estado del acta'
     },

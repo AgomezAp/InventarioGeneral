@@ -168,23 +168,39 @@
                 "
               >
                 <div
-                  class="disp-chip"
+                  class="disp-chip-wrapper"
                   *ngFor="let disp of dispositivosDisponiblesFiltrados"
-                  (click)="agregarDispositivo(disp)"
-                  tabindex="0"
                 >
-                  <i
-                    class="pi"
-                    [ngClass]="getCategoriaIcon(disp.categoria)"
-                  ></i>
-                  <span class="disp-chip-name">{{ disp.nombre }}</span>
-                  <span class="disp-chip-detail" *ngIf="disp.marca">{{
-                    disp.marca
-                  }}</span>
-                  <span class="disp-chip-detail disp-chip-serial" *ngIf="disp.imei || disp.serial">
-                    {{ disp.imei || disp.serial }}
-                  </span>
-                  <i class="pi pi-plus add-icon"></i>
+                  <div
+                    class="disp-chip"
+                    (click)="agregarDispositivo(disp)"
+                    tabindex="0"
+                  >
+                    <i
+                      class="pi"
+                      [ngClass]="getCategoriaIcon(disp.categoria)"
+                    ></i>
+                    <span class="disp-chip-name">{{ disp.nombre }}</span>
+                    <span class="disp-chip-detail" *ngIf="disp.marca">{{
+                      disp.marca
+                    }}</span>
+                    <span class="disp-chip-detail disp-chip-serial" *ngIf="disp.imei || disp.serial">
+                      {{ disp.imei || disp.serial }}
+                    </span>
+                    <button
+                      type="button"
+                      class="btn-info-desc"
+                      *ngIf="disp.descripcion"
+                      (click)="toggleDescripcion(disp.id!); $event.stopPropagation()"
+                      title="Ver descripción"
+                    >
+                      <i class="pi pi-info-circle"></i>
+                    </button>
+                    <i class="pi pi-plus add-icon"></i>
+                  </div>
+                  <div class="descripcion-expandida" *ngIf="descripcionExpandida.has(disp.id!)">
+                    <p>{{ disp.descripcion }}</p>
+                  </div>
                 </div>
               </div>
 
@@ -274,6 +290,12 @@
                         item.dispositivo.serial
                       }}</span>
                     </div>
+                  </div>
+
+                  <!-- Descripción del dispositivo -->
+                  <div class="disp-card-descripcion" *ngIf="item.dispositivo.descripcion">
+                    <i class="pi pi-info-circle"></i>
+                    <span>{{ item.dispositivo.descripcion }}</span>
                   </div>
 
                   <!-- Formulario del dispositivo -->

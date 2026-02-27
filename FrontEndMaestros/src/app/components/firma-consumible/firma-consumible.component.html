@@ -139,14 +139,62 @@
 
     <!-- Panel de firma -->
     <div class="firma-card" *ngIf="mostrarFirma">
-      <h3><i class="fas fa-signature"></i> Dibuje su firma</h3>
-      <p class="firma-instrucciones">Use el ratón o el dedo (en dispositivos táctiles) para dibujar su firma en el recuadro.</p>
-      
-      <div class="signature-container">
-        <canvas #signatureCanvas class="signature-canvas"></canvas>
-        <button class="btn-limpiar" (click)="limpiarFirma()" title="Limpiar firma">
-          <i class="fas fa-eraser"></i>
+      <h3><i class="fas fa-signature"></i> Su Firma</h3>
+
+      <!-- Tabs para elegir modo de firma -->
+      <div class="firma-tabs">
+        <button
+          type="button"
+          class="firma-tab"
+          [class.active]="modoFirma === 'dibujar'"
+          (click)="cambiarModoFirma('dibujar')"
+        >
+          <i class="fas fa-pen-nib"></i> Dibujar firma
         </button>
+        <button
+          type="button"
+          class="firma-tab"
+          [class.active]="modoFirma === 'imagen'"
+          (click)="cambiarModoFirma('imagen')"
+        >
+          <i class="fas fa-image"></i> Subir imagen
+        </button>
+      </div>
+
+      <!-- Modo dibujar -->
+      <div *ngIf="modoFirma === 'dibujar'">
+        <p class="firma-instrucciones">Use el raton o el dedo (en dispositivos tactiles) para dibujar su firma en el recuadro.</p>
+        <div class="signature-container">
+          <canvas #signatureCanvas class="signature-canvas"></canvas>
+          <button class="btn-limpiar" (click)="limpiarFirma()" title="Limpiar firma">
+            <i class="fas fa-eraser"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modo imagen -->
+      <div *ngIf="modoFirma === 'imagen'">
+        <p class="firma-instrucciones">Suba una imagen de su firma (JPG, PNG). Maximo 5MB.</p>
+        <div class="firma-upload-area" *ngIf="!imagenFirmaPreview">
+          <label class="firma-upload-label" for="firmaImageInputCons">
+            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+            <span class="upload-text">Haga clic para seleccionar imagen</span>
+            <span class="upload-hint">JPG, PNG - Max 5MB</span>
+          </label>
+          <input
+            type="file"
+            id="firmaImageInputCons"
+            accept="image/*"
+            (change)="onImagenFirmaSelected($event)"
+            hidden
+          />
+        </div>
+        <div class="firma-imagen-preview" *ngIf="imagenFirmaPreview">
+          <img [src]="imagenFirmaPreview" alt="Vista previa de firma" />
+          <button type="button" class="btn-cambiar-imagen" (click)="eliminarImagenFirma()">
+            <i class="fas fa-sync-alt"></i> Cambiar imagen
+          </button>
+        </div>
       </div>
 
       <div class="firma-actions">
@@ -154,10 +202,10 @@
           <i class="fas fa-arrow-left"></i>
           Volver
         </button>
-        <button 
-          class="btn btn-confirmar" 
-          (click)="confirmarFirma()" 
-          [disabled]="firmando"
+        <button
+          class="btn btn-confirmar"
+          (click)="confirmarFirma()"
+          [disabled]="firmando || (modoFirma === 'dibujar' && firmaVacia) || (modoFirma === 'imagen' && !imagenFirmaBase64)"
           [style.background]="'linear-gradient(135deg, ' + colorTema + ' 0%, ' + colorTema + 'cc 100%)'"
         >
           <i class="fas" [ngClass]="firmando ? 'fa-spinner fa-spin' : 'fa-check'"></i>

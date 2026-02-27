@@ -39,11 +39,14 @@ export class ActasConsumiblesComponent implements OnInit, OnDestroy {
   // Reenvío de correo
   reenviandoCorreo: { [id: number]: boolean } = {};
 
+  // Cancelación de acta
+  cancelandoActa: { [id: number]: boolean } = {};
+
   // Suscripciones WebSocket
   private subscriptions: Subscription[] = [];
 
   // Estados disponibles
-  estados = ['pendiente_firma', 'firmada', 'rechazada'];
+  estados = ['pendiente_firma', 'firmada', 'rechazada', 'cancelada'];
 
   constructor(
     private actaService: ActaConsumibleService,
@@ -71,11 +74,11 @@ export class ActasConsumiblesComponent implements OnInit, OnDestroy {
   configurarTipo(): void {
     if (this.tipoInventario === 'aseo') {
       this.tituloTipo = 'Aseo';
-      this.iconoTipo = 'fa-broom';
+      this.iconoTipo = 'pi-sparkles';
       this.colorTema = '#00bcd4';
     } else {
       this.tituloTipo = 'Papelería';
-      this.iconoTipo = 'fa-pen';
+      this.iconoTipo = 'pi-pencil';
       this.colorTema = '#ffa726';
     }
   }
@@ -167,51 +170,54 @@ export class ActasConsumiblesComponent implements OnInit, OnDestroy {
 
   getEstadoClass(estado: string): string {
     const clases: { [key: string]: string } = {
-      'pendiente_firma': 'estado-pendiente',
-      'firmada': 'estado-firmada',
-      'rechazada': 'estado-rechazada'
+      'pendiente_firma': 'badge-pendiente_firma',
+      'firmada': 'badge-firmada',
+      'rechazada': 'badge-rechazada',
+      'cancelada': 'badge-cancelada'
     };
     return clases[estado] || '';
   }
 
   getEstadoIcon(estado: string): string {
     const iconos: { [key: string]: string } = {
-      'pendiente_firma': 'fa-envelope',
-      'firmada': 'fa-check-circle',
-      'rechazada': 'fa-times-circle'
+      'pendiente_firma': 'pi-envelope',
+      'firmada': 'pi-check-circle',
+      'rechazada': 'pi-times-circle',
+      'cancelada': 'pi-ban'
     };
-    return iconos[estado] || 'fa-circle';
+    return iconos[estado] || 'pi-circle';
   }
 
   getEstadoLabel(estado: string): string {
     const labels: { [key: string]: string } = {
       'pendiente_firma': 'Pendiente de Firma',
       'firmada': 'Firmada',
-      'rechazada': 'Rechazada'
+      'rechazada': 'Rechazada',
+      'cancelada': 'Cancelada'
     };
     return labels[estado] || estado;
   }
 
   getCategoriaIcon(categoria?: string): string {
-    if (!categoria) return 'fa-box';
-    
+    if (!categoria) return 'pi-box';
+
     const iconos: { [key: string]: string } = {
-      'limpieza': 'fa-spray-can',
-      'desinfectantes': 'fa-pump-soap',
-      'jabones': 'fa-soap',
-      'papel': 'fa-toilet-paper',
-      'bolsas': 'fa-trash',
-      'escritura': 'fa-pen',
-      'archivo': 'fa-folder',
-      'impresión': 'fa-print',
-      'adhesivos': 'fa-tape'
+      'limpieza': 'pi-sparkles',
+      'desinfectantes': 'pi-heart',
+      'jabones': 'pi-heart',
+      'papel': 'pi-file',
+      'bolsas': 'pi-trash',
+      'escritura': 'pi-pencil',
+      'archivo': 'pi-folder',
+      'impresión': 'pi-print',
+      'adhesivos': 'pi-tag'
     };
-    
+
     const categoriaLower = categoria.toLowerCase();
     for (const [key, icon] of Object.entries(iconos)) {
       if (categoriaLower.includes(key)) return icon;
     }
-    return 'fa-box';
+    return 'pi-box';
   }
 
   getTotalArticulos(acta: ActaConsumible): number {
@@ -229,6 +235,10 @@ export class ActasConsumiblesComponent implements OnInit, OnDestroy {
 
   contarRechazadas(): number {
     return this.actas.filter(a => a.estado === 'rechazada').length;
+  }
+
+  contarCanceladas(): number {
+    return this.actas.filter(a => a.estado === 'cancelada').length;
   }
 
   // Reenviar correo
@@ -278,6 +288,54 @@ export class ActasConsumiblesComponent implements OnInit, OnDestroy {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
+    });
+  }
+
+  // Cancelar acta pendiente de firma
+  cancelarActa(acta: ActaConsumible): void {
+    if (!acta.id) return;
+
+    Swal.fire({
+      title: '¿Cancelar acta?',
+      text: `Se cancelará el acta ${acta.numeroActa} y se restaurará el stock de los artículos.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#f44336',
+      cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'No'
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      this.cancelandoActa[acta.id!] = true;
+
+      this.actaService.cancelarActa(acta.id!).subscribe({
+        next: () => {
+          this.cancelandoActa[acta.id!] = false;
+          Swal.fire({
+            icon: 'success',
+            title: 'Acta cancelada',
+            text: 'El stock ha sido restaurado exitosamente.',
+            toast: true,
+            position: 'top-end',
+            timer: 3000,
+            showConfirmButton: false
+          });
+          this.cargarActas();
+          if (this.actaSeleccionada?.id === acta.id) {
+            this.cerrarDetalle();
+          }
+        },
+        error: (err) => {
+          this.cancelandoActa[acta.id!] = false;
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.error?.msg || 'Error al cancelar el acta',
+            confirmButtonColor: this.colorTema
+          });
+        }
+      });
     });
   }
 }

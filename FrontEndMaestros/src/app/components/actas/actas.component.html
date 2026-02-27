@@ -74,6 +74,16 @@
           <span class="stat-label">Rechazadas</span>
         </div>
       </div>
+
+      <div class="stat-card stat-canceladas" *ngIf="contarCanceladas() > 0">
+        <div class="stat-icon">
+          <i class="pi pi-ban"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ contarCanceladas() }}</span>
+          <span class="stat-label">Canceladas</span>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -159,6 +169,20 @@
               </span>
             </div>
           </div>
+
+          <!-- Lista de dispositivos en la tarjeta -->
+          <div class="card-productos" *ngIf="acta.detalles && acta.detalles.length > 0">
+            <div class="card-producto-item" *ngFor="let detalle of acta.detalles">
+              <i class="pi" [ngClass]="getCategoriaIcon(detalle.dispositivo?.categoria || '')"></i>
+              <div class="card-producto-info">
+                <span class="card-producto-nombre">{{ detalle.dispositivo?.nombre }}</span>
+                <span class="card-producto-detalle">{{ detalle.dispositivo?.marca }} {{ detalle.dispositivo?.modelo }}<span *ngIf="detalle.dispositivo?.serial"> - S/N: {{ detalle.dispositivo?.serial }}</span></span>
+              </div>
+              <span class="badge badge-sm" [ngClass]="detalle.devuelto ? 'badge-devuelto' : 'badge-pendiente'" *ngIf="acta.estado === 'activa' || acta.estado === 'devuelta_parcial'">
+                {{ detalle.devuelto ? 'Dev.' : 'Pend.' }}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div class="acta-card-footer">
@@ -177,6 +201,21 @@
               ></i>
               {{
                 reenviandoCorreo[acta.id!] ? "Enviando..." : "Reenviar Correo"
+              }}
+            </button>
+            <button
+              class="btn btn-sm btn-danger"
+              (click)="cancelarActa(acta); $event.stopPropagation()"
+              [disabled]="cancelandoActa[acta.id!]"
+            >
+              <i
+                class="pi"
+                [ngClass]="
+                  cancelandoActa[acta.id!] ? 'pi-spin pi-spinner' : 'pi-ban'
+                "
+              ></i>
+              {{
+                cancelandoActa[acta.id!] ? "Cancelando..." : "Cancelar"
               }}
             </button>
           </ng-container>
@@ -245,6 +284,10 @@
         <h2 id="modal-detalle-titulo">
           <i class="pi pi-file"></i> {{ actaSeleccionada.numeroActa }}
         </h2>
+        <span class="badge" [ngClass]="getEstadoClass(actaSeleccionada.estado)">
+          <i class="pi" [ngClass]="getEstadoIcon(actaSeleccionada.estado)"></i>
+          {{ getEstadoLabel(actaSeleccionada.estado) }}
+        </span>
         <button class="btn-close" (click)="cerrarDetalle()" aria-label="Cerrar">
           <i class="pi pi-times"></i>
         </button>
@@ -286,6 +329,15 @@
                   actaSeleccionada.telefonoReceptor
                 }}</span>
               </div>
+              <div
+                class="detail-item"
+                *ngIf="actaSeleccionada.correoReceptor"
+              >
+                <span class="detail-label">Correo</span>
+                <span class="detail-value detail-email">{{
+                  actaSeleccionada.correoReceptor
+                }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -302,6 +354,15 @@
                 <span class="detail-label">Entrega</span>
                 <span class="detail-value">{{
                   actaSeleccionada.fechaEntrega | date: "dd/MM/yyyy HH:mm"
+                }}</span>
+              </div>
+              <div
+                class="detail-item"
+                *ngIf="actaSeleccionada.fechaFirma"
+              >
+                <span class="detail-label">Firma</span>
+                <span class="detail-value">{{
+                  actaSeleccionada.fechaFirma | date: "dd/MM/yyyy HH:mm"
                 }}</span>
               </div>
               <div
@@ -336,45 +397,133 @@
           <div class="detail-section-body">
             <div class="dispositivos-lista">
               <div
-                class="dispositivo-item"
+                class="dispositivo-item-expanded"
                 *ngFor="let detalle of actaSeleccionada.detalles"
                 [class.devuelto]="detalle.devuelto"
               >
-                <div class="dispositivo-icon">
-                  <i
-                    class="pi"
+                <div class="dispositivo-header-row">
+                  <div class="dispositivo-icon">
+                    <i
+                      class="pi"
+                      [ngClass]="
+                        getCategoriaIcon(detalle.dispositivo?.categoria || '')
+                      "
+                    ></i>
+                  </div>
+                  <div class="dispositivo-info">
+                    <strong>{{ detalle.dispositivo?.nombre }}</strong>
+                    <span
+                      >{{ detalle.dispositivo?.marca }}
+                      {{ detalle.dispositivo?.modelo }}</span
+                    >
+                  </div>
+                  <span
+                    class="badge"
                     [ngClass]="
-                      getCategoriaIcon(detalle.dispositivo?.categoria || '')
-                    "
-                  ></i>
-                </div>
-                <div class="dispositivo-info">
-                  <strong>{{ detalle.dispositivo?.nombre }}</strong>
-                  <span
-                    >{{ detalle.dispositivo?.marca }}
-                    {{ detalle.dispositivo?.modelo }}</span
-                  >
-                </div>
-                <span
-                  class="badge"
-                  [ngClass]="
-                    detalle.devuelto ? 'badge-devuelto' : 'badge-pendiente'
-                  "
-                >
-                  {{ detalle.devuelto ? "Devuelto" : "Pendiente" }}
-                  <span
-                    *ngIf="
-                      detalle.devuelto &&
-                      detalle.estadoDevolucion !== 'disponible'
+                      detalle.devuelto ? 'badge-devuelto' : 'badge-pendiente'
                     "
                   >
-                    ({{ detalle.estadoDevolucion }})
+                    {{ detalle.devuelto ? "Devuelto" : "Pendiente" }}
+                    <span
+                      *ngIf="
+                        detalle.devuelto &&
+                        detalle.estadoDevolucion !== 'disponible'
+                      "
+                    >
+                      ({{ detalle.estadoDevolucion }})
+                    </span>
                   </span>
-                </span>
+                </div>
+
+                <!-- Detalles extendidos del dispositivo -->
+                <div class="dispositivo-detail-grid">
+                  <div class="dispositivo-detail" *ngIf="detalle.dispositivo?.serial">
+                    <span class="dispositivo-detail-label">Serial</span>
+                    <span class="dispositivo-detail-value">{{ detalle.dispositivo?.serial }}</span>
+                  </div>
+                  <div class="dispositivo-detail" *ngIf="detalle.dispositivo?.imei">
+                    <span class="dispositivo-detail-label">IMEI</span>
+                    <span class="dispositivo-detail-value">{{ detalle.dispositivo?.imei }}</span>
+                  </div>
+                  <div class="dispositivo-detail" *ngIf="detalle.dispositivo?.color">
+                    <span class="dispositivo-detail-label">Color</span>
+                    <span class="dispositivo-detail-value">{{ detalle.dispositivo?.color }}</span>
+                  </div>
+                  <div class="dispositivo-detail" *ngIf="detalle.dispositivo?.categoria">
+                    <span class="dispositivo-detail-label">Categoría</span>
+                    <span class="dispositivo-detail-value">{{ detalle.dispositivo?.categoria | titlecase }}</span>
+                  </div>
+                  <div class="dispositivo-detail" *ngIf="detalle.condicionEntrega">
+                    <span class="dispositivo-detail-label">Condición entrega</span>
+                    <span class="dispositivo-detail-value badge-condicion" [ngClass]="'condicion-' + detalle.condicionEntrega">{{ detalle.condicionEntrega | titlecase }}</span>
+                  </div>
+                  <div class="dispositivo-detail" *ngIf="detalle.estadoEntrega">
+                    <span class="dispositivo-detail-label">Estado entrega</span>
+                    <span class="dispositivo-detail-value">{{ detalle.estadoEntrega | titlecase }}</span>
+                  </div>
+                </div>
+
+                <div class="dispositivo-obs" *ngIf="detalle.observacionesEntrega">
+                  <i class="pi pi-comment"></i>
+                  <span>{{ detalle.observacionesEntrega }}</span>
+                </div>
+
+                <div class="dispositivo-desc" *ngIf="detalle.dispositivo?.descripcion">
+                  <i class="pi pi-info-circle"></i>
+                  <span>{{ detalle.dispositivo?.descripcion }}</span>
+                </div>
+
+                <!-- Info de devolución si fue devuelto -->
+                <div class="dispositivo-devolucion-info" *ngIf="detalle.devuelto">
+                  <div class="devolucion-divider">
+                    <span>Devolución</span>
+                  </div>
+                  <div class="dispositivo-detail-grid">
+                    <div class="dispositivo-detail" *ngIf="detalle.fechaDevolucion">
+                      <span class="dispositivo-detail-label">Fecha</span>
+                      <span class="dispositivo-detail-value">{{ detalle.fechaDevolucion | date: "dd/MM/yyyy" }}</span>
+                    </div>
+                    <div class="dispositivo-detail" *ngIf="detalle.estadoDevolucion">
+                      <span class="dispositivo-detail-label">Estado</span>
+                      <span class="dispositivo-detail-value">{{ detalle.estadoDevolucion | titlecase }}</span>
+                    </div>
+                    <div class="dispositivo-detail" *ngIf="detalle.condicionDevolucion">
+                      <span class="dispositivo-detail-label">Condición</span>
+                      <span class="dispositivo-detail-value badge-condicion" [ngClass]="'condicion-' + detalle.condicionDevolucion">{{ detalle.condicionDevolucion | titlecase }}</span>
+                    </div>
+                  </div>
+                  <div class="dispositivo-obs" *ngIf="detalle.observacionesDevolucion">
+                    <i class="pi pi-comment"></i>
+                    <span>{{ detalle.observacionesDevolucion }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- Sección Observaciones Entrega -->
+        <div class="detail-section" *ngIf="actaSeleccionada.observacionesEntrega">
+          <div class="detail-section-header">
+            <i class="pi pi-comment"></i>
+            <h4>Observaciones de entrega</h4>
+          </div>
+          <div class="detail-section-body">
+            <p class="obs-text">{{ actaSeleccionada.observacionesEntrega }}</p>
+          </div>
+        </div>
+
+        <!-- Sección Observaciones Devolución -->
+        <div class="detail-section" *ngIf="actaSeleccionada.observacionesDevolucion">
+          <div class="detail-section-header">
+            <i class="pi pi-replay"></i>
+            <h4>Observaciones de devolución</h4>
+          </div>
+          <div class="detail-section-body">
+            <p class="obs-text">{{ actaSeleccionada.observacionesDevolucion }}</p>
+          </div>
+        </div>
+
         <!-- Sección Firma -->
         <div class="detail-section" *ngIf="actaSeleccionada.firmaReceptor">
           <div class="detail-section-header">

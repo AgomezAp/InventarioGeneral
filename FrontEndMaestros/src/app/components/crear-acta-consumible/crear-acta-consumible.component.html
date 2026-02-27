@@ -205,19 +205,35 @@
                 *ngIf="!loadingArticulos && articulosFiltrados.length > 0"
               >
                 <div
-                  class="art-chip"
+                  class="art-chip-wrapper"
                   *ngFor="let art of articulosFiltrados"
-                  (click)="agregarArticulo(art)"
-                  tabindex="0"
                 >
-                  <i class="pi" [ngClass]="getCategoriaIcon(art.categoria)"></i>
-                  <div class="art-chip-info">
-                    <span class="art-chip-name">{{ art.nombre }}</span>
-                    <span class="art-chip-stock"
-                      >{{ art.stockActual }} disp.</span
+                  <div
+                    class="art-chip"
+                    (click)="agregarArticulo(art)"
+                    tabindex="0"
+                  >
+                    <i class="pi" [ngClass]="getCategoriaIcon(art.categoria)"></i>
+                    <div class="art-chip-info">
+                      <span class="art-chip-name">{{ art.nombre }}</span>
+                      <span class="art-chip-stock"
+                        >{{ art.stockActual }} disp.</span
+                      >
+                    </div>
+                    <button
+                      type="button"
+                      class="btn-info-desc"
+                      *ngIf="art.descripcion"
+                      (click)="toggleDescripcion(art.id!); $event.stopPropagation()"
+                      title="Ver descripción"
                     >
+                      <i class="pi pi-info-circle"></i>
+                    </button>
+                    <i class="pi pi-plus add-icon"></i>
                   </div>
-                  <i class="pi pi-plus add-icon"></i>
+                  <div class="descripcion-expandida" *ngIf="descripcionExpandida.has(art.id!)">
+                    <p>{{ art.descripcion }}</p>
+                  </div>
                 </div>
               </div>
 
@@ -273,6 +289,12 @@
                     >
                       <i class="pi pi-times"></i>
                     </button>
+                  </div>
+
+                  <!-- Descripción del artículo -->
+                  <div class="art-card-descripcion" *ngIf="item.consumible.descripcion">
+                    <i class="pi pi-info-circle"></i>
+                    <span>{{ item.consumible.descripcion }}</span>
                   </div>
 
                   <div class="art-card-form">

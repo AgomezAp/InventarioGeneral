@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
+import sequelize from '../database/connection.js';
 import { ActaConsumible } from '../models/actaConsumible.js';
 import { DetalleActaConsumible } from '../models/detalleActaConsumible.js';
 import { TokenFirmaConsumible } from '../models/tokenFirmaConsumible.js';
@@ -615,5 +616,91 @@ export const reenviarCorreoFirma = async (req: Request, res: Response): Promise<
   } catch (error) {
     console.error('Error al reenviar correo:', error);
     res.status(500).json({ msg: 'Error al reenviar el correo' });
+  }
+};
+
+/**
+ * Cancelar acta de consumibles pendiente de firma
+ * Restaura el stock de todos los consumibles y marca el acta como cancelada
+ */
+export const cancelarActaConsumible = async (req: Request, res: Response): Promise<void> => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+    const { Uid } = req.body;
+
+    const acta = await ActaConsumible.findByPk(Number(id), {
+      include: [
+        {
+          model: DetalleActaConsumible,
+          as: 'detalles',
+          include: [
+            { model: Consumible, as: 'consumible' }
+          ]
+        }
+      ],
+      transaction
+    });
+
+    if (!acta) {
+      await transaction.rollback();
+      res.status(404).json({ msg: 'Acta no encontrada' });
+      return;
+    }
+
+    if (acta.estado !== 'pendiente_firma') {
+      await transaction.rollback();
+      res.status(400).json({ msg: 'Solo se pueden cancelar actas pendientes de firma' });
+      return;
+    }
+
+    // Restaurar stock de cada consumible
+    for (const detalle of (acta as any).detalles || []) {
+      const consumible = detalle.consumible;
+      if (!consumible) continue;
+
+      const stockAnterior = consumible.stockActual;
+      const stockNuevo = stockAnterior + detalle.cantidad;
+
+      await Consumible.update(
+        { stockActual: stockNuevo },
+        { where: { id: consumible.id }, transaction }
+      );
+
+      await MovimientoConsumible.create({
+        consumibleId: consumible.id,
+        tipoMovimiento: 'devolucion',
+        cantidad: detalle.cantidad,
+        stockAnterior,
+        stockNuevo,
+        motivo: 'cancelacion_acta',
+        descripcion: `Cancelación de Acta ${acta.numeroActa} - Stock restaurado`,
+        actaEntregaId: acta.id,
+        fecha: new Date(),
+        Uid
+      }, { transaction });
+    }
+
+    // Marcar token como usado para invalidar el enlace
+    await TokenFirmaConsumible.update(
+      { usado: true },
+      { where: { actaConsumibleId: acta.id, usado: false }, transaction }
+    );
+
+    // Cambiar estado del acta a cancelada
+    await acta.update({ estado: 'cancelada' }, { transaction });
+
+    await transaction.commit();
+
+    // Emitir eventos WebSocket
+    const io = getIO();
+    io.to('actas-consumibles').emit('acta:cancelled', { actaId: acta.id });
+
+    res.json({ msg: 'Acta cancelada exitosamente. El stock ha sido restaurado.' });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error al cancelar acta de consumibles:', error);
+    res.status(500).json({ msg: 'Error al cancelar el acta' });
   }
 };

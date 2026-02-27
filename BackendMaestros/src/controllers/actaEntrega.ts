@@ -5,6 +5,7 @@ import { ActaEntrega } from '../models/actaEntrega.js';
 import { DetalleActa } from '../models/detalleActa.js';
 import { Dispositivo } from '../models/dispositivo.js';
 import { MovimientoDispositivo } from '../models/movimientoDispositivo.js';
+import { TokenFirma } from '../models/tokenFirma.js';
 import { getPhotoUrl } from '../config/multer.js';
 import { getIO } from '../models/server.js';
  
@@ -540,5 +541,116 @@ export const obtenerHistorialDispositivo = async (req: Request, res: Response) =
   } catch (error) {
     console.error('Error al obtener historial:', error);
     res.status(500).json({ msg: 'Error al obtener el historial del dispositivo' });
+  }
+};
+
+/**
+ * Cancelar acta de entrega pendiente de firma
+ * Restaura el inventario (stock o estado individual) y marca el acta como cancelada
+ */
+export const cancelarActaEntrega = async (req: Request, res: Response): Promise<void> => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+    const { Uid } = req.body;
+
+    const acta = await ActaEntrega.findByPk(Number(id), {
+      include: [
+        {
+          model: DetalleActa,
+          as: 'detalles',
+          include: [
+            {
+              model: Dispositivo,
+              as: 'dispositivo'
+            }
+          ]
+        }
+      ],
+      transaction
+    });
+
+    if (!acta) {
+      await transaction.rollback();
+      res.status(404).json({ msg: 'Acta no encontrada' });
+      return;
+    }
+
+    if (acta.estado !== 'pendiente_firma') {
+      await transaction.rollback();
+      res.status(400).json({ msg: 'Solo se pueden cancelar actas pendientes de firma' });
+      return;
+    }
+
+    // Restaurar inventario para cada dispositivo del detalle
+    const dispositivoIds: number[] = [];
+    for (const detalle of (acta as any).detalles || []) {
+      const dispositivo = detalle.dispositivo;
+      if (!dispositivo) continue;
+
+      dispositivoIds.push(dispositivo.id);
+
+      if (dispositivo.tipoRegistro === 'stock') {
+        // Restaurar stock
+        const cantidadEntregada = detalle.cantidad || 1;
+        const stockRestaurado = (dispositivo.stockActual || 0) + cantidadEntregada;
+
+        await Dispositivo.update(
+          { stockActual: stockRestaurado, estado: 'disponible' },
+          { where: { id: dispositivo.id }, transaction }
+        );
+
+        await MovimientoDispositivo.create({
+          dispositivoId: dispositivo.id,
+          tipoMovimiento: 'cancelacion' as any,
+          estadoAnterior: `stock: ${dispositivo.stockActual}`,
+          estadoNuevo: `stock: ${stockRestaurado}`,
+          descripcion: `Cancelación de Acta ${acta.numeroActa} - Restaurado ${cantidadEntregada} uds`,
+          actaId: acta.id,
+          fecha: new Date(),
+          Uid
+        }, { transaction });
+      } else {
+        // Restaurar dispositivo individual a disponible
+        await Dispositivo.update(
+          { estado: 'disponible' },
+          { where: { id: dispositivo.id }, transaction }
+        );
+
+        await MovimientoDispositivo.create({
+          dispositivoId: dispositivo.id,
+          tipoMovimiento: 'cancelacion' as any,
+          estadoAnterior: 'reservado',
+          estadoNuevo: 'disponible',
+          descripcion: `Cancelación de Acta ${acta.numeroActa} - Dispositivo restaurado a disponible`,
+          actaId: acta.id,
+          fecha: new Date(),
+          Uid
+        }, { transaction });
+      }
+    }
+
+    // Cancelar tokens de firma pendientes
+    await TokenFirma.update(
+      { estado: 'cancelado' },
+      { where: { actaId: acta.id, estado: 'pendiente' }, transaction }
+    );
+
+    // Cambiar estado del acta a cancelada
+    await acta.update({ estado: 'cancelada' }, { transaction });
+
+    await transaction.commit();
+
+    // Emitir eventos WebSocket
+    const io = getIO();
+    io.to('actas').emit('acta:cancelled', { actaId: acta.id });
+    io.to('inventario').emit('dispositivo:updated', { multiple: true, ids: dispositivoIds });
+
+    res.json({ msg: 'Acta cancelada exitosamente. El inventario ha sido restaurado.' });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error al cancelar acta:', error);
+    res.status(500).json({ msg: 'Error al cancelar el acta' });
   }
 };

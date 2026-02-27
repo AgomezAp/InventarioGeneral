@@ -158,19 +158,71 @@
       <div class="firma-section">
         <h3><i class="fa fa-signature"></i> Su Firma</h3>
         <p class="instrucciones">
-          <strong>{{ acta.nombreEntrega }}</strong>, por favor firme en el recuadro a continuación 
+          <strong>{{ acta.nombreEntrega }}</strong>, por favor firme en el recuadro a continuación
           para confirmar la devolución de los equipos listados.
         </p>
-        
-        <div class="signature-area">
-          <canvas #signatureCanvas class="signature-canvas"></canvas>
-        </div>
-        
-        <div class="firma-actions">
-          <button class="btn-limpiar" (click)="limpiarFirma()">
-            <i class="fa fa-eraser"></i> Limpiar
+
+        <!-- Tabs para elegir modo de firma -->
+        <div class="firma-tabs">
+          <button
+            type="button"
+            class="firma-tab"
+            [class.active]="modoFirma === 'dibujar'"
+            (click)="cambiarModoFirma('dibujar')"
+          >
+            <i class="fa fa-pen-nib"></i> Dibujar firma
+          </button>
+          <button
+            type="button"
+            class="firma-tab"
+            [class.active]="modoFirma === 'imagen'"
+            (click)="cambiarModoFirma('imagen')"
+          >
+            <i class="fa fa-image"></i> Subir imagen
           </button>
         </div>
+
+        <!-- Modo dibujar -->
+        @if (modoFirma === 'dibujar') {
+          <div class="signature-area">
+            <canvas #signatureCanvas class="signature-canvas"></canvas>
+          </div>
+
+          <div class="firma-actions">
+            <button class="btn-limpiar" (click)="limpiarFirma()">
+              <i class="fa fa-eraser"></i> Limpiar
+            </button>
+          </div>
+        }
+
+        <!-- Modo imagen -->
+        @if (modoFirma === 'imagen') {
+          <p class="instrucciones">Suba una imagen de su firma (JPG, PNG). Máximo 5MB.</p>
+          @if (!imagenFirmaPreview) {
+            <div class="firma-upload-area">
+              <label class="firma-upload-label" for="firmaImageInputDev">
+                <i class="fa fa-cloud-upload-alt upload-icon"></i>
+                <span class="upload-text">Haga clic para seleccionar imagen</span>
+                <span class="upload-hint">JPG, PNG - Max 5MB</span>
+              </label>
+              <input
+                type="file"
+                id="firmaImageInputDev"
+                accept="image/*"
+                (change)="onImagenFirmaSelected($event)"
+                hidden
+              />
+            </div>
+          }
+          @if (imagenFirmaPreview) {
+            <div class="firma-imagen-preview">
+              <img [src]="imagenFirmaPreview" alt="Vista previa de firma" />
+              <button type="button" class="btn-cambiar-imagen" (click)="eliminarImagenFirma()">
+                <i class="fa fa-sync-alt"></i> Cambiar imagen
+              </button>
+            </div>
+          }
+        }
       </div>
       
       <!-- Términos -->
@@ -195,10 +247,10 @@
           }
         </button>
         
-        <button 
-          class="btn-firmar" 
+        <button
+          class="btn-firmar"
           (click)="firmar()"
-          [disabled]="firmando || rechazando">
+          [disabled]="firmando || rechazando || (modoFirma === 'dibujar' && firmaVacia) || (modoFirma === 'imagen' && !imagenFirmaBase64)">
           @if (firmando) {
             <i class="fa fa-spinner fa-spin"></i> Firmando...
           } @else {

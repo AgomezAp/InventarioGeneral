@@ -1,334 +1,431 @@
 <app-navbar></app-navbar>
 
-<div
-  class="actas-container"
-  [class.aseo]="tipoInventario === 'aseo'"
-  [class.papeleria]="tipoInventario === 'papeleria'"
->
-  <div class="content-wrapper">
-    <!-- Header Negro -->
-    <header class="page-header">
-      <div class="header-content">
-        <div class="header-info">
-          <h1>
-            <i class="pi pi-file-edit"></i>
-            Actas de Entrega - {{ tituloTipo }}
-          </h1>
-        </div>
-        <div class="header-badge" [ngClass]="'badge-' + tipoInventario">
-          <i class="pi" [ngClass]="iconoTipo"></i>
-          <span>{{ tipoInventario | titlecase }}</span>
-        </div>
-        <div class="header-actions">
-          <button class="btn-header-outline" (click)="irAInventario()">
-            <i class="pi pi-box"></i>
-            <span>Inventario</span>
-          </button>
-          <button class="btn-header-primary" (click)="irACrearActa()">
-            <i class="pi pi-plus"></i>
-            <span>Nueva Acta</span>
-          </button>
-        </div>
+<div class="actas-container">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-info">
+        <h1><i class="pi pi-file-edit"></i> Actas de Entrega - {{ tituloTipo }}</h1>
+        <p class="subtitle">
+          Gestión de entregas de artículos de {{ tituloTipo | lowercase }}
+        </p>
       </div>
-    </header>
 
-    <!-- Stats + Filtros en una fila -->
-    <div class="toolbar">
-      <div class="stats-row">
-        <button
-          class="stat-chip"
-          [class.active]="filtroEstado === 'todas'"
-          (click)="filtroEstado = 'todas'; aplicarFiltros()"
-        >
-          <i class="pi pi-list"></i>
-          <span class="stat-num">{{ actas.length }}</span>
-          <span class="stat-label">Total</span>
+      <div class="header-badge" [ngClass]="'badge-' + tipoInventario">
+        <i class="pi" [ngClass]="iconoTipo"></i>
+        <span>{{ tipoInventario | titlecase }}</span>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-secondary" (click)="irAInventario()">
+          <i class="pi pi-box"></i> Inventario
         </button>
-        <button
-          class="stat-chip pending"
-          [class.active]="filtroEstado === 'pendiente_firma'"
-          (click)="filtroEstado = 'pendiente_firma'; aplicarFiltros()"
-        >
+        <button class="btn btn-accent" (click)="irACrearActa()">
+          <i class="pi pi-plus"></i> Nueva Acta
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Estadísticas rápidas -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card stat-pendientes">
+        <div class="stat-icon">
           <i class="pi pi-envelope"></i>
-          <span class="stat-num">{{ contarPendientesFirma() }}</span>
-          <span class="stat-label">Pendientes</span>
-        </button>
-        <button
-          class="stat-chip signed"
-          [class.active]="filtroEstado === 'firmada'"
-          (click)="filtroEstado = 'firmada'; aplicarFiltros()"
-        >
-          <i class="pi pi-check-circle"></i>
-          <span class="stat-num">{{ contarFirmadas() }}</span>
-          <span class="stat-label">Firmadas</span>
-        </button>
-        <button
-          class="stat-chip rejected"
-          [class.active]="filtroEstado === 'rechazada'"
-          (click)="filtroEstado = 'rechazada'; aplicarFiltros()"
-        >
-          <i class="pi pi-times-circle"></i>
-          <span class="stat-num">{{ contarRechazadas() }}</span>
-          <span class="stat-label">Rechazadas</span>
-        </button>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ contarPendientesFirma() }}</span>
+          <span class="stat-label">Pend. Firma</span>
+        </div>
       </div>
 
-      <div class="search-box">
+      <div class="stat-card stat-firmadas">
+        <div class="stat-icon">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ contarFirmadas() }}</span>
+          <span class="stat-label">Firmadas</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-rechazadas" *ngIf="contarRechazadas() > 0">
+        <div class="stat-icon">
+          <i class="pi pi-times-circle"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ contarRechazadas() }}</span>
+          <span class="stat-label">Rechazadas</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-canceladas" *ngIf="contarCanceladas() > 0">
+        <div class="stat-icon">
+          <i class="pi pi-ban"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value">{{ contarCanceladas() }}</span>
+          <span class="stat-label">Canceladas</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filtros -->
+  <section class="filtros-section">
+    <div class="filtros-wrapper">
+      <div class="filtro-select">
+        <div class="custom-select-wrapper">
+          <select
+            [(ngModel)]="filtroEstado"
+            (change)="aplicarFiltros()"
+            class="custom-select"
+          >
+            <option value="todas">Todos los estados</option>
+            <option *ngFor="let estado of estados" [value]="estado">
+              {{ getEstadoLabel(estado) }}
+            </option>
+          </select>
+          <i class="pi pi-chevron-down select-arrow"></i>
+        </div>
+      </div>
+
+      <div class="filtro-busqueda">
         <i class="pi pi-search"></i>
         <input
           type="text"
           [(ngModel)]="filtroBusqueda"
-          (ngModelChange)="aplicarFiltros()"
-          placeholder="Buscar acta, receptor, área..."
+          (input)="aplicarFiltros()"
+          placeholder="Buscar por número de acta, receptor o área..."
+          class="search-input"
         />
       </div>
     </div>
+  </section>
 
-    <!-- Loading -->
-    <div class="loading-state" *ngIf="loading">
-      <div class="spinner"></div>
-      <span>Cargando actas...</span>
-    </div>
-
-    <!-- Error -->
-    <div class="error-state" *ngIf="error && !loading">
-      <i class="pi pi-exclamation-triangle"></i>
-      <p>{{ error }}</p>
-      <button class="btn btn-secondary btn-compact" (click)="cargarActas()">
-        <i class="pi pi-refresh"></i> Reintentar
-      </button>
-    </div>
-
-    <!-- Lista de actas -->
-    <div class="actas-content" *ngIf="!loading && !error">
-      <!-- Empty state -->
-      <div class="empty-state" *ngIf="actasFiltradas.length === 0">
-        <i class="pi pi-file"></i>
-        <h3>No hay actas</h3>
-        <p *ngIf="actas.length === 0">Aún no se han creado actas de entrega</p>
-        <p *ngIf="actas.length > 0">No se encontraron actas con los filtros</p>
-        <button
-          class="btn btn-accent btn-compact"
-          (click)="irACrearActa()"
-          *ngIf="actas.length === 0"
-        >
-          <i class="pi pi-plus"></i> Crear Primera Acta
-        </button>
-      </div>
-
-      <!-- Grid de actas -->
-      <div class="actas-grid" *ngIf="actasFiltradas.length > 0">
-        <div
-          class="acta-card"
-          *ngFor="let acta of actasFiltradas"
-          (click)="verDetalle(acta)"
-          [class.selected]="actaSeleccionada?.id === acta.id"
-        >
-          <div class="acta-card-header">
-            <span class="acta-numero">{{ acta.numeroActa }}</span>
-            <span class="acta-estado" [ngClass]="getEstadoClass(acta.estado)">
-              <i class="pi" [ngClass]="getEstadoIcon(acta.estado)"></i>
-              {{ getEstadoLabel(acta.estado) }}
-            </span>
-          </div>
-
-          <div class="acta-card-body">
-            <div class="acta-receptor">
-              <i class="pi pi-user"></i>
-              <div>
-                <strong>{{ acta.nombreReceptor }}</strong>
-                <span>{{ acta.cargoReceptor }}</span>
-              </div>
-            </div>
-
-            <div class="acta-meta">
-              <span class="meta-item" *ngIf="acta.areaReceptor">
-                <i class="pi pi-building"></i> {{ acta.areaReceptor }}
-              </span>
-              <span class="meta-item">
-                <i class="pi pi-box"></i>
-                {{ getTotalArticulos(acta) }} artículos
-              </span>
-            </div>
-          </div>
-
-          <div class="acta-card-footer">
-            <span class="acta-fecha">
-              <i class="pi pi-calendar"></i>
-              {{ formatDate(acta.fechaEntrega) }}
-            </span>
-            <div class="acta-actions">
-              <button
-                class="btn-icon"
-                *ngIf="acta.estado === 'pendiente_firma'"
-                (click)="reenviarCorreo(acta); $event.stopPropagation()"
-                [disabled]="reenviandoCorreo[acta.id!]"
-                title="Reenviar correo"
-              >
-                <i
-                  class="pi"
-                  [ngClass]="
-                    reenviandoCorreo[acta.id!]
-                      ? 'pi-spin pi-spinner'
-                      : 'pi-send'
-                  "
-                ></i>
-              </button>
-              <button class="btn-icon" title="Ver detalle">
-                <i class="pi pi-eye"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando actas...</p>
   </div>
 
-  <!-- Panel de detalle -->
-  <div class="detalle-panel" [class.open]="actaSeleccionada !== null">
-    <div class="detalle-overlay" (click)="cerrarDetalle()"></div>
-    <div class="detalle-content" *ngIf="actaSeleccionada">
-      <!-- Header del panel -->
-      <div class="detalle-header">
-        <div class="detalle-title">
-          <span class="acta-badge">{{ actaSeleccionada.numeroActa }}</span>
-          <span
-            class="estado-badge"
-            [ngClass]="getEstadoClass(actaSeleccionada.estado)"
-          >
-            <i
-              class="pi"
-              [ngClass]="getEstadoIcon(actaSeleccionada.estado)"
-            ></i>
-            {{ getEstadoLabel(actaSeleccionada.estado) }}
+  <!-- Lista de actas -->
+  <section class="actas-section" *ngIf="!loading">
+    <div class="actas-grid">
+      <article
+        class="acta-card"
+        *ngFor="let acta of actasFiltradas"
+        [ngClass]="'acta-estado-' + acta.estado"
+        (click)="verDetalle(acta)"
+        tabindex="0"
+        (keydown.enter)="verDetalle(acta)"
+      >
+        <div class="acta-card-header">
+          <span class="acta-numero">{{ acta.numeroActa }}</span>
+          <span class="badge" [ngClass]="getEstadoClass(acta.estado)">
+            <i class="pi" [ngClass]="getEstadoIcon(acta.estado)"></i>
+            {{ getEstadoLabel(acta.estado) }}
           </span>
         </div>
-        <button class="btn-close" (click)="cerrarDetalle()">
+
+        <div class="acta-card-body">
+          <div class="receptor-info">
+            <div class="receptor-avatar">
+              <i class="pi pi-user"></i>
+            </div>
+            <div class="receptor-details">
+              <strong>{{ acta.nombreReceptor }}</strong>
+              <span>{{ acta.cargoReceptor }}</span>
+            </div>
+          </div>
+
+          <div class="acta-meta">
+            <div class="meta-item">
+              <i class="pi pi-calendar"></i>
+              <span>{{ formatDate(acta.fechaEntrega) }}</span>
+            </div>
+
+            <div class="meta-item" *ngIf="acta.areaReceptor">
+              <i class="pi pi-building"></i>
+              <span>{{ acta.areaReceptor }}</span>
+            </div>
+
+            <div class="meta-item">
+              <i class="pi pi-box"></i>
+              <span>{{ getTotalArticulos(acta) }} artículo(s)</span>
+            </div>
+          </div>
+
+          <!-- Lista de artículos en la tarjeta -->
+          <div class="card-productos" *ngIf="acta.detalles && acta.detalles.length > 0">
+            <div class="card-producto-item" *ngFor="let detalle of acta.detalles">
+              <i class="pi" [ngClass]="getCategoriaIcon(detalle.consumible?.categoria)"></i>
+              <div class="card-producto-info">
+                <span class="card-producto-nombre">{{ detalle.consumible?.nombre || 'Artículo' }}</span>
+                <span class="card-producto-detalle">{{ detalle.cantidad }} {{ detalle.unidadMedida }}<span *ngIf="detalle.consumible?.categoria"> - {{ detalle.consumible?.categoria | titlecase }}</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="acta-card-footer">
+          <!-- Actas pendientes de firma -->
+          <ng-container *ngIf="acta.estado === 'pendiente_firma'">
+            <button
+              class="btn btn-sm btn-outline"
+              (click)="reenviarCorreo(acta); $event.stopPropagation()"
+              [disabled]="reenviandoCorreo[acta.id!]"
+            >
+              <i
+                class="pi"
+                [ngClass]="
+                  reenviandoCorreo[acta.id!] ? 'pi-spin pi-spinner' : 'pi-send'
+                "
+              ></i>
+              {{
+                reenviandoCorreo[acta.id!] ? "Enviando..." : "Reenviar Correo"
+              }}
+            </button>
+            <button
+              class="btn btn-sm btn-danger"
+              (click)="cancelarActa(acta); $event.stopPropagation()"
+              [disabled]="cancelandoActa[acta.id!]"
+            >
+              <i
+                class="pi"
+                [ngClass]="
+                  cancelandoActa[acta.id!] ? 'pi-spin pi-spinner' : 'pi-ban'
+                "
+              ></i>
+              {{
+                cancelandoActa[acta.id!] ? "Cancelando..." : "Cancelar"
+              }}
+            </button>
+          </ng-container>
+        </div>
+      </article>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="actasFiltradas.length === 0">
+      <div class="empty-icon">
+        <i class="pi pi-folder-open"></i>
+      </div>
+      <h3>No se encontraron actas</h3>
+      <p *ngIf="actas.length === 0">Aún no se han creado actas de entrega</p>
+      <p *ngIf="actas.length > 0">Intenta ajustar los filtros</p>
+    </div>
+  </section>
+
+  <!-- Modal de detalle -->
+  <div
+    class="modal-overlay"
+    *ngIf="actaSeleccionada"
+    (click)="cerrarDetalle()"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="modal-container modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          <i class="pi pi-file-edit"></i> {{ actaSeleccionada.numeroActa }}
+        </h2>
+        <span class="badge" [ngClass]="getEstadoClass(actaSeleccionada.estado)">
+          <i class="pi" [ngClass]="getEstadoIcon(actaSeleccionada.estado)"></i>
+          {{ getEstadoLabel(actaSeleccionada.estado) }}
+        </span>
+        <button class="btn-close" (click)="cerrarDetalle()" aria-label="Cerrar">
           <i class="pi pi-times"></i>
         </button>
       </div>
 
-      <!-- Body del panel -->
-      <div class="detalle-body" *ngIf="!loadingDetalle">
-        <!-- Receptor -->
-        <div class="detalle-section">
-          <h4><i class="pi pi-user"></i> Receptor</h4>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="label">Nombre</span>
-              <span class="value">{{ actaSeleccionada.nombreReceptor }}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Cargo</span>
-              <span class="value">{{ actaSeleccionada.cargoReceptor }}</span>
-            </div>
-            <div class="info-item" *ngIf="actaSeleccionada.areaReceptor">
-              <span class="label">Área</span>
-              <span class="value">{{ actaSeleccionada.areaReceptor }}</span>
-            </div>
-            <div class="info-item full">
-              <span class="label">Correo</span>
-              <span class="value email">{{
-                actaSeleccionada.correoReceptor
-              }}</span>
-            </div>
+      <div class="modal-body" *ngIf="!loadingDetalle">
+        <!-- Sección Receptor -->
+        <div class="detail-section">
+          <div class="detail-section-header">
+            <i class="pi pi-user"></i>
+            <h4>Receptor</h4>
           </div>
-        </div>
-
-        <!-- Fechas -->
-        <div class="detalle-section">
-          <h4><i class="pi pi-calendar"></i> Fechas</h4>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="label">Entrega</span>
-              <span class="value">{{
-                formatDate(actaSeleccionada.fechaEntrega)
-              }}</span>
-            </div>
-            <div class="info-item" *ngIf="actaSeleccionada.fechaFirma">
-              <span class="label">Firma</span>
-              <span class="value">{{
-                formatDate(actaSeleccionada.fechaFirma)
-              }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Artículos -->
-        <div class="detalle-section">
-          <h4>
-            <i class="pi pi-box"></i> Artículos ({{
-              actaSeleccionada.detalles?.length || 0
-            }})
-          </h4>
-          <div class="articulos-list">
-            <div
-              class="articulo-row"
-              *ngFor="let detalle of actaSeleccionada.detalles"
-            >
-              <div class="articulo-icon">
-                <i
-                  class="pi"
-                  [ngClass]="getCategoriaIcon(detalle.consumible?.categoria)"
-                ></i>
+          <div class="detail-section-body">
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-label">Nombre</span>
+                <span class="detail-value">{{
+                  actaSeleccionada.nombreReceptor
+                }}</span>
               </div>
-              <div class="articulo-info">
-                <strong>{{ detalle.consumible?.nombre || "Artículo" }}</strong>
-                <span>{{ detalle.cantidad }} {{ detalle.unidadMedida }}</span>
+              <div class="detail-item">
+                <span class="detail-label">Cargo</span>
+                <span class="detail-value">{{
+                  actaSeleccionada.cargoReceptor
+                }}</span>
               </div>
-              <span class="articulo-obs" *ngIf="detalle.observaciones">{{
-                detalle.observaciones
-              }}</span>
+              <div class="detail-item" *ngIf="actaSeleccionada.cedulaReceptor">
+                <span class="detail-label">Cédula</span>
+                <span class="detail-value">{{
+                  actaSeleccionada.cedulaReceptor
+                }}</span>
+              </div>
+              <div class="detail-item" *ngIf="actaSeleccionada.areaReceptor">
+                <span class="detail-label">Área</span>
+                <span class="detail-value">{{
+                  actaSeleccionada.areaReceptor
+                }}</span>
+              </div>
+              <div class="detail-item" *ngIf="actaSeleccionada.correoReceptor">
+                <span class="detail-label">Correo</span>
+                <span class="detail-value detail-email">{{
+                  actaSeleccionada.correoReceptor
+                }}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Observaciones -->
-        <div class="detalle-section" *ngIf="actaSeleccionada.observaciones">
-          <h4><i class="pi pi-comment"></i> Observaciones</h4>
-          <p class="obs-text">{{ actaSeleccionada.observaciones }}</p>
+        <!-- Sección Fechas y Creador -->
+        <div class="detail-section">
+          <div class="detail-section-header">
+            <i class="pi pi-calendar"></i>
+            <h4>Información del acta</h4>
+          </div>
+          <div class="detail-section-body">
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="detail-label">Fecha entrega</span>
+                <span class="detail-value">{{
+                  formatDate(actaSeleccionada.fechaEntrega)
+                }}</span>
+              </div>
+              <div class="detail-item" *ngIf="actaSeleccionada.fechaFirma">
+                <span class="detail-label">Fecha firma</span>
+                <span class="detail-value">{{
+                  formatDate(actaSeleccionada.fechaFirma)
+                }}</span>
+              </div>
+              <div class="detail-item" *ngIf="actaSeleccionada.creador">
+                <span class="detail-label">Creado por</span>
+                <span class="detail-value">{{
+                  actaSeleccionada.creador.nombre
+                }} {{ actaSeleccionada.creador.apellido }}</span>
+              </div>
+              <div class="detail-item" *ngIf="actaSeleccionada.tipoInventario">
+                <span class="detail-label">Tipo inventario</span>
+                <span class="detail-value">{{
+                  actaSeleccionada.tipoInventario.nombre
+                }}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Rechazo -->
+        <!-- Sección Artículos -->
+        <div class="detail-section">
+          <div class="detail-section-header">
+            <i class="pi pi-box"></i>
+            <h4>Artículos ({{ actaSeleccionada.detalles?.length || 0 }}) - Total: {{ getTotalArticulos(actaSeleccionada) }} unidades</h4>
+          </div>
+          <div class="detail-section-body">
+            <div class="articulos-lista">
+              <div
+                class="articulo-item-expanded"
+                *ngFor="let detalle of actaSeleccionada.detalles"
+              >
+                <div class="articulo-header-row">
+                  <div class="articulo-icon">
+                    <i
+                      class="pi"
+                      [ngClass]="getCategoriaIcon(detalle.consumible?.categoria)"
+                    ></i>
+                  </div>
+                  <div class="articulo-info">
+                    <strong>{{ detalle.consumible?.nombre || "Artículo" }}</strong>
+                    <span>{{ detalle.cantidad }} {{ detalle.unidadMedida }}</span>
+                  </div>
+                  <span class="articulo-categoria-badge" *ngIf="detalle.consumible?.categoria">
+                    {{ detalle.consumible?.categoria | titlecase }}
+                  </span>
+                </div>
+
+                <div class="articulo-desc" *ngIf="detalle.consumible?.descripcion">
+                  <i class="pi pi-info-circle"></i>
+                  <span>{{ detalle.consumible?.descripcion }}</span>
+                </div>
+
+                <div class="articulo-obs-text" *ngIf="detalle.observaciones">
+                  <i class="pi pi-comment"></i>
+                  <span>{{ detalle.observaciones }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección Observaciones -->
+        <div class="detail-section" *ngIf="actaSeleccionada.observaciones">
+          <div class="detail-section-header">
+            <i class="pi pi-comment"></i>
+            <h4>Observaciones</h4>
+          </div>
+          <div class="detail-section-body">
+            <p class="obs-text">{{ actaSeleccionada.observaciones }}</p>
+          </div>
+        </div>
+
+        <!-- Sección Motivo de Rechazo -->
         <div
-          class="detalle-section rechazo"
+          class="detail-section detail-section-danger"
           *ngIf="
             actaSeleccionada.estado === 'rechazada' &&
             actaSeleccionada.motivoRechazo
           "
         >
-          <h4><i class="pi pi-ban"></i> Motivo de Rechazo</h4>
-          <p class="rechazo-text">{{ actaSeleccionada.motivoRechazo }}</p>
+          <div class="detail-section-header detail-header-danger">
+            <i class="pi pi-ban"></i>
+            <h4>Motivo de Rechazo</h4>
+          </div>
+          <div class="detail-section-body">
+            <p class="rechazo-text">{{ actaSeleccionada.motivoRechazo }}</p>
+          </div>
         </div>
 
-        <!-- Firma -->
+        <!-- Sección Firma -->
         <div
-          class="detalle-section"
+          class="detail-section"
           *ngIf="
             actaSeleccionada.estado === 'firmada' &&
             actaSeleccionada.firmaReceptor
           "
         >
-          <h4><i class="pi pi-pencil"></i> Firma</h4>
-          <div class="firma-preview">
-            <img [src]="actaSeleccionada.firmaReceptor" alt="Firma" />
+          <div class="detail-section-header">
+            <i class="pi pi-pencil"></i>
+            <h4>Firma del receptor</h4>
+          </div>
+          <div class="detail-section-body">
+            <div class="firma-container">
+              <img
+                [src]="actaSeleccionada.firmaReceptor"
+                alt="Firma del receptor"
+                class="firma-imagen"
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Loading -->
-      <div class="detalle-loading" *ngIf="loadingDetalle">
+      <!-- Loading detalle -->
+      <div class="loading-container modal-loading" *ngIf="loadingDetalle">
         <div class="spinner"></div>
-        <span>Cargando...</span>
+        <p>Cargando detalle...</p>
       </div>
 
       <!-- Footer acciones -->
       <div
-        class="detalle-footer"
+        class="modal-footer"
         *ngIf="!loadingDetalle && actaSeleccionada.estado === 'pendiente_firma'"
       >
         <button
-          class="btn btn-accent btn-compact"
+          class="btn btn-accent"
           (click)="reenviarCorreo(actaSeleccionada)"
           [disabled]="reenviandoCorreo[actaSeleccionada.id!]"
         >
@@ -344,6 +441,25 @@
             reenviandoCorreo[actaSeleccionada.id!]
               ? "Enviando..."
               : "Reenviar Correo"
+          }}
+        </button>
+        <button
+          class="btn btn-danger"
+          (click)="cancelarActa(actaSeleccionada)"
+          [disabled]="cancelandoActa[actaSeleccionada.id!]"
+        >
+          <i
+            class="pi"
+            [ngClass]="
+              cancelandoActa[actaSeleccionada.id!]
+                ? 'pi-spin pi-spinner'
+                : 'pi-ban'
+            "
+          ></i>
+          {{
+            cancelandoActa[actaSeleccionada.id!]
+              ? "Cancelando..."
+              : "Cancelar Acta"
           }}
         </button>
       </div>

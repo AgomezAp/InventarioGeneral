@@ -54,6 +54,9 @@ export class FirmaExternaComponent implements OnInit, AfterViewInit {
   mostrarFirma: boolean = false;
   firmando: boolean = false;
   firmaVacia: boolean = true;
+  modoFirma: 'dibujar' | 'imagen' = 'dibujar';
+  imagenFirmaBase64: string | null = null;
+  imagenFirmaPreview: string | null = null;
   
   // Proceso de rechazo
   mostrarRechazo: boolean = false;
@@ -179,15 +182,66 @@ export class FirmaExternaComponent implements OnInit, AfterViewInit {
     }
   }
 
-  confirmarFirma(): void {
-    if (!this.signaturePad || this.signaturePad.isEmpty()) {
-      alert('Debe dibujar su firma antes de confirmar');
+  cambiarModoFirma(modo: 'dibujar' | 'imagen'): void {
+    this.modoFirma = modo;
+    if (modo === 'dibujar') {
+      this.imagenFirmaBase64 = null;
+      this.imagenFirmaPreview = null;
+      setTimeout(() => this.initSignaturePad(), 100);
+    } else {
+      if (this.signaturePad) {
+        this.signaturePad.clear();
+      }
+      this.firmaVacia = true;
+    }
+  }
+
+  onImagenFirmaSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    if (!file.type.startsWith('image/')) {
+      alert('Solo se permiten archivos de imagen (JPG, PNG, etc.)');
       return;
     }
-    
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen no debe superar los 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.imagenFirmaBase64 = e.target?.result as string;
+      this.imagenFirmaPreview = this.imagenFirmaBase64;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  eliminarImagenFirma(): void {
+    this.imagenFirmaBase64 = null;
+    this.imagenFirmaPreview = null;
+  }
+
+  confirmarFirma(): void {
+    let firmaBase64: string;
+
+    if (this.modoFirma === 'dibujar') {
+      if (!this.signaturePad || this.signaturePad.isEmpty()) {
+        alert('Debe dibujar su firma antes de confirmar');
+        return;
+      }
+      firmaBase64 = this.signaturePad.toDataURL('image/png');
+    } else {
+      if (!this.imagenFirmaBase64) {
+        alert('Debe subir una imagen de su firma antes de confirmar');
+        return;
+      }
+      firmaBase64 = this.imagenFirmaBase64;
+    }
+
     this.firmando = true;
-    const firmaBase64 = this.signaturePad.toDataURL('image/png');
-    
+
     this.http.post(`${this.apiUrl}api/firma/publica/${this.token}/firmar`, {
       firma: firmaBase64
     }).subscribe({
