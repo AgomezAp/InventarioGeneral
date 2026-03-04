@@ -496,6 +496,11 @@
   border: 1px solid var(--border-color);
 }
 
+/* Reduce available list height when devices are selected */
+.disponibles-scroll.compacta {
+  max-height: 120px;
+}
+
 .disp-chip {
   display: inline-flex;
   align-items: center;
@@ -507,6 +512,7 @@
   cursor: pointer;
   transition: all var(--transition-fast);
   font-size: 0.8125rem;
+  width: 100%;
 }
 
 .disp-chip:hover {
@@ -517,16 +523,62 @@
 .disp-chip i:first-child {
   color: var(--color-secondary);
   font-size: 0.9375rem;
+  flex-shrink: 0;
+}
+
+.disp-chip-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .disp-chip-name {
   color: var(--text-primary);
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.disp-chip-meta {
+  display: flex;
+  gap: 6px;
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+}
+
+.disp-chip-color {
+  font-style: italic;
+}
+
+.disp-chip-cat {
+  padding: 2px 8px;
+  background: var(--color-primary);
+  color: var(--color-secondary);
+  border-radius: var(--border-radius-full);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.disp-chip-stock {
+  padding: 2px 6px;
+  background: rgba(76, 175, 80, 0.1);
+  color: var(--color-success);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .disp-chip-detail {
   color: var(--text-secondary);
   font-size: 0.75rem;
+  flex-shrink: 0;
 }
 
 .disp-chip-detail.disp-chip-serial {
@@ -781,6 +833,69 @@
   padding: var(--spacing-sm) var(--spacing-md);
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
+}
+
+/* Info row with tags for device details */
+.disp-card-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.info-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  background: var(--bg-card);
+  border-radius: var(--border-radius-full);
+  font-size: 0.75rem;
+}
+
+.info-tag i {
+  color: var(--color-secondary);
+  font-size: 0.6875rem;
+}
+
+.info-tag-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.info-tag-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.info-tag-value.condicion-nuevo { color: #4caf50; }
+.info-tag-value.condicion-bueno { color: #2196f3; }
+.info-tag-value.condicion-regular { color: #ff9800; }
+.info-tag-value.condicion-malo { color: #f44336; }
+
+.info-tag-stock {
+  background: rgba(76, 175, 80, 0.08);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.info-tag-stock .info-tag-value {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+/* Category badge in card header */
+.disp-card-cat-badge {
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: var(--border-radius-full);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
 }
 
 .identifier {

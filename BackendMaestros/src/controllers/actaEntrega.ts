@@ -174,16 +174,42 @@ export const crearActaEntrega = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // Para dispositivos tipo stock, verificar que haya suficiente stock
+    // Para dispositivos tipo stock, verificar stock disponible (stock actual - reservas pendientes)
+    const dispositivosStock = dispositivosDB.filter(d => d.tipoRegistro === 'stock');
+    let stockReservado: { [id: number]: number } = {};
+
+    if (dispositivosStock.length > 0) {
+      // Calcular cantidades reservadas en actas pendientes de firma
+      const reservasPendientes = await DetalleActa.findAll({
+        where: { dispositivoId: dispositivosStock.map(d => d.id) },
+        include: [{
+          model: ActaEntrega,
+          as: 'acta',
+          where: { estado: 'pendiente_firma' },
+          attributes: ['id']
+        }],
+        attributes: ['dispositivoId', 'cantidad'],
+        transaction
+      });
+
+      for (const reserva of reservasPendientes) {
+        const did = (reserva as any).dispositivoId;
+        stockReservado[did] = (stockReservado[did] || 0) + ((reserva as any).cantidad || 1);
+      }
+    }
+
     const sinStockSuficiente = dispositivos.filter((item: any) => {
       const dispoDb = dispositivosDB.find((d: any) => d.id === item.dispositivoId);
-      return dispoDb?.tipoRegistro === 'stock' && (dispoDb.stockActual || 0) < (item.cantidad || 1);
+      if (dispoDb?.tipoRegistro !== 'stock') return false;
+      const disponible = (dispoDb.stockActual || 0) - (stockReservado[dispoDb.id] || 0);
+      return disponible < (item.cantidad || 1);
     });
     if (sinStockSuficiente.length > 0) {
       await transaction.rollback();
       const nombres = sinStockSuficiente.map((item: any) => {
         const d = dispositivosDB.find((d: any) => d.id === item.dispositivoId);
-        return `${d?.nombre} (necesita ${item.cantidad}, disponible: ${d?.stockActual})`;
+        const disponible = (d?.stockActual || 0) - (stockReservado[d?.id || 0] || 0);
+        return `${d?.nombre} (necesita ${item.cantidad}, disponible: ${disponible})`;
       });
       res.status(400).json({
         msg: 'Stock insuficiente para algunos dispositivos',
@@ -240,24 +266,15 @@ export const crearActaEntrega = async (req: Request, res: Response): Promise<voi
       }, { transaction });
       
       if (dispositivo?.tipoRegistro === 'stock') {
-        // Dispositivo tipo stock: reducir stock inmediatamente, sigue disponible si queda stock
-        const cantidadEntregada = item.cantidad || 1;
-        const nuevoStock = Math.max(0, (dispositivo.stockActual || 0) - cantidadEntregada);
-
-        await Dispositivo.update(
-          {
-            stockActual: nuevoStock,
-            estado: nuevoStock > 0 ? 'disponible' : 'entregado'
-          },
-          { where: { id: item.dispositivoId }, transaction }
-        );
+        // Dispositivo tipo stock: reservar sin reducir stock (se reduce al firmar)
+        const cantidadReservada = item.cantidad || 1;
 
         await MovimientoDispositivo.create({
           dispositivoId: item.dispositivoId,
-          tipoMovimiento: 'retirar_stock' as any,
+          tipoMovimiento: 'reserva' as any,
           estadoAnterior: `stock: ${dispositivo.stockActual}`,
-          estadoNuevo: `stock: ${nuevoStock}`,
-          descripcion: `Entregado a ${nombreReceptor} (${cargoReceptor}) - ${cantidadEntregada} uds - Acta ${numeroActa} (pendiente firma)`,
+          estadoNuevo: `stock: ${dispositivo.stockActual} (reserva: ${cantidadReservada})`,
+          descripcion: `Reservado para ${nombreReceptor} (${cargoReceptor}) - ${cantidadReservada} uds - Acta ${numeroActa} (pendiente firma)`,
           actaId: acta.id,
           fecha: new Date(),
           Uid
@@ -592,21 +609,15 @@ export const cancelarActaEntrega = async (req: Request, res: Response): Promise<
       dispositivoIds.push(dispositivo.id);
 
       if (dispositivo.tipoRegistro === 'stock') {
-        // Restaurar stock
-        const cantidadEntregada = detalle.cantidad || 1;
-        const stockRestaurado = (dispositivo.stockActual || 0) + cantidadEntregada;
-
-        await Dispositivo.update(
-          { stockActual: stockRestaurado, estado: 'disponible' },
-          { where: { id: dispositivo.id }, transaction }
-        );
+        // Stock nunca fue reducido (modelo de reserva), solo registrar cancelación
+        const cantidadReservada = detalle.cantidad || 1;
 
         await MovimientoDispositivo.create({
           dispositivoId: dispositivo.id,
           tipoMovimiento: 'cancelacion' as any,
-          estadoAnterior: `stock: ${dispositivo.stockActual}`,
-          estadoNuevo: `stock: ${stockRestaurado}`,
-          descripcion: `Cancelación de Acta ${acta.numeroActa} - Restaurado ${cantidadEntregada} uds`,
+          estadoAnterior: `stock: ${dispositivo.stockActual} (reserva: ${cantidadReservada})`,
+          estadoNuevo: `stock: ${dispositivo.stockActual}`,
+          descripcion: `Cancelación de Acta ${acta.numeroActa} - Reserva de ${cantidadReservada} uds liberada`,
           actaId: acta.id,
           fecha: new Date(),
           Uid

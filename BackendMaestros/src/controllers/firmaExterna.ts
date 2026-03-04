@@ -288,17 +288,26 @@ export const firmarActaConToken = async (req: Request, res: Response): Promise<v
     // Actualizar estado de dispositivos a 'entregado'
     for (const detalle of acta.detalles) {
       const dispositivo = detalle.dispositivo;
-      const cantidadEntregada = detalle.cantidad || 1; // Default a 1 si no se especificó
-      
-      // Si es un dispositivo de tipo stock, el stock ya fue reducido al crear el acta.
-      // Solo registrar la confirmación de firma.
+      const cantidadEntregada = detalle.cantidad || 1;
+
       if (dispositivo.tipoRegistro === 'stock') {
+        // Dispositivo stock: AHORA reducir el stock real (estaba reservado)
+        const nuevoStock = Math.max(0, (dispositivo.stockActual || 0) - cantidadEntregada);
+
+        await Dispositivo.update(
+          {
+            stockActual: nuevoStock,
+            estado: nuevoStock > 0 ? 'disponible' : 'entregado'
+          },
+          { where: { id: detalle.dispositivoId }, transaction }
+        );
+
         await MovimientoDispositivo.create({
           dispositivoId: detalle.dispositivoId,
           tipoMovimiento: 'firma_entrega' as any,
           estadoAnterior: `stock: ${dispositivo.stockActual}`,
-          estadoNuevo: `stock: ${dispositivo.stockActual}`,
-          descripcion: `Confirmado por firma digital de ${acta.nombreReceptor} - ${acta.numeroActa} (${cantidadEntregada} und.)`,
+          estadoNuevo: `stock: ${nuevoStock}`,
+          descripcion: `Confirmado por firma digital de ${acta.nombreReceptor} - ${acta.numeroActa} (${cantidadEntregada} und.) - Stock reducido`,
           actaId: acta.id,
           fecha: ahora
         }, { transaction });
@@ -431,15 +440,10 @@ export const rechazarActaConToken = async (req: Request, res: Response): Promise
       for (const detalle of acta.detalles) {
         const dispositivo = detalle.dispositivo;
         if (!dispositivo) continue;
-        const cantidadEntregada = detalle.cantidad || 1;
 
         if (dispositivo.tipoRegistro === 'stock') {
-          // Devolver el stock que se redujo al crear el acta
-          const stockRestaurado = (dispositivo.stockActual || 0) + cantidadEntregada;
-          await Dispositivo.update(
-            { stockActual: stockRestaurado, estado: 'disponible' },
-            { where: { id: detalle.dispositivoId }, transaction }
-          );
+          // Stock nunca fue reducido (modelo de reserva), no hay nada que restaurar
+          // Solo registrar el movimiento de cancelación de reserva
         } else {
           // Dispositivo individual: volver a disponible
           await Dispositivo.update(

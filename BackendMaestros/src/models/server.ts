@@ -91,7 +91,7 @@ class Server {
     });
   }
   middlewares() {
-    this.app.use(express.json());
+    this.app.use(express.json({ limit: '10mb' }));
     
     // Logger HTTP
     this.app.use(httpLoggerMiddleware);

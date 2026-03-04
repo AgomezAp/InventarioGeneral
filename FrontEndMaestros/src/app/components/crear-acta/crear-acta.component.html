@@ -163,6 +163,7 @@
               <!-- Lista compacta de disponibles -->
               <div
                 class="disponibles-scroll"
+                [class.compacta]="dispositivosSeleccionados.length > 0"
                 *ngIf="
                   !loadingDispositivos && dispositivosDisponiblesFiltrados.length > 0
                 "
@@ -180,10 +181,18 @@
                       class="pi"
                       [ngClass]="getCategoriaIcon(disp.categoria)"
                     ></i>
-                    <span class="disp-chip-name">{{ disp.nombre }}</span>
-                    <span class="disp-chip-detail" *ngIf="disp.marca">{{
-                      disp.marca
-                    }}</span>
+                    <div class="disp-chip-info">
+                      <span class="disp-chip-name">{{ disp.nombre }}</span>
+                      <span class="disp-chip-meta">
+                        <span *ngIf="disp.marca">{{ disp.marca }}</span>
+                        <span *ngIf="disp.modelo">{{ disp.modelo }}</span>
+                        <span *ngIf="disp.color" class="disp-chip-color">{{ disp.color }}</span>
+                      </span>
+                    </div>
+                    <span class="disp-chip-cat">{{ disp.categoria | titlecase }}</span>
+                    <span class="disp-chip-stock" *ngIf="disp.tipoRegistro === 'stock'">
+                      x{{ disp.stockActual }}
+                    </span>
                     <span class="disp-chip-detail disp-chip-serial" *ngIf="disp.imei || disp.serial">
                       {{ disp.imei || disp.serial }}
                     </span>
@@ -259,8 +268,10 @@
                       <span class="disp-card-subtitle">
                         {{ item.dispositivo.marca }}
                         {{ item.dispositivo.modelo }}
+                        <span *ngIf="item.dispositivo.color"> &middot; {{ item.dispositivo.color }}</span>
                       </span>
                     </div>
+                    <span class="disp-card-cat-badge">{{ item.dispositivo.categoria | titlecase }}</span>
                     <button
                       type="button"
                       class="btn-remove-card"
@@ -271,24 +282,29 @@
                     </button>
                   </div>
 
-                  <!-- Identificadores -->
-                  <div
-                    class="disp-card-identifiers"
-                    *ngIf="item.dispositivo.imei || item.dispositivo.serial"
-                  >
-                    <div class="identifier" *ngIf="item.dispositivo.imei">
+                  <!-- Info rápida del dispositivo -->
+                  <div class="disp-card-info-row">
+                    <div class="info-tag" *ngIf="item.dispositivo.imei">
                       <i class="pi pi-mobile"></i>
-                      <span class="identifier-label">IMEI:</span>
-                      <span class="identifier-value">{{
-                        item.dispositivo.imei
-                      }}</span>
+                      <span class="info-tag-label">IMEI:</span>
+                      <span class="info-tag-value">{{ item.dispositivo.imei }}</span>
                     </div>
-                    <div class="identifier" *ngIf="item.dispositivo.serial">
+                    <div class="info-tag" *ngIf="item.dispositivo.serial">
                       <i class="pi pi-hashtag"></i>
-                      <span class="identifier-label">Serial:</span>
-                      <span class="identifier-value">{{
-                        item.dispositivo.serial
-                      }}</span>
+                      <span class="info-tag-label">Serial:</span>
+                      <span class="info-tag-value">{{ item.dispositivo.serial }}</span>
+                    </div>
+                    <div class="info-tag" *ngIf="item.dispositivo.condicion">
+                      <i class="pi pi-shield"></i>
+                      <span class="info-tag-value condicion-{{ item.dispositivo.condicion }}">{{ item.dispositivo.condicion | titlecase }}</span>
+                    </div>
+                    <div class="info-tag" *ngIf="item.dispositivo.ubicacion">
+                      <i class="pi pi-map-marker"></i>
+                      <span class="info-tag-value">{{ item.dispositivo.ubicacion }}</span>
+                    </div>
+                    <div class="info-tag info-tag-stock" *ngIf="item.dispositivo.tipoRegistro === 'stock'">
+                      <i class="pi pi-box"></i>
+                      <span class="info-tag-value">Stock: {{ item.dispositivo.stockActual }}</span>
                     </div>
                   </div>
 
@@ -305,7 +321,7 @@
                       <div class="form-field" *ngIf="item.dispositivo.tipoRegistro === 'stock'">
                         <label>Cantidad a entregar</label>
                         <div class="cantidad-input-group">
-                          <button 
+                          <button
                             type="button"
                             class="btn-cantidad btn-minus"
                             (click)="item.cantidad = Math.max(1, item.cantidad - 1)"
@@ -321,7 +337,7 @@
                             [max]="item.dispositivo.stockActual || 999"
                             class="input-cantidad"
                           />
-                          <button 
+                          <button
                             type="button"
                             class="btn-cantidad btn-plus"
                             (click)="item.cantidad = Math.min(item.dispositivo.stockActual || 999, item.cantidad + 1)"
@@ -334,7 +350,7 @@
                           </span>
                         </div>
                       </div>
-                      
+
                       <div class="form-field">
                         <label>Condición al entregar</label>
                         <div class="select-device">
