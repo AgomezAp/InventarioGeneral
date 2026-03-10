@@ -27,6 +27,8 @@ import RTipoInventario from '../routes/tipoInventario.js';
 import RMobiliario from '../routes/mobiliario.js';
 import RConsumible from '../routes/consumible.js';
 import RActaConsumible from '../routes/actaConsumible.js';
+import RActaMobiliario from '../routes/actaMobiliario.js';
+import RFirmaMobiliario from '../routes/firmaMobiliario.js';
 import { maestroBorrado } from './maestroBorrado.js';
 import { Maestro } from './maestros.js';
 import { MovimientoMaestro } from './movimientoMaestro.js';
@@ -50,6 +52,10 @@ import { MovimientoConsumible } from './movimientoConsumible.js';
 import { ActaConsumible } from './actaConsumible.js';
 import { DetalleActaConsumible } from './detalleActaConsumible.js';
 import { TokenFirmaConsumible } from './tokenFirmaConsumible.js';
+// Modelos de actas de mobiliario
+import { ActaMobiliario } from './actaMobiliario.js';
+import { DetalleActaMobiliario } from './detalleActaMobiliario.js';
+import { TokenFirmaMobiliario } from './tokenFirmaMobiliario.js';
 
 dotenv.config();
 
@@ -163,6 +169,9 @@ class Server {
     this.app.use('/api/mobiliario', RMobiliario);
     this.app.use('/api/consumibles', RConsumible);
     this.app.use('/api/actas-consumibles', RActaConsumible);
+    // Actas de mobiliario
+    this.app.use('/api/actas-mobiliario', RActaMobiliario);
+    this.app.use('/api/firma-mobiliario', RFirmaMobiliario);
   }
 
   async DbConnection() {
@@ -215,6 +224,11 @@ class Server {
       await ActaConsumible.sync();
       await DetalleActaConsumible.sync();
       await TokenFirmaConsumible.sync();
+      // Modelos de actas de mobiliario
+      await this.migrateMovimientoMobiliarioEnums();
+      await ActaMobiliario.sync();
+      await DetalleActaMobiliario.sync();
+      await TokenFirmaMobiliario.sync();
       // Inicializar tipos de inventario por defecto
       await inicializarTiposInventario();
       console.log("Conexión a la base de datos exitosa");
@@ -524,6 +538,38 @@ class Server {
     } catch (error: any) {
       if (!error.message?.includes('does not exist')) {
         console.log('Error en migración de cancelada ENUM:', error.message);
+      }
+    }
+  }
+
+  /**
+   * Migración para agregar nuevos tipos de movimiento a movimientos_mobiliario
+   * Necesario para el sistema de actas de mobiliario
+   */
+  async migrateMovimientoMobiliarioEnums() {
+    try {
+      const [results] = await sequelize.query(`
+        SELECT enumlabel
+        FROM pg_enum
+        WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'enum_movimientos_mobiliario_tipoMovimiento')
+      `);
+      const labels = (results as any[]).map(r => r.enumlabel);
+
+      if (!labels.includes('reserva')) {
+        await sequelize.query(`ALTER TYPE "enum_movimientos_mobiliario_tipoMovimiento" ADD VALUE IF NOT EXISTS 'reserva';`);
+      }
+      if (!labels.includes('firma_entrega')) {
+        await sequelize.query(`ALTER TYPE "enum_movimientos_mobiliario_tipoMovimiento" ADD VALUE IF NOT EXISTS 'firma_entrega';`);
+      }
+      if (!labels.includes('cancelacion')) {
+        await sequelize.query(`ALTER TYPE "enum_movimientos_mobiliario_tipoMovimiento" ADD VALUE IF NOT EXISTS 'cancelacion';`);
+      }
+      if (!labels.includes('devolucion')) {
+        await sequelize.query(`ALTER TYPE "enum_movimientos_mobiliario_tipoMovimiento" ADD VALUE IF NOT EXISTS 'devolucion';`);
+      }
+    } catch (error: any) {
+      if (!error.message?.includes('does not exist')) {
+        console.log('Error en migración de ENUM movimientos_mobiliario:', error.message);
       }
     }
   }

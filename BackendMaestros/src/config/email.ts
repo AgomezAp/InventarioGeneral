@@ -694,4 +694,219 @@ export async function enviarCorreoFirmaConsumible(
   }
 }
 
+/**
+ * Envía correo de solicitud de firma para actas de mobiliario
+ */
+export async function enviarCorreoFirmaMobiliario(
+  destinatario: string,
+  nombreReceptor: string,
+  token: string,
+  muebles: { nombre: string; categoria: string; cantidad: number; unidad: string }[],
+  observaciones?: string
+): Promise<boolean> {
+  const frontendUrl = process.env.FRONTEND_URL || 'https://inventarioap.com';
+  const enlaceFirma = `${frontendUrl}/firmar-mobiliario/${token}`;
+
+  const listaMuebles = muebles.map(m =>
+    `<tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">${m.nombre}</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${m.categoria || '-'}</td>
+      <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${m.cantidad}</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${m.unidad || 'und.'}</td>
+    </tr>`
+  ).join('');
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #5d4037; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-top: none; }
+        .button { display: inline-block; background: #5d4037; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+        .footer { text-align: center; padding: 15px; color: #666; font-size: 12px; }
+        .warning { background: #fff3e0; border-left: 4px solid #ff9800; padding: 10px; margin: 15px 0; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th { background: #5d4037; color: white; padding: 8px; text-align: left; }
+        .obs { background: #f3e5f5; border-left: 4px solid #7b1fa2; padding: 10px; margin: 15px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🪑 Acta de Entrega de Mobiliario</h1>
+        </div>
+        <div class="content">
+          <p>Estimado/a <strong>${nombreReceptor}</strong>,</p>
+          <p>Se le ha asignado mobiliario. Por favor revise la información y firme el acta de entrega:</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Mueble</th>
+                <th>Categoría</th>
+                <th>Cantidad</th>
+                <th>Unidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${listaMuebles}
+            </tbody>
+          </table>
+
+          ${observaciones ? `<div class="obs"><strong>📝 Observaciones:</strong> ${observaciones}</div>` : ''}
+
+          <p style="text-align: center;">
+            <a href="${enlaceFirma}" class="button">✍️ Ver y Firmar Acta</a>
+          </p>
+
+          <p><strong>Instrucciones:</strong></p>
+          <ol>
+            <li>Haga clic en el botón para revisar el acta completa</li>
+            <li>Verifique que los muebles y cantidades sean correctos</li>
+            <li>Firme digitalmente usando su dedo o mouse</li>
+            <li>Si hay algún error, puede rechazar el acta indicando el motivo</li>
+          </ol>
+
+          <div class="warning">
+            <strong>⚠️ Importante:</strong> Al firmar, usted confirma haber recibido el mobiliario listado en el acta.
+          </div>
+        </div>
+        <div class="footer">
+          <p>Este es un correo automático. Por favor no responda a este mensaje.</p>
+          <p>Si tiene dudas, contacte al área administrativa.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const domain = process.env.EMAIL_SERVICE || 'gmail';
+  const messageId = `<${crypto.randomUUID()}@${domain}.com>`;
+
+  const mailOptions = {
+    from: `"Sistema de Inventario" <${process.env.EMAIL_USER}>`,
+    to: destinatario,
+    subject: `🪑 Acta de Entrega de Mobiliario - Requiere su firma`,
+    html: htmlContent,
+    headers: {
+      'Message-ID': messageId,
+      'X-Entity-Ref-ID': crypto.randomUUID(),
+      'Precedence': 'bulk',
+      'Auto-Submitted': 'auto-generated',
+    },
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Correo firma mobiliario enviado a: ${destinatario} — ${info.messageId}`);
+    return true;
+  } catch (error: any) {
+    console.error('❌ Error enviando correo mobiliario:', error.message);
+    throw new Error(`Error enviando correo: ${error.message}`);
+  }
+}
+
+/**
+ * Envía correo de confirmación cuando el acta de mobiliario es firmada
+ */
+export async function enviarActaMobiliarioFirmada(
+  destinatarios: string[],
+  nombreReceptor: string,
+  muebles: { nombre: string; categoria: string; cantidad: number }[],
+  fechaFirma: Date
+): Promise<boolean> {
+  const listaMuebles = muebles.map(m =>
+    `<tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">${m.nombre}</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${m.categoria || '-'}</td>
+      <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${m.cantidad}</td>
+    </tr>`
+  ).join('');
+
+  const fechaFormateada = new Date(fechaFirma).toLocaleString('es-CO', {
+    dateStyle: 'full', timeStyle: 'short'
+  });
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #2e7d32; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-top: none; }
+        .success { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 10px; margin: 15px 0; }
+        .footer { text-align: center; padding: 15px; color: #666; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        th { background: #2e7d32; color: white; padding: 8px; text-align: left; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>✅ Acta de Mobiliario Firmada</h1>
+        </div>
+        <div class="content">
+          <div class="success">
+            <strong>✅ El acta de entrega de mobiliario ha sido firmada exitosamente.</strong>
+          </div>
+
+          <p><strong>Receptor:</strong> ${nombreReceptor}</p>
+          <p><strong>Fecha de firma:</strong> ${fechaFormateada}</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Mueble</th>
+                <th>Categoría</th>
+                <th>Cantidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${listaMuebles}
+            </tbody>
+          </table>
+
+          <p>El acta ha quedado registrada en el sistema de inventario.</p>
+        </div>
+        <div class="footer">
+          <p>Este es un correo automático. Por favor no responda a este mensaje.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const domain = process.env.EMAIL_SERVICE || 'gmail';
+  const messageId = `<${crypto.randomUUID()}@${domain}.com>`;
+
+  const mailOptions = {
+    from: `"Sistema de Inventario" <${process.env.EMAIL_USER}>`,
+    to: destinatarios.join(','),
+    subject: `✅ Acta de Mobiliario Firmada - ${nombreReceptor}`,
+    html: htmlContent,
+    headers: {
+      'Message-ID': messageId,
+      'X-Entity-Ref-ID': crypto.randomUUID(),
+      'Precedence': 'bulk',
+      'Auto-Submitted': 'auto-generated',
+    },
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Confirmación firma mobiliario enviada — ${info.messageId}`);
+    return true;
+  } catch (error: any) {
+    console.error('❌ Error enviando confirmación mobiliario:', error.message);
+    throw new Error(`Error enviando correo: ${error.message}`);
+  }
+}
+
 export default transporter;

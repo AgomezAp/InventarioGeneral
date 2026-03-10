@@ -246,14 +246,30 @@
           <!-- Actas activas o parciales -->
           <ng-container
             *ngIf="
-              acta.estado === 'activa' || acta.estado === 'devuelta_parcial'
+              acta.estado === 'activa' || acta.estado === 'devuelta_parcial' || acta.estado === 'vencida'
             "
           >
             <button
               class="btn btn-sm btn-accent"
               (click)="abrirModalDevolucion(acta); $event.stopPropagation()"
+              *ngIf="acta.estado !== 'vencida'"
             >
               <i class="pi pi-replay"></i> Registrar Devolución
+            </button>
+            <button
+              class="btn btn-sm btn-danger"
+              (click)="cancelarActa(acta); $event.stopPropagation()"
+              [disabled]="cancelandoActa[acta.id!]"
+            >
+              <i
+                class="pi"
+                [ngClass]="
+                  cancelandoActa[acta.id!] ? 'pi-spin pi-spinner' : 'pi-ban'
+                "
+              ></i>
+              {{
+                cancelandoActa[acta.id!] ? "Cancelando..." : "Cancelar Acta"
+              }}
             </button>
           </ng-container>
         </div>

@@ -191,7 +191,7 @@
                     </div>
                     <span class="disp-chip-cat">{{ disp.categoria | titlecase }}</span>
                     <span class="disp-chip-stock" *ngIf="disp.tipoRegistro === 'stock'">
-                      x{{ disp.stockActual }}
+                      x{{ disp.stockDisponible ?? disp.stockActual }}
                     </span>
                     <span class="disp-chip-detail disp-chip-serial" *ngIf="disp.imei || disp.serial">
                       {{ disp.imei || disp.serial }}
@@ -304,7 +304,7 @@
                     </div>
                     <div class="info-tag info-tag-stock" *ngIf="item.dispositivo.tipoRegistro === 'stock'">
                       <i class="pi pi-box"></i>
-                      <span class="info-tag-value">Stock: {{ item.dispositivo.stockActual }}</span>
+                      <span class="info-tag-value">Disponible: {{ item.dispositivo.stockDisponible ?? item.dispositivo.stockActual }}</span>
                     </div>
                   </div>
 
@@ -334,19 +334,19 @@
                             [(ngModel)]="item.cantidad"
                             [name]="'cantidad_' + i"
                             min="1"
-                            [max]="item.dispositivo.stockActual || 999"
+                            [max]="item.dispositivo.stockDisponible || item.dispositivo.stockActual || 999"
                             class="input-cantidad"
                           />
                           <button
                             type="button"
                             class="btn-cantidad btn-plus"
-                            (click)="item.cantidad = Math.min(item.dispositivo.stockActual || 999, item.cantidad + 1)"
-                            [disabled]="item.cantidad >= (item.dispositivo.stockActual || 999)"
+                            (click)="item.cantidad = Math.min(item.dispositivo.stockDisponible || item.dispositivo.stockActual || 999, item.cantidad + 1)"
+                            [disabled]="item.cantidad >= (item.dispositivo.stockDisponible || item.dispositivo.stockActual || 999)"
                           >
                             <i class="pi pi-plus"></i>
                           </button>
                           <span class="stock-disponible">
-                            / {{ item.dispositivo.stockActual || 0 }} disp.
+                            / {{ item.dispositivo.stockDisponible ?? item.dispositivo.stockActual ?? 0 }} disp.
                           </span>
                         </div>
                       </div>

@@ -18,6 +18,10 @@ import { FirmaDevolucionComponent } from './components/firma-devolucion/firma-de
 // Componentes de Mobiliario
 import { InventarioMobiliarioComponent } from './components/inventario-mobiliario/inventario-mobiliario.component';
 import { AgregarMobiliarioComponent } from './components/agregar-mobiliario/agregar-mobiliario.component';
+// Componentes de Actas de Mobiliario
+import { CrearActaMobiliarioComponent } from './components/crear-acta-mobiliario/crear-acta-mobiliario.component';
+import { ActasMobiliarioComponent } from './components/actas-mobiliario/actas-mobiliario.component';
+import { FirmaMobiliarioComponent } from './components/firma-mobiliario/firma-mobiliario.component';
 // Componentes de Consumibles (Aseo y Papelería)
 import { InventarioConsumiblesComponent } from './components/inventario-consumibles/inventario-consumibles.component';
 import { AgregarConsumibleComponent } from './components/agregar-consumible/agregar-consumible.component';
@@ -97,6 +101,18 @@ export const routes: Routes = [
   {
     path: 'agregar-mobiliario',
     component: AgregarMobiliarioComponent,
+  },
+  {
+    path: 'crear-acta-mobiliario',
+    component: CrearActaMobiliarioComponent,
+  },
+  {
+    path: 'actas-mobiliario',
+    component: ActasMobiliarioComponent,
+  },
+  {
+    path: 'firmar-mobiliario/:token',
+    component: FirmaMobiliarioComponent,
   },
   {
     path: 'mobiliario/:id',

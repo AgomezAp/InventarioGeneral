@@ -649,9 +649,15 @@ export const cancelarActaConsumible = async (req: Request, res: Response): Promi
       return;
     }
 
-    if (acta.estado !== 'pendiente_firma') {
+    if (acta.estado === 'cancelada') {
       await transaction.rollback();
-      res.status(400).json({ msg: 'Solo se pueden cancelar actas pendientes de firma' });
+      res.status(400).json({ msg: 'Esta acta ya está cancelada' });
+      return;
+    }
+
+    if (acta.estado === 'rechazada') {
+      await transaction.rollback();
+      res.status(400).json({ msg: 'No se puede cancelar un acta rechazada' });
       return;
     }
 
@@ -675,7 +681,7 @@ export const cancelarActaConsumible = async (req: Request, res: Response): Promi
         stockAnterior,
         stockNuevo,
         motivo: 'cancelacion_acta',
-        descripcion: `Cancelación de Acta ${acta.numeroActa} - Stock restaurado`,
+        descripcion: `Cancelación${acta.estado === 'firmada' ? ' post-firma' : ''} de Acta ${acta.numeroActa} - Stock restaurado (${detalle.cantidad} uds)`,
         actaEntregaId: acta.id,
         fecha: new Date(),
         Uid
@@ -702,5 +708,56 @@ export const cancelarActaConsumible = async (req: Request, res: Response): Promi
     await transaction.rollback();
     console.error('Error al cancelar acta de consumibles:', error);
     res.status(500).json({ msg: 'Error al cancelar el acta' });
+  }
+};
+
+/**
+ * Eliminar permanentemente un acta cancelada o rechazada
+ */
+export const eliminarActaConsumible = async (req: Request, res: Response): Promise<void> => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+
+    const acta = await ActaConsumible.findByPk(Number(id), { transaction });
+
+    if (!acta) {
+      await transaction.rollback();
+      res.status(404).json({ msg: 'Acta no encontrada' });
+      return;
+    }
+
+    if (!['cancelada', 'rechazada'].includes(acta.estado)) {
+      await transaction.rollback();
+      res.status(400).json({ msg: 'Solo se pueden eliminar actas canceladas o rechazadas' });
+      return;
+    }
+
+    // Eliminar tokens asociados
+    await TokenFirmaConsumible.destroy({
+      where: { actaConsumibleId: acta.id },
+      transaction
+    });
+
+    // Eliminar detalles
+    await DetalleActaConsumible.destroy({
+      where: { actaConsumibleId: acta.id },
+      transaction
+    });
+
+    // Eliminar acta
+    await acta.destroy({ transaction });
+
+    await transaction.commit();
+
+    const io = getIO();
+    io.to('actas-consumibles').emit('acta:deleted', { actaId: Number(id) });
+
+    res.json({ msg: 'Acta eliminada permanentemente' });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error al eliminar acta de consumibles:', error);
+    res.status(500).json({ msg: 'Error al eliminar el acta' });
   }
 };

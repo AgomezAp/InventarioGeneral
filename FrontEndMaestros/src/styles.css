@@ -13,11 +13,14 @@
   --color-secondary-hover: #ffde33;
   --color-secondary-light: rgba(255, 214, 0, 0.1);
   --color-secondary-medium: rgba(255, 214, 0, 0.2);
+  --color-white: #ffffff;
 
   /* Colores de estado */
   --color-success: #4caf50;
+  --color-success-dark: #388e3c;
   --color-warning: #ff9800;
   --color-danger: #f44336;
+  --color-danger-dark: #c62828;
   --color-info: #2196f3;
 
   /* Estados de petición */
@@ -47,12 +50,38 @@
   --text-secondary: #616161;
   --border-color: #e0e0e0;
 
+  /* Gradientes corporativos */
+  --gradient-primary: linear-gradient(135deg, #141414 0%, #1f1f1f 100%);
+  --gradient-accent: linear-gradient(135deg, #ffd600 0%, #ffab00 100%);
+  --gradient-accent-soft: linear-gradient(135deg, rgba(255, 214, 0, 0.08) 0%, rgba(255, 171, 0, 0.04) 100%);
+  --gradient-hero: linear-gradient(135deg, #141414 0%, #1a1a2e 50%, #16213e 100%);
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.25);
+
   /* Sombras */
   --shadow-sm: 0 1px 2px rgba(20, 20, 20, 0.05);
   --shadow-md: 0 4px 6px rgba(20, 20, 20, 0.1);
   --shadow-lg: 0 10px 15px rgba(20, 20, 20, 0.1);
   --shadow-xl: 0 20px 25px rgba(20, 20, 20, 0.15);
   --shadow-accent: 0 0 0 3px rgba(255, 214, 0, 0.25);
+
+  /* Sombras multi-capa (profundidad natural) */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 16px 32px rgba(0, 0, 0, 0.12);
+  --shadow-accent-glow: 0 0 20px rgba(255, 214, 0, 0.15), 0 0 40px rgba(255, 214, 0, 0.05);
+  --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+
+  /* Badge light backgrounds */
+  --badge-bg-info: rgba(33, 150, 243, 0.1);
+  --badge-bg-success: rgba(76, 175, 80, 0.1);
+  --badge-bg-warning: rgba(255, 152, 0, 0.1);
+  --badge-bg-danger: rgba(244, 67, 54, 0.1);
+  --badge-bg-gray: rgba(158, 158, 158, 0.12);
+
+  /* Accent line */
+  --accent-line: 3px;
 
   /* Transiciones */
   --transition-fast: 150ms ease-in-out;
@@ -90,10 +119,18 @@ body.dark-mode {
   --text-secondary: #b0b0b0;
   --border-color: #2a2a2a;
 
+  --glass-bg: rgba(26, 26, 26, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  --gradient-accent-soft: linear-gradient(135deg, rgba(255, 214, 0, 0.06) 0%, rgba(255, 171, 0, 0.03) 100%);
+
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.3), 0 16px 32px rgba(0, 0, 0, 0.4);
+  --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* ========================================
@@ -150,11 +187,13 @@ h6 {
   line-height: 1.2;
   margin-bottom: var(--spacing-md);
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 h1 {
   font-size: 2.25rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
 }
 h2 {
   font-size: 1.875rem;
@@ -192,22 +231,28 @@ a:hover {
    SCROLLBAR PERSONALIZADO
    ======================================== */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-gray-400);
+  background: var(--color-gray-300);
   border-radius: var(--border-radius-full);
   transition: background var(--transition-fast);
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-secondary);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-300) transparent;
 }
 
 /* ========================================
@@ -407,6 +452,7 @@ a:hover {
   font-size: 0.8125rem;
   font-weight: 500;
   font-family: var(--font-family);
+  letter-spacing: 0.01em;
 }
 
 .badge-accent {
@@ -416,16 +462,16 @@ a:hover {
 
 .badge-dark {
   background-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .badge-pendiente {
-  background-color: rgba(33, 150, 243, 0.1);
+  background-color: var(--badge-bg-info);
   color: var(--color-pendiente);
 }
 
 .badge-en-progreso {
-  background-color: rgba(76, 175, 80, 0.1);
+  background-color: var(--badge-bg-success);
   color: var(--color-en-progreso);
 }
 
@@ -435,7 +481,7 @@ a:hover {
 }
 
 .badge-cancelada {
-  background-color: rgba(244, 67, 54, 0.1);
+  background-color: var(--badge-bg-danger);
   color: var(--color-cancelada);
 }
 
@@ -475,6 +521,57 @@ a:hover {
   }
 }
 
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(255, 214, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 214, 0, 0.35);
+  }
+}
+
 .fade-in {
   animation: fadeIn 0.3s ease-out;
 }
@@ -503,6 +600,27 @@ a:hover {
   border-top-color: var(--color-secondary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+/* ========================================
+   FOCUS GLOBAL
+   ======================================== */
+:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   ACCESIBILIDAD - MOVIMIENTO REDUCIDO
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ========================================

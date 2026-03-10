@@ -48,6 +48,7 @@ export class WebsocketService implements OnDestroy {
   private mobiliarioUpdated$ = new Subject<any>();
   private maestroUpdated$ = new Subject<any>();
   private actaConsumibleUpdated$ = new Subject<any>();
+  private actaMobiliarioUpdated$ = new Subject<any>();
   
   // Subject para notificaciones en tiempo real
   private notification$ = new Subject<{ type: string; message: string; data?: any }>();
@@ -147,6 +148,7 @@ export class WebsocketService implements OnDestroy {
       this.joinRoom('mobiliario');
       this.joinRoom('maestros');
       this.joinRoom('actas-consumibles');
+      this.joinRoom('actas-mobiliario');
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -372,6 +374,31 @@ export class WebsocketService implements OnDestroy {
       console.log('❌ Acta consumible rechazada:', data);
       this.actaConsumibleUpdated$.next({ action: 'rejected', data });
       this.consumibleUpdated$.next({ action: 'stockUpdated', data });
+    });
+
+    // ==================== EVENTOS DE ACTAS DE MOBILIARIO ====================
+    this.socket.on('actaMobiliario:created', (data) => {
+      console.log('📄 Acta mobiliario creada:', data);
+      this.actaMobiliarioUpdated$.next({ action: 'created', data });
+      this.mobiliarioUpdated$.next({ action: 'stockUpdated', data });
+    });
+
+    this.socket.on('actaMobiliario:signed', (data) => {
+      console.log('✍️ Acta mobiliario firmada:', data);
+      this.actaMobiliarioUpdated$.next({ action: 'signed', data });
+      this.mobiliarioUpdated$.next({ action: 'stockUpdated', data });
+    });
+
+    this.socket.on('actaMobiliario:rejected', (data) => {
+      console.log('❌ Acta mobiliario rechazada:', data);
+      this.actaMobiliarioUpdated$.next({ action: 'rejected', data });
+      this.mobiliarioUpdated$.next({ action: 'stockUpdated', data });
+    });
+
+    this.socket.on('actaMobiliario:cancelled', (data) => {
+      console.log('🚫 Acta mobiliario cancelada:', data);
+      this.actaMobiliarioUpdated$.next({ action: 'cancelled', data });
+      this.mobiliarioUpdated$.next({ action: 'stockUpdated', data });
     });
   }
 
@@ -792,6 +819,56 @@ export class WebsocketService implements OnDestroy {
     return new Observable(observer => {
       const sub = this.actaConsumibleUpdated$.subscribe(event => {
         if (event.action === 'rejected') {
+          observer.next(event.data);
+        }
+      });
+      return () => sub.unsubscribe();
+    });
+  }
+
+  // ==================== OBSERVABLES DE ACTAS MOBILIARIO ====================
+  get onActaMobiliarioUpdate$(): Observable<any> {
+    return this.actaMobiliarioUpdated$.asObservable();
+  }
+
+  // ==================== MÉTODOS DE ACTAS DE MOBILIARIO ====================
+  onActaMobiliarioCreated(): Observable<any> {
+    return new Observable(observer => {
+      const sub = this.actaMobiliarioUpdated$.subscribe(event => {
+        if (event.action === 'created') {
+          observer.next(event.data);
+        }
+      });
+      return () => sub.unsubscribe();
+    });
+  }
+
+  onActaMobiliarioSigned(): Observable<any> {
+    return new Observable(observer => {
+      const sub = this.actaMobiliarioUpdated$.subscribe(event => {
+        if (event.action === 'signed') {
+          observer.next(event.data);
+        }
+      });
+      return () => sub.unsubscribe();
+    });
+  }
+
+  onActaMobiliarioRejected(): Observable<any> {
+    return new Observable(observer => {
+      const sub = this.actaMobiliarioUpdated$.subscribe(event => {
+        if (event.action === 'rejected') {
+          observer.next(event.data);
+        }
+      });
+      return () => sub.unsubscribe();
+    });
+  }
+
+  onActaMobiliarioCancelled(): Observable<any> {
+    return new Observable(observer => {
+      const sub = this.actaMobiliarioUpdated$.subscribe(event => {
+        if (event.action === 'cancelled') {
           observer.next(event.data);
         }
       });

@@ -95,7 +95,7 @@
         [(ngModel)]="filtroBusqueda" 
         (ngModelChange)="onBusquedaChange($event)"
         (blur)="guardarFiltros()"
-        placeholder="Nombre, código, proveedor..."
+        placeholder="Nombre, descripción..."
       />
       <i class="fa-solid fa-search"></i>
     </div>
@@ -116,25 +116,23 @@
     <table class="tabla-consumibles">
       <thead>
         <tr>
-          <th>Código</th>
+          <th>Descripción</th>
           <th>Producto</th>
           <th>Categoría</th>
           <th>Stock</th>
           <th>Unidad</th>
-          <th>Proveedor</th>
           <th>Precio Unit.</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let consumible of consumiblesPaginados" [class]="getStockClass(consumible)">
-          <td class="td-codigo">
-            <span *ngIf="consumible.codigoInterno" class="codigo">{{ consumible.codigoInterno }}</span>
-            <span *ngIf="!consumible.codigoInterno" class="sin-codigo">-</span>
+          <td class="td-descripcion">
+            <span *ngIf="consumible.descripcion" class="descripcion-text">{{ consumible.descripcion }}</span>
+            <span *ngIf="!consumible.descripcion" class="sin-datos">-</span>
           </td>
           <td class="td-nombre">
             <strong>{{ consumible.nombre }}</strong>
-            <span *ngIf="consumible.descripcion" class="descripcion">{{ consumible.descripcion }}</span>
           </td>
           <td class="td-categoria">
             <span class="categoria-badge">{{ consumible.categoria | titlecase }}</span>
@@ -154,10 +152,6 @@
             </div>
           </td>
           <td class="td-unidad">{{ consumible.unidadMedida }}</td>
-          <td class="td-proveedor">
-            <span *ngIf="consumible.proveedor">{{ consumible.proveedor }}</span>
-            <span *ngIf="!consumible.proveedor" class="sin-datos">-</span>
-          </td>
           <td class="td-precio">{{ formatearPrecio(consumible.precioUnitario) }}</td>
           <td class="td-acciones">
             <div class="acciones-stock-rapido">

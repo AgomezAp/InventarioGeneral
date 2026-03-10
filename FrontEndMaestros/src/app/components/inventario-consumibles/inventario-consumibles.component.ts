@@ -324,9 +324,7 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
       const busqueda = this.filtroBusqueda.toLowerCase().trim();
       resultado = resultado.filter(c =>
         c.nombre.toLowerCase().includes(busqueda) ||
-        c.descripcion?.toLowerCase().includes(busqueda) ||
-        c.proveedor?.toLowerCase().includes(busqueda) ||
-        c.codigoInterno?.toLowerCase().includes(busqueda)
+        c.descripcion?.toLowerCase().includes(busqueda)
       );
     }
 

@@ -58,6 +58,14 @@ export class NavbarComponent {
     this.router.navigate(['/agregar-mobiliario']);
   }
 
+  crearActaMobiliario() {
+    this.router.navigate(['/crear-acta-mobiliario']);
+  }
+
+  verActasMobiliario() {
+    this.router.navigate(['/actas-mobiliario']);
+  }
+
   // ==================== ASEO ====================
   irAseo() {
     this.router.navigate(['/inventario-aseo']);

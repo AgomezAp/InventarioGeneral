@@ -291,26 +291,49 @@ export const firmarActaConToken = async (req: Request, res: Response): Promise<v
       const cantidadEntregada = detalle.cantidad || 1;
 
       if (dispositivo.tipoRegistro === 'stock') {
-        // Dispositivo stock: AHORA reducir el stock real (estaba reservado)
-        const nuevoStock = Math.max(0, (dispositivo.stockActual || 0) - cantidadEntregada);
-
-        await Dispositivo.update(
-          {
-            stockActual: nuevoStock,
-            estado: nuevoStock > 0 ? 'disponible' : 'entregado'
+        // Verificar si esta acta usó el modelo de reserva (stock NO fue reducido al crear)
+        const tieneReserva = await MovimientoDispositivo.findOne({
+          where: {
+            dispositivoId: detalle.dispositivoId,
+            actaId: acta.id,
+            tipoMovimiento: 'reserva' as any
           },
-          { where: { id: detalle.dispositivoId }, transaction }
-        );
+          transaction
+        });
 
-        await MovimientoDispositivo.create({
-          dispositivoId: detalle.dispositivoId,
-          tipoMovimiento: 'firma_entrega' as any,
-          estadoAnterior: `stock: ${dispositivo.stockActual}`,
-          estadoNuevo: `stock: ${nuevoStock}`,
-          descripcion: `Confirmado por firma digital de ${acta.nombreReceptor} - ${acta.numeroActa} (${cantidadEntregada} und.) - Stock reducido`,
-          actaId: acta.id,
-          fecha: ahora
-        }, { transaction });
+        if (tieneReserva) {
+          // Modelo nuevo: stock no fue reducido, reducirlo ahora
+          const nuevoStock = Math.max(0, (dispositivo.stockActual || 0) - cantidadEntregada);
+
+          await Dispositivo.update(
+            {
+              stockActual: nuevoStock,
+              estado: nuevoStock > 0 ? 'disponible' : 'entregado'
+            },
+            { where: { id: detalle.dispositivoId }, transaction }
+          );
+
+          await MovimientoDispositivo.create({
+            dispositivoId: detalle.dispositivoId,
+            tipoMovimiento: 'firma_entrega' as any,
+            estadoAnterior: `stock: ${dispositivo.stockActual}`,
+            estadoNuevo: `stock: ${nuevoStock}`,
+            descripcion: `Confirmado por firma digital de ${acta.nombreReceptor} - ${acta.numeroActa} (${cantidadEntregada} und.) - Stock reducido`,
+            actaId: acta.id,
+            fecha: ahora
+          }, { transaction });
+        } else {
+          // Modelo viejo: stock ya fue reducido al crear, solo registrar movimiento
+          await MovimientoDispositivo.create({
+            dispositivoId: detalle.dispositivoId,
+            tipoMovimiento: 'firma_entrega' as any,
+            estadoAnterior: `stock: ${dispositivo.stockActual}`,
+            estadoNuevo: `stock: ${dispositivo.stockActual}`,
+            descripcion: `Confirmado por firma digital de ${acta.nombreReceptor} - ${acta.numeroActa} (${cantidadEntregada} und.)`,
+            actaId: acta.id,
+            fecha: ahora
+          }, { transaction });
+        }
       } else {
         // Dispositivo individual - cambiar a entregado
         await Dispositivo.update(

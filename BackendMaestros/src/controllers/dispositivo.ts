@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { Dispositivo } from '../models/dispositivo.js';
 import { MovimientoDispositivo } from '../models/movimientoDispositivo.js';
+import { DetalleActa } from '../models/detalleActa.js';
+import { ActaEntrega } from '../models/actaEntrega.js';
 import { getPhotoUrl, deletePhoto } from '../config/multer.js';
 import { getIO } from '../models/server.js';
 
@@ -50,6 +52,9 @@ export const obtenerDispositivos = async (req: Request, res: Response) => {
 
 /**
  * Obtener dispositivos disponibles para préstamo
+ * Para dispositivos tipo stock, calcula el stock disponible real
+ * descontando solo las reservas del modelo nuevo (tipo movimiento 'reserva')
+ * Las actas viejas ya redujeron el stock al crearse, no se descuentan otra vez
  */
 export const obtenerDisponibles = async (req: Request, res: Response) => {
   try {
@@ -57,8 +62,65 @@ export const obtenerDisponibles = async (req: Request, res: Response) => {
       where: { estado: 'disponible' },
       order: [['categoria', 'ASC'], ['nombre', 'ASC']]
     });
-    
-    res.json(dispositivos);
+
+    // Calcular reservas pendientes para dispositivos tipo stock
+    const dispositivosStock = dispositivos.filter(d => d.tipoRegistro === 'stock');
+
+    let stockReservado: { [id: number]: number } = {};
+
+    if (dispositivosStock.length > 0) {
+      const stockIds = dispositivosStock.map(d => d.id);
+
+      // Obtener detalles de actas pendientes de firma para estos dispositivos
+      const detallesPendientes = await DetalleActa.findAll({
+        where: { dispositivoId: stockIds },
+        include: [{
+          model: ActaEntrega,
+          as: 'acta',
+          where: { estado: 'pendiente_firma' },
+          attributes: ['id']
+        }],
+        attributes: ['dispositivoId', 'cantidad', 'actaId']
+      });
+
+      if (detallesPendientes.length > 0) {
+        // Obtener movimientos tipo 'reserva' para saber cuáles usaron el modelo nuevo
+        const movimientosReserva = await MovimientoDispositivo.findAll({
+          where: {
+            dispositivoId: stockIds,
+            tipoMovimiento: 'reserva' as any
+          },
+          attributes: ['dispositivoId', 'actaId']
+        });
+
+        // Set de combos dispositivoId-actaId que usaron modelo de reserva
+        const reservaSet = new Set(
+          movimientosReserva.map((m: any) => `${m.dispositivoId}-${m.actaId}`)
+        );
+
+        // Solo contar las reservas del modelo nuevo (stock NO fue reducido)
+        for (const detalle of detallesPendientes) {
+          const did = (detalle as any).dispositivoId;
+          const actaId = (detalle as any).actaId;
+
+          if (reservaSet.has(`${did}-${actaId}`)) {
+            stockReservado[did] = (stockReservado[did] || 0) + ((detalle as any).cantidad || 1);
+          }
+          // Actas viejas (sin movimiento 'reserva'): stock ya fue reducido, no descontar
+        }
+      }
+    }
+
+    // Agregar campo stockDisponible a los dispositivos tipo stock
+    const resultado = dispositivos.map(d => {
+      const plain = d.toJSON();
+      if (d.tipoRegistro === 'stock') {
+        plain.stockDisponible = Math.max(0, (d.stockActual || 0) - (stockReservado[d.id] || 0));
+      }
+      return plain;
+    });
+
+    res.json(resultado);
   } catch (error) {
     console.error('Error al obtener dispositivos disponibles:', error);
     res.status(500).json({ msg: 'Error al obtener los dispositivos disponibles' });

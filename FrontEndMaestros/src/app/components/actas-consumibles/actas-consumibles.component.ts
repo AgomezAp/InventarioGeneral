@@ -291,13 +291,18 @@ export class ActasConsumiblesComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Cancelar acta pendiente de firma
+  // Cancelar acta (pendiente o firmada)
   cancelarActa(acta: ActaConsumible): void {
     if (!acta.id) return;
 
+    const esFirmada = acta.estado === 'firmada';
+    const mensaje = esFirmada
+      ? `Esta acta ya fue firmada. Se cancelará el acta ${acta.numeroActa} y se restaurará el stock de los artículos.\n\nEsta acción no se puede deshacer.`
+      : `Se cancelará el acta ${acta.numeroActa} y se restaurará el stock de los artículos.`;
+
     Swal.fire({
       title: '¿Cancelar acta?',
-      text: `Se cancelará el acta ${acta.numeroActa} y se restaurará el stock de los artículos.`,
+      text: mensaje,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#f44336',
@@ -332,6 +337,50 @@ export class ActasConsumiblesComponent implements OnInit, OnDestroy {
             icon: 'error',
             title: 'Error',
             text: err.error?.msg || 'Error al cancelar el acta',
+            confirmButtonColor: this.colorTema
+          });
+        }
+      });
+    });
+  }
+
+  // Eliminar acta cancelada/rechazada permanentemente
+  eliminarActa(acta: ActaConsumible): void {
+    if (!acta.id) return;
+
+    Swal.fire({
+      title: 'Eliminar acta',
+      text: `¿Está seguro de eliminar permanentemente el acta ${acta.numeroActa}? Esta acción no se puede deshacer.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#f44336',
+      cancelButtonColor: '#757575',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'No'
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      this.actaService.eliminarActa(acta.id!).subscribe({
+        next: () => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Acta eliminada',
+            text: 'El acta fue eliminada permanentemente.',
+            toast: true,
+            position: 'top-end',
+            timer: 3000,
+            showConfirmButton: false
+          });
+          this.cargarActas();
+          if (this.actaSeleccionada?.id === acta.id) {
+            this.cerrarDetalle();
+          }
+        },
+        error: (err) => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.error?.msg || 'Error al eliminar el acta',
             confirmButtonColor: this.colorTema
           });
         }

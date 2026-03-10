@@ -3,10 +3,11 @@
    ======================================== */
 
 .inventario-container {
-  min-height: calc(100vh - 60px); /* Ajustar según altura del navbar */
+  min-height: calc(100vh - 60px); /* Ajustar segun altura del navbar */
   background-color: var(--bg-secondary);
   padding: var(--spacing-lg);
   font-family: var(--font-family);
+  animation: fadeIn 0.3s ease-out;
 }
 
 /* ========================================
@@ -23,10 +24,11 @@
   flex-wrap: wrap;
   gap: var(--spacing-lg);
   box-shadow: var(--shadow-md);
+  animation: slideInUp 0.4s ease-out;
 }
 
 .header-title h1 {
-  color: #ffffff;
+  color: var(--color-white);
   font-size: 1.75rem;
   font-weight: 700;
   margin: 0 0 var(--spacing-xs) 0;
@@ -76,12 +78,12 @@
 .btn-agregar:hover {
   background-color: var(--color-secondary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 214, 0, 0.4);
+  box-shadow: var(--shadow-accent-glow);
 }
 
 .btn-entrega {
   background-color: transparent;
-  color: #ffffff;
+  color: var(--color-white);
   border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
@@ -99,11 +101,13 @@
   grid-template-columns: repeat(6, 1fr);
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
+  animation: slideInUp 0.4s ease-out 0.1s both;
 }
 
 .stat-card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
+  border-top: var(--accent-line) solid var(--color-secondary);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-lg);
   display: flex;
@@ -112,6 +116,7 @@
   transition: all var(--transition-normal);
   position: relative;
   overflow: hidden;
+  box-shadow: var(--shadow-card);
 }
 
 .stat-card::before {
@@ -125,8 +130,8 @@
 }
 
 .stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
 }
 
 /* Colores por tipo de stat */
@@ -166,27 +171,27 @@
 }
 
 .stat-disponible .stat-icon {
-  background-color: rgba(76, 175, 80, 0.1);
+  background-color: var(--badge-bg-success);
   color: var(--color-success);
 }
 
 .stat-prestado .stat-icon {
-  background-color: rgba(33, 150, 243, 0.1);
+  background-color: var(--badge-bg-info);
   color: var(--color-info);
 }
 
 .stat-danado .stat-icon {
-  background-color: rgba(255, 152, 0, 0.1);
+  background-color: var(--badge-bg-warning);
   color: var(--color-warning);
 }
 
 .stat-perdido .stat-icon {
-  background-color: rgba(244, 67, 54, 0.1);
+  background-color: var(--badge-bg-danger);
   color: var(--color-danger);
 }
 
 .stat-obsoleto .stat-icon {
-  background-color: rgba(158, 158, 158, 0.1);
+  background-color: var(--badge-bg-gray);
   color: var(--color-gray-500);
 }
 
@@ -226,6 +231,7 @@
   gap: var(--spacing-lg);
   align-items: flex-end;
   box-shadow: var(--shadow-sm);
+  animation: slideInUp 0.4s ease-out 0.15s both;
 }
 
 .filtro-grupo {
@@ -266,14 +272,14 @@
 .filtro-grupo select {
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23616161' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23757575' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   padding-right: 36px;
 }
 
 body.dark-mode .filtro-grupo select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23B0B0B0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23bdbdbd' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
 }
 
 .filtro-busqueda {
@@ -303,7 +309,7 @@ body.dark-mode .filtro-grupo select {
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-md) var(--spacing-lg);
-  background-color: rgba(244, 67, 54, 0.1);
+  background-color: var(--badge-bg-danger);
   border: 1px solid var(--color-danger);
   border-left: 4px solid var(--color-danger);
   border-radius: var(--border-radius-md);
@@ -328,6 +334,7 @@ body.dark-mode .filtro-grupo select {
 .loading i {
   color: var(--color-secondary);
   font-size: 1.25rem;
+  animation: spin 1s linear infinite;
 }
 
 /* ========================================
@@ -338,7 +345,8 @@ body.dark-mode .filtro-grupo select {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
+  animation: slideInUp 0.4s ease-out 0.2s both;
 }
 
 .tabla-dispositivos {
@@ -352,14 +360,14 @@ body.dark-mode .filtro-grupo select {
 }
 
 .tabla-dispositivos thead th {
-  color: #ffffff;
+  color: var(--color-white);
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: var(--spacing-md) var(--spacing-lg);
   text-align: left;
-  border-bottom: 3px solid var(--color-secondary);
+  border-bottom: var(--accent-line) solid var(--color-secondary);
   white-space: nowrap;
 }
 
@@ -367,10 +375,13 @@ body.dark-mode .filtro-grupo select {
 .tabla-dispositivos tbody tr {
   background-color: var(--bg-card);
   transition: all var(--transition-fast);
+  border-left: 3px solid transparent;
 }
 
 .tabla-dispositivos tbody tr:hover {
   background-color: var(--color-secondary-light);
+  border-left: 3px solid var(--color-secondary);
+  box-shadow: var(--shadow-sm, 0 2px 4px rgba(0, 0, 0, 0.05));
 }
 
 .tabla-dispositivos tbody tr:not(:last-child) {
@@ -403,7 +414,7 @@ body.dark-mode .filtro-grupo select {
   opacity: 0.7;
 }
 
-/* Columnas específicas */
+/* Columnas especificas */
 .td-categoria .categoria-badge {
   display: inline-flex;
   align-items: center;
@@ -469,7 +480,7 @@ body.dark-mode .filtro-grupo select {
   border-radius: var(--border-radius-md);
   font-size: 0.875rem;
   font-weight: 700;
-  background-color: rgba(33, 150, 243, 0.15);
+  background-color: var(--badge-bg-info);
   color: var(--color-info);
 }
 
@@ -493,21 +504,21 @@ body.dark-mode .filtro-grupo select {
 
 .td-cantidad .cantidad-badge .btn-restar {
   background-color: var(--color-danger);
-  color: white;
+  color: var(--color-white);
 }
 
 .td-cantidad .cantidad-badge .btn-restar:hover:not(:disabled) {
-  background-color: #c62828;
+  background-color: var(--color-danger-dark);
   transform: scale(1.1);
 }
 
 .td-cantidad .cantidad-badge .btn-sumar {
   background-color: var(--color-success);
-  color: white;
+  color: var(--color-white);
 }
 
 .td-cantidad .cantidad-badge .btn-sumar:hover {
-  background-color: #388e3c;
+  background-color: var(--color-success-dark);
   transform: scale(1.1);
 }
 
@@ -532,14 +543,9 @@ body.dark-mode .filtro-grupo select {
 }
 
 .td-cantidad .cantidad-badge.stock-bajo {
-  background-color: rgba(244, 67, 54, 0.15);
+  background-color: var(--badge-bg-danger);
   color: var(--color-danger);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  animation: glowPulse 2s infinite;
 }
 
 .td-cantidad .cantidad-individual {
@@ -572,37 +578,37 @@ body.dark-mode .filtro-grupo select {
 }
 
 .estado-badge.estado-disponible {
-  background-color: rgba(76, 175, 80, 0.15);
+  background-color: var(--badge-bg-success);
   color: var(--color-success);
 }
 
 .estado-badge.estado-prestado {
-  background-color: rgba(33, 150, 243, 0.15);
+  background-color: var(--badge-bg-info);
   color: var(--color-info);
 }
 
 .estado-badge.estado-entregado {
-  background-color: rgba(76, 175, 80, 0.15);
+  background-color: var(--badge-bg-success);
   color: var(--color-success);
 }
 
 .estado-badge.estado-danado,
 .estado-badge.estado-dañado {
-  background-color: rgba(255, 152, 0, 0.15);
+  background-color: var(--badge-bg-warning);
   color: var(--color-warning);
 }
 
 .estado-badge.estado-perdido {
-  background-color: rgba(244, 67, 54, 0.15);
+  background-color: var(--badge-bg-danger);
   color: var(--color-danger);
 }
 
 .estado-badge.estado-obsoleto {
-  background-color: rgba(158, 158, 158, 0.15);
+  background-color: var(--badge-bg-gray);
   color: var(--color-gray-600);
 }
 
-/* Condición Badge */
+/* Condicion Badge */
 .td-condicion .condicion-badge {
   display: inline-block;
   padding: 3px 8px;
@@ -612,26 +618,26 @@ body.dark-mode .filtro-grupo select {
 }
 
 .condicion-badge.condicion-nuevo {
-  background-color: rgba(76, 175, 80, 0.1);
+  background-color: var(--badge-bg-success);
   color: var(--color-success);
 }
 
 .condicion-badge.condicion-bueno {
-  background-color: rgba(33, 150, 243, 0.1);
+  background-color: var(--badge-bg-info);
   color: var(--color-info);
 }
 
 .condicion-badge.condicion-regular {
-  background-color: rgba(255, 152, 0, 0.1);
+  background-color: var(--badge-bg-warning);
   color: var(--color-warning);
 }
 
 .condicion-badge.condicion-malo {
-  background-color: rgba(244, 67, 54, 0.1);
+  background-color: var(--badge-bg-danger);
   color: var(--color-danger);
 }
 
-/* Ubicación */
+/* Ubicacion */
 .td-ubicacion {
   color: var(--text-secondary);
   font-size: 0.8125rem;
@@ -644,7 +650,7 @@ body.dark-mode .filtro-grupo select {
 }
 
 /* ========================================
-   BOTONES DE ACCIÓN EN TABLA
+   BOTONES DE ACCION EN TABLA
    ======================================== */
 .td-acciones {
   white-space: nowrap;
@@ -680,27 +686,32 @@ body.dark-mode .filtro-grupo select {
 
 .btn-accion.btn-ver:hover {
   background-color: var(--color-info);
-  color: #ffffff;
+  color: var(--color-white);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
 }
 
 .btn-accion.btn-editar:hover {
   background-color: var(--color-secondary);
   color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(255, 214, 0, 0.3);
 }
 
 .btn-accion.btn-historial:hover {
   background-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-white);
+  box-shadow: 0 2px 8px rgba(20, 20, 20, 0.3);
 }
 
 .btn-accion.btn-estado:hover {
   background-color: var(--color-success);
-  color: #ffffff;
+  color: var(--color-white);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
 
 .btn-accion.btn-eliminar:hover {
   background-color: var(--color-danger);
-  color: #ffffff;
+  color: var(--color-white);
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
 }
 
 /* Sin datos */
@@ -715,15 +726,17 @@ body.dark-mode .filtro-grupo select {
   color: var(--border-color);
   margin-bottom: var(--spacing-md);
   display: block;
+  animation: fadeIn 0.6s ease-out, pulse 3s ease-in-out infinite;
 }
 
 .sin-datos p {
   margin: 0;
   font-size: 1rem;
+  animation: fadeIn 0.8s ease-out;
 }
 
 /* ========================================
-   PAGINACIÓN
+   PAGINACION
    ======================================== */
 .paginacion {
   display: flex;
@@ -760,6 +773,14 @@ body.dark-mode .filtro-grupo select {
 .btn-pagina:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.btn-pagina.active {
+  background-color: var(--color-secondary);
+  color: var(--color-primary);
+  border-color: var(--color-secondary);
+  font-weight: 700;
+  box-shadow: var(--shadow-accent);
 }
 
 .pagina-info {
@@ -896,14 +917,16 @@ body.dark-mode .filtro-grupo select {
    ======================================== */
 @media print {
   .inventario-container {
-    background-color: white;
+    background-color: var(--color-white);
     padding: 0;
+    animation: none;
   }
 
   .header-section {
-    background-color: #141414 !important;
+    background-color: var(--color-primary) !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    animation: none;
   }
 
   .header-actions,
@@ -914,13 +937,14 @@ body.dark-mode .filtro-grupo select {
   }
 
   .tabla-dispositivos thead tr {
-    background-color: #141414 !important;
+    background-color: var(--color-primary) !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   .stats-grid {
     grid-template-columns: repeat(6, 1fr);
+    animation: none;
   }
 
   .stat-card {
@@ -931,6 +955,7 @@ body.dark-mode .filtro-grupo select {
   .tabla-container {
     box-shadow: none;
     overflow: visible;
+    animation: none;
   }
 
   .tabla-dispositivos {

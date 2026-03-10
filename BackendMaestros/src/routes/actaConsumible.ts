@@ -9,7 +9,8 @@ import {
   rechazarActa,
   obtenerEstadisticas,
   reenviarCorreoFirma,
-  cancelarActaConsumible
+  cancelarActaConsumible,
+  eliminarActaConsumible
 } from '../controllers/actaConsumible.js';
 import validateToken from './validateToken.js';
 
@@ -30,5 +31,8 @@ router.post('/:id/reenviar', validateToken, reenviarCorreoFirma);
 
 // Cancelar acta pendiente de firma
 router.delete('/:id', validateToken, cancelarActaConsumible);
+
+// Eliminar acta cancelada/rechazada permanentemente
+router.delete('/:id/eliminar', validateToken, eliminarActaConsumible);
 
 export default router;

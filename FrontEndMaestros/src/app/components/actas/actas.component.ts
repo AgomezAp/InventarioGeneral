@@ -348,13 +348,16 @@ export class ActasComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Cancelar acta pendiente de firma
+  // Cancelar acta (pendiente o firmada)
   cancelarActa(acta: ActaEntrega): void {
     if (!acta.id) return;
 
-    const confirmado = confirm(
-      `¿Está seguro de cancelar el acta ${acta.numeroActa}?\n\nEsto restaurará los dispositivos al inventario y el enlace de firma quedará inválido.`
-    );
+    const esFirmada = ['activa', 'devuelta_parcial', 'vencida'].includes(acta.estado);
+    const mensaje = esFirmada
+      ? `¿Está seguro de cancelar el acta ${acta.numeroActa}?\n\nEsta acta ya fue firmada. Los dispositivos no devueltos serán restaurados al inventario.\n\nEsta acción no se puede deshacer.`
+      : `¿Está seguro de cancelar el acta ${acta.numeroActa}?\n\nEsto restaurará los dispositivos al inventario y el enlace de firma quedará inválido.`;
+
+    const confirmado = confirm(mensaje);
     if (!confirmado) return;
 
     this.cancelandoActa[acta.id] = true;

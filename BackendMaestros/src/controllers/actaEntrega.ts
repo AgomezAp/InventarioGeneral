@@ -174,27 +174,50 @@ export const crearActaEntrega = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    // Para dispositivos tipo stock, verificar stock disponible (stock actual - reservas pendientes)
+    // Para dispositivos tipo stock, verificar stock disponible (stock actual - reservas pendientes del modelo nuevo)
     const dispositivosStock = dispositivosDB.filter(d => d.tipoRegistro === 'stock');
     let stockReservado: { [id: number]: number } = {};
 
     if (dispositivosStock.length > 0) {
-      // Calcular cantidades reservadas en actas pendientes de firma
-      const reservasPendientes = await DetalleActa.findAll({
-        where: { dispositivoId: dispositivosStock.map(d => d.id) },
+      const stockIds = dispositivosStock.map(d => d.id);
+
+      // Obtener detalles de actas pendientes de firma
+      const detallesPendientes = await DetalleActa.findAll({
+        where: { dispositivoId: stockIds },
         include: [{
           model: ActaEntrega,
           as: 'acta',
           where: { estado: 'pendiente_firma' },
           attributes: ['id']
         }],
-        attributes: ['dispositivoId', 'cantidad'],
+        attributes: ['dispositivoId', 'cantidad', 'actaId'],
         transaction
       });
 
-      for (const reserva of reservasPendientes) {
-        const did = (reserva as any).dispositivoId;
-        stockReservado[did] = (stockReservado[did] || 0) + ((reserva as any).cantidad || 1);
+      if (detallesPendientes.length > 0) {
+        // Solo contar reservas del modelo nuevo (tienen movimiento tipo 'reserva')
+        // Las actas viejas ya redujeron el stock al crearse
+        const movimientosReserva = await MovimientoDispositivo.findAll({
+          where: {
+            dispositivoId: stockIds,
+            tipoMovimiento: 'reserva' as any
+          },
+          attributes: ['dispositivoId', 'actaId'],
+          transaction
+        });
+
+        const reservaSet = new Set(
+          movimientosReserva.map((m: any) => `${m.dispositivoId}-${m.actaId}`)
+        );
+
+        for (const detalle of detallesPendientes) {
+          const did = (detalle as any).dispositivoId;
+          const actaId = (detalle as any).actaId;
+
+          if (reservaSet.has(`${did}-${actaId}`)) {
+            stockReservado[did] = (stockReservado[did] || 0) + ((detalle as any).cantidad || 1);
+          }
+        }
       }
     }
 
@@ -420,30 +443,69 @@ export const registrarDevolucion = async (req: Request, res: Response): Promise<
       } else if (devolucion.estadoDevolucion === 'perdido') {
         nuevoEstado = 'perdido';
       }
-      
+
       console.log('   Cambiando estado de dispositivo', detalle.dispositivoId, 'a:', nuevoEstado);
-      
-      await Dispositivo.update(
-        { 
-          estado: nuevoEstado as any,
-          condicion: devolucion.condicionDevolucion
-        },
-        { where: { id: detalle.dispositivoId }, transaction }
-      );
-      
-      console.log('   ✅ Estado de dispositivo actualizado');
-      
-      // Registrar movimiento
-      await MovimientoDispositivo.create({
-        dispositivoId: detalle.dispositivoId,
-        tipoMovimiento: 'devolucion',
-        estadoAnterior: 'entregado',
-        estadoNuevo: nuevoEstado,
-        descripcion: `Devuelto de ${acta.nombreReceptor} - Estado: ${nuevoEstado}${devolucion.observaciones ? ' - ' + devolucion.observaciones : ''}`,
-        actaId: acta.id,
-        fecha: new Date(),
-        Uid
-      }, { transaction });
+
+      // Obtener el dispositivo para verificar tipo de registro
+      const dispositivo = await Dispositivo.findByPk(detalle.dispositivoId, { transaction });
+
+      if (dispositivo?.tipoRegistro === 'stock') {
+        // Dispositivo stock: restaurar cantidad al stock si se devuelve como disponible
+        const cantidadDevuelta = detalle.cantidad || 1;
+        const stockAnterior = dispositivo.stockActual || 0;
+
+        if (nuevoEstado === 'disponible') {
+          const stockRestaurado = stockAnterior + cantidadDevuelta;
+          await Dispositivo.update(
+            { stockActual: stockRestaurado, estado: 'disponible' },
+            { where: { id: detalle.dispositivoId }, transaction }
+          );
+
+          await MovimientoDispositivo.create({
+            dispositivoId: detalle.dispositivoId,
+            tipoMovimiento: 'devolucion',
+            estadoAnterior: `stock: ${stockAnterior}`,
+            estadoNuevo: `stock: ${stockRestaurado}`,
+            descripcion: `Devuelto de ${acta.nombreReceptor} - ${cantidadDevuelta} uds restauradas al stock${devolucion.observaciones ? ' - ' + devolucion.observaciones : ''}`,
+            actaId: acta.id,
+            fecha: new Date(),
+            Uid
+          }, { transaction });
+        } else {
+          // Dañado o perdido: no restaurar stock, solo registrar movimiento
+          await MovimientoDispositivo.create({
+            dispositivoId: detalle.dispositivoId,
+            tipoMovimiento: 'devolucion',
+            estadoAnterior: `stock: ${stockAnterior}`,
+            estadoNuevo: `stock: ${stockAnterior} (${cantidadDevuelta} uds ${nuevoEstado})`,
+            descripcion: `Devuelto de ${acta.nombreReceptor} - ${cantidadDevuelta} uds marcadas como ${nuevoEstado}${devolucion.observaciones ? ' - ' + devolucion.observaciones : ''}`,
+            actaId: acta.id,
+            fecha: new Date(),
+            Uid
+          }, { transaction });
+        }
+      } else {
+        // Dispositivo individual: cambiar estado
+        await Dispositivo.update(
+          {
+            estado: nuevoEstado as any,
+            condicion: devolucion.condicionDevolucion
+          },
+          { where: { id: detalle.dispositivoId }, transaction }
+        );
+
+        // Registrar movimiento
+        await MovimientoDispositivo.create({
+          dispositivoId: detalle.dispositivoId,
+          tipoMovimiento: 'devolucion',
+          estadoAnterior: 'entregado',
+          estadoNuevo: nuevoEstado,
+          descripcion: `Devuelto de ${acta.nombreReceptor} - Estado: ${nuevoEstado}${devolucion.observaciones ? ' - ' + devolucion.observaciones : ''}`,
+          actaId: acta.id,
+          fecha: new Date(),
+          Uid
+        }, { transaction });
+      }
       
       console.log('   ✅ Movimiento registrado');
     }
@@ -562,8 +624,8 @@ export const obtenerHistorialDispositivo = async (req: Request, res: Response) =
 };
 
 /**
- * Cancelar acta de entrega pendiente de firma
- * Restaura el inventario (stock o estado individual) y marca el acta como cancelada
+ * Cancelar acta de entrega (pendiente o firmada)
+ * Restaura el inventario y marca el acta como cancelada, manteniendo trazabilidad
  */
 export const cancelarActaEntrega = async (req: Request, res: Response): Promise<void> => {
   const transaction = await sequelize.transaction();
@@ -594,11 +656,13 @@ export const cancelarActaEntrega = async (req: Request, res: Response): Promise<
       return;
     }
 
-    if (acta.estado !== 'pendiente_firma') {
+    if (acta.estado === 'cancelada') {
       await transaction.rollback();
-      res.status(400).json({ msg: 'Solo se pueden cancelar actas pendientes de firma' });
+      res.status(400).json({ msg: 'Esta acta ya está cancelada' });
       return;
     }
+
+    const estadoAnterior = acta.estado;
 
     // Restaurar inventario para cada dispositivo del detalle
     const dispositivoIds: number[] = [];
@@ -608,38 +672,106 @@ export const cancelarActaEntrega = async (req: Request, res: Response): Promise<
 
       dispositivoIds.push(dispositivo.id);
 
-      if (dispositivo.tipoRegistro === 'stock') {
-        // Stock nunca fue reducido (modelo de reserva), solo registrar cancelación
-        const cantidadReservada = detalle.cantidad || 1;
+      if (estadoAnterior === 'pendiente_firma') {
+        if (dispositivo.tipoRegistro === 'stock') {
+          const cantidadReservada = detalle.cantidad || 1;
 
-        await MovimientoDispositivo.create({
-          dispositivoId: dispositivo.id,
-          tipoMovimiento: 'cancelacion' as any,
-          estadoAnterior: `stock: ${dispositivo.stockActual} (reserva: ${cantidadReservada})`,
-          estadoNuevo: `stock: ${dispositivo.stockActual}`,
-          descripcion: `Cancelación de Acta ${acta.numeroActa} - Reserva de ${cantidadReservada} uds liberada`,
-          actaId: acta.id,
-          fecha: new Date(),
-          Uid
-        }, { transaction });
-      } else {
-        // Restaurar dispositivo individual a disponible
-        await Dispositivo.update(
-          { estado: 'disponible' },
-          { where: { id: dispositivo.id }, transaction }
-        );
+          // Verificar si usó modelo de reserva (stock NO fue reducido) o modelo viejo (stock SÍ fue reducido)
+          const tieneReserva = await MovimientoDispositivo.findOne({
+            where: {
+              dispositivoId: dispositivo.id,
+              actaId: acta.id,
+              tipoMovimiento: 'reserva' as any
+            },
+            transaction
+          });
 
-        await MovimientoDispositivo.create({
-          dispositivoId: dispositivo.id,
-          tipoMovimiento: 'cancelacion' as any,
-          estadoAnterior: 'reservado',
-          estadoNuevo: 'disponible',
-          descripcion: `Cancelación de Acta ${acta.numeroActa} - Dispositivo restaurado a disponible`,
-          actaId: acta.id,
-          fecha: new Date(),
-          Uid
-        }, { transaction });
+          if (tieneReserva) {
+            // Modelo nuevo: stock no fue reducido, solo liberar reserva
+            await MovimientoDispositivo.create({
+              dispositivoId: dispositivo.id,
+              tipoMovimiento: 'cancelacion' as any,
+              estadoAnterior: `stock: ${dispositivo.stockActual} (reserva: ${cantidadReservada})`,
+              estadoNuevo: `stock: ${dispositivo.stockActual}`,
+              descripcion: `Cancelación de Acta ${acta.numeroActa} - Reserva de ${cantidadReservada} uds liberada`,
+              actaId: acta.id,
+              fecha: new Date(),
+              Uid
+            }, { transaction });
+          } else {
+            // Modelo viejo: stock fue reducido al crear, restaurarlo
+            const stockRestaurado = (dispositivo.stockActual || 0) + cantidadReservada;
+            await Dispositivo.update(
+              { stockActual: stockRestaurado },
+              { where: { id: dispositivo.id }, transaction }
+            );
+            await MovimientoDispositivo.create({
+              dispositivoId: dispositivo.id,
+              tipoMovimiento: 'cancelacion' as any,
+              estadoAnterior: `stock: ${dispositivo.stockActual}`,
+              estadoNuevo: `stock: ${stockRestaurado}`,
+              descripcion: `Cancelación de Acta ${acta.numeroActa} - Stock restaurado (${cantidadReservada} uds)`,
+              actaId: acta.id,
+              fecha: new Date(),
+              Uid
+            }, { transaction });
+          }
+        } else {
+          await Dispositivo.update(
+            { estado: 'disponible' },
+            { where: { id: dispositivo.id }, transaction }
+          );
+          await MovimientoDispositivo.create({
+            dispositivoId: dispositivo.id,
+            tipoMovimiento: 'cancelacion' as any,
+            estadoAnterior: 'reservado',
+            estadoNuevo: 'disponible',
+            descripcion: `Cancelación de Acta ${acta.numeroActa} - Dispositivo restaurado a disponible`,
+            actaId: acta.id,
+            fecha: new Date(),
+            Uid
+          }, { transaction });
+        }
+      } else if (['activa', 'devuelta_parcial', 'vencida'].includes(estadoAnterior)) {
+        // FIRMADA: stock fue reducido, dispositivos individuales están 'entregado'
+        // Solo restaurar items NO devueltos
+        if (detalle.devuelto) continue;
+
+        if (dispositivo.tipoRegistro === 'stock') {
+          const cantidadEntregada = detalle.cantidad || 1;
+          const stockRestaurado = (dispositivo.stockActual || 0) + cantidadEntregada;
+          await Dispositivo.update(
+            { stockActual: stockRestaurado, estado: 'disponible' },
+            { where: { id: dispositivo.id }, transaction }
+          );
+          await MovimientoDispositivo.create({
+            dispositivoId: dispositivo.id,
+            tipoMovimiento: 'cancelacion' as any,
+            estadoAnterior: `stock: ${dispositivo.stockActual}`,
+            estadoNuevo: `stock: ${stockRestaurado}`,
+            descripcion: `Cancelación post-firma de Acta ${acta.numeroActa} - Restaurado ${cantidadEntregada} uds`,
+            actaId: acta.id,
+            fecha: new Date(),
+            Uid
+          }, { transaction });
+        } else {
+          await Dispositivo.update(
+            { estado: 'disponible' },
+            { where: { id: dispositivo.id }, transaction }
+          );
+          await MovimientoDispositivo.create({
+            dispositivoId: dispositivo.id,
+            tipoMovimiento: 'cancelacion' as any,
+            estadoAnterior: 'entregado',
+            estadoNuevo: 'disponible',
+            descripcion: `Cancelación post-firma de Acta ${acta.numeroActa} - Dispositivo restaurado a disponible`,
+            actaId: acta.id,
+            fecha: new Date(),
+            Uid
+          }, { transaction });
+        }
       }
+      // Para rechazada/devuelta_completa: inventario ya está restaurado, solo marcar cancelada
     }
 
     // Cancelar tokens de firma pendientes

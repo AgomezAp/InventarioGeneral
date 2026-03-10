@@ -176,4 +176,13 @@ export class ActaConsumibleService {
       { body: { Uid: localStorage.getItem('userId') } }
     );
   }
+
+  /**
+   * Eliminar acta cancelada o rechazada permanentemente
+   */
+  eliminarActa(id: number): Observable<{ msg: string }> {
+    return this.http.delete<{ msg: string }>(
+      `${this.apiUrl}api/actas-consumibles/${id}/eliminar`
+    );
+  }
 }

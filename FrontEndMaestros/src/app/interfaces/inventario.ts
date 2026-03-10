@@ -22,6 +22,7 @@ export interface Dispositivo {
   tipoRegistro?: 'individual' | 'stock';
   stockActual?: number;
   stockMinimo?: number;
+  stockDisponible?: number; // Stock real disponible (stockActual - reservas pendientes)
 }
 
 export interface ActaEntrega {
