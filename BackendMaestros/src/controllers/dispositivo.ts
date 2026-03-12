@@ -58,8 +58,15 @@ export const obtenerDispositivos = async (req: Request, res: Response) => {
  */
 export const obtenerDisponibles = async (req: Request, res: Response) => {
   try {
+    // Dispositivos individuales: filtrar por estado 'disponible'
+    // Dispositivos stock: incluir siempre que tengan stockActual > 0 (el estado no importa)
     const dispositivos = await Dispositivo.findAll({
-      where: { estado: 'disponible' },
+      where: {
+        [Op.or]: [
+          { tipoRegistro: { [Op.ne]: 'stock' }, estado: 'disponible' },
+          { tipoRegistro: 'stock', stockActual: { [Op.gt]: 0 } }
+        ]
+      },
       order: [['categoria', 'ASC'], ['nombre', 'ASC']]
     });
 

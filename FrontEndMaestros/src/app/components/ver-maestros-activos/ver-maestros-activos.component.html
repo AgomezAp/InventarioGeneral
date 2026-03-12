@@ -138,13 +138,13 @@
               </td>
               <td class="td-cell" data-label="Persona a cargo">
                 <span class="cell-text cell-persona">
-                  <div class="persona-avatar">
-                    {{ maestro.usuarios.nombre.charAt(0)
-                    }}{{ maestro.usuarios.apellido.charAt(0) }}
+                  <div class="persona-avatar" *ngIf="maestro.usuarios">
+                    {{ (maestro.usuarios.nombre || '?').charAt(0)
+                    }}{{ (maestro.usuarios.apellido || '?').charAt(0) }}
                   </div>
                   <span class="persona-nombre">
-                    {{ maestro.usuarios.nombre }}
-                    {{ maestro.usuarios.apellido }}
+                    {{ maestro.usuarios?.nombre || 'Sin nombre' }}
+                    {{ maestro.usuarios?.apellido || '' }}
                   </span>
                 </span>
               </td>

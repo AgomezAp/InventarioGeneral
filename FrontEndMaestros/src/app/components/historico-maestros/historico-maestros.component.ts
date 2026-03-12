@@ -162,7 +162,7 @@ export class HistoricoMaestrosComponent implements OnInit, OnDestroy {
       return (
         (this.filtroEstado === '' || maestro.estado === this.filtroEstado) &&
         (this.filtroPersona === '' ||
-          `${maestro.usuarios.nombre} ${maestro.usuarios.apellido}`
+          `${maestro.usuarios?.nombre || ''} ${maestro.usuarios?.apellido || ''}`
             .toLowerCase()
             .includes(this.filtroPersona.toLowerCase())) &&
         (this.filtroRegion === '' ||
@@ -180,7 +180,7 @@ export class HistoricoMaestrosComponent implements OnInit, OnDestroy {
       return (
         (this.filtroEstado === '' || maestro.estado === this.filtroEstado) &&
         (this.filtroPersona === '' ||
-          `${maestro.usuarios.nombre} ${maestro.usuarios.apellido}`
+          `${maestro.usuarios?.nombre || ''} ${maestro.usuarios?.apellido || ''}`
             .toLowerCase()
             .includes(this.filtroPersona.toLowerCase())) &&
         (this.filtroRegion === '' ||

@@ -164,7 +164,15 @@ export const crearActaEntrega = async (req: Request, res: Response): Promise<voi
       transaction
     });
     
-    const noDisponibles = dispositivosDB.filter(d => d.estado !== 'disponible');
+    // Validar disponibilidad: dispositivos individuales por estado, stock por cantidad
+    const noDisponibles = dispositivosDB.filter(d => {
+      if (d.tipoRegistro === 'stock') {
+        // Stock: solo verificar que tenga cantidad > 0
+        return (d.stockActual || 0) <= 0;
+      }
+      // Individual: verificar estado
+      return d.estado !== 'disponible';
+    });
     if (noDisponibles.length > 0) {
       await transaction.rollback();
       res.status(400).json({
@@ -741,7 +749,7 @@ export const cancelarActaEntrega = async (req: Request, res: Response): Promise<
           const cantidadEntregada = detalle.cantidad || 1;
           const stockRestaurado = (dispositivo.stockActual || 0) + cantidadEntregada;
           await Dispositivo.update(
-            { stockActual: stockRestaurado, estado: 'disponible' },
+            { stockActual: stockRestaurado },
             { where: { id: dispositivo.id }, transaction }
           );
           await MovimientoDispositivo.create({

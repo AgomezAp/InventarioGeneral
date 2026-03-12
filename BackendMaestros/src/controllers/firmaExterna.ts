@@ -307,8 +307,9 @@ export const firmarActaConToken = async (req: Request, res: Response): Promise<v
 
           await Dispositivo.update(
             {
-              stockActual: nuevoStock,
-              estado: nuevoStock > 0 ? 'disponible' : 'entregado'
+              stockActual: nuevoStock
+              // Stock devices: NO cambiar estado, siempre queda 'disponible'
+              // Solo importa la cantidad, no el estado
             },
             { where: { id: detalle.dispositivoId }, transaction }
           );

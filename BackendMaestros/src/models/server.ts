@@ -334,7 +334,39 @@ class Server {
         `);
         console.log('Tipos de movimiento de stock agregados');
       }
-      
+
+      // Agregar tipo de movimiento cancelacion
+      if (!movLabels.includes('cancelacion')) {
+        console.log('Agregando tipo de movimiento: cancelacion...');
+        await sequelize.query(`
+          ALTER TYPE "enum_movimientos_dispositivo_tipoMovimiento" ADD VALUE IF NOT EXISTS 'cancelacion';
+        `);
+        console.log('Tipo de movimiento cancelacion agregado');
+      }
+
+      // Corregir dispositivos tipo stock que quedaron trabados con estado incorrecto
+      // Los dispositivos stock NUNCA deben tener estado 'reservado' o 'entregado'
+      // Solo importa su stockActual, no el estado
+      const [stockTrabados]: any = await sequelize.query(`
+        SELECT id, nombre, estado, "stockActual", "tipoRegistro"
+        FROM dispositivos
+        WHERE "tipoRegistro" = 'stock'
+          AND estado IN ('reservado', 'entregado')
+      `);
+      if (stockTrabados && stockTrabados.length > 0) {
+        console.log(`Corrigiendo ${stockTrabados.length} dispositivos stock con estado incorrecto...`);
+        await sequelize.query(`
+          UPDATE dispositivos
+          SET estado = 'disponible'
+          WHERE "tipoRegistro" = 'stock'
+            AND estado IN ('reservado', 'entregado')
+        `);
+        for (const d of stockTrabados) {
+          console.log(`  - ${d.nombre}: ${d.estado} → disponible (stock: ${d.stockActual})`);
+        }
+        console.log('Dispositivos stock corregidos');
+      }
+
     } catch (error: any) {
       // Si falla, probablemente el ENUM no existe aún (primera vez)
       if (!error.message?.includes('does not exist')) {
