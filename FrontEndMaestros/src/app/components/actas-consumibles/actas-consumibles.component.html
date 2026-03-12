@@ -317,8 +317,8 @@
               <div class="detail-item" *ngIf="actaSeleccionada.creador">
                 <span class="detail-label">Creado por</span>
                 <span class="detail-value">{{
-                  actaSeleccionada.creador?.nombre || 'Sin nombre'
-                }} {{ actaSeleccionada.creador?.apellido || '' }}</span>
+                  actaSeleccionada.creador.nombre || 'Sin nombre'
+                }} {{ actaSeleccionada.creador.apellido || '' }}</span>
               </div>
               <div class="detail-item" *ngIf="actaSeleccionada.tipoInventario">
                 <span class="detail-label">Tipo inventario</span>
