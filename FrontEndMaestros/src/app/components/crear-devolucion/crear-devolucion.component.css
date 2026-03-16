@@ -4,11 +4,11 @@
 ======================================== */
 
 .crear-devolucion-container {
-  height: 100vh;
+  min-height: 100vh;
   background-color: var(--bg-secondary);
   padding: var(--spacing-md);
   font-family: var(--font-family);
-  overflow: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
@@ -17,10 +17,8 @@
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
-  height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 /* ========================================
@@ -167,7 +165,6 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   min-height: 0;
 }
 
@@ -177,7 +174,6 @@
   gap: var(--spacing-lg);
   flex: 1;
   min-height: 0;
-  overflow: hidden;
 }
 
 .form-column {
@@ -189,7 +185,7 @@
 }
 
 .column-devices {
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* ========================================
@@ -414,7 +410,6 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .section-devices .section-header-inline {
@@ -516,7 +511,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
-  max-height: 280px;
+  max-height: 200px;
   overflow-y: auto;
   padding: var(--spacing-md);
   background: var(--bg-secondary);
@@ -714,11 +709,8 @@
    SELECCIONADOS
 ======================================== */
 .seleccionados-area {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   border-top: 1px solid var(--border-color);
   padding-top: var(--spacing-md);
 }
@@ -727,9 +719,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  max-height: 500px;
   overflow-y: auto;
-  flex: 1;
-  min-height: 0;
   padding-right: var(--spacing-xs);
 }
 
