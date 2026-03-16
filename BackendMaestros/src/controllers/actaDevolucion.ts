@@ -36,52 +36,49 @@ const generarNumeroActaDevolucion = async (): Promise<string> => {
 
 /**
  * Obtener dispositivos entregados (disponibles para devolución)
- * Incluye información del acta para poder preseleccionar
+ * Si viene ?actaId=X, trae los dispositivos de esa acta específica
+ * Si no, trae todos los dispositivos entregados no devueltos
  */
 export const obtenerDispositivosEntregados = async (req: Request, res: Response) => {
   try {
-    // Obtener dispositivos entregados con información del acta
-    const dispositivos = await Dispositivo.findAll({
-      where: { estado: 'entregado' },
-      order: [['nombre', 'ASC']]
-    });
-    
-    // Para cada dispositivo, buscar el acta correspondiente
-    const dispositivosConActa = await Promise.all(
-      dispositivos.map(async (disp: any) => {
-        // Buscar el detalle de acta más reciente para este dispositivo
-        const detalleActa = await sequelize.query(`
-          SELECT da."actaId", ae."nombreReceptor" as receptor, ae.id as "actaEntregaId"
-          FROM detalles_acta da
-          INNER JOIN actas_entrega ae ON da."actaId" = ae.id
-          WHERE da."dispositivoId" = :dispositivoId 
-            AND da.devuelto = false
-          ORDER BY ae."fechaEntrega" DESC
-          LIMIT 1
-        `, {
-          replacements: { dispositivoId: disp.id },
-          type: 'SELECT' as any
-        }) as any[];
-        
-        const info = detalleActa[0] || {};
-        
-        return {
-          id: disp.id,
-          nombre: disp.nombre,
-          categoria: disp.categoria,
-          marca: disp.marca,
-          modelo: disp.modelo,
-          serial: disp.serial,
-          imei: disp.imei,
-          descripcion: disp.descripcion,
-          condicion: disp.condicion,
-          actaId: info.actaId || info.actaEntregaId || null,
-          receptor: info.receptor || null
-        };
-      })
-    );
-    
-    res.json(dispositivosConActa);
+    const { actaId } = req.query;
+
+    // Buscar directamente desde detalles_acta + dispositivos
+    // Esto funciona tanto para dispositivos individuales como stock
+    let whereClause = `da.devuelto = false AND ae.estado IN ('activa', 'devuelta_parcial')`;
+    const replacements: any = {};
+
+    if (actaId) {
+      whereClause += ` AND da."actaId" = :actaId`;
+      replacements.actaId = Number(actaId);
+    }
+
+    const resultados = await sequelize.query(`
+      SELECT
+        d.id,
+        d.nombre,
+        d.categoria,
+        d.marca,
+        d.modelo,
+        d.serial,
+        d.imei,
+        d.descripcion,
+        d.condicion,
+        d."tipoRegistro",
+        da."actaId" as "actaId",
+        da.cantidad,
+        ae."nombreReceptor" as receptor
+      FROM detalles_acta da
+      INNER JOIN dispositivos d ON da."dispositivoId" = d.id
+      INNER JOIN actas_entrega ae ON da."actaId" = ae.id
+      WHERE ${whereClause}
+      ORDER BY d.nombre ASC
+    `, {
+      replacements,
+      type: 'SELECT' as any
+    }) as any[];
+
+    res.json(resultados);
   } catch (error) {
     console.error('Error al obtener dispositivos entregados:', error);
     res.status(500).json({ msg: 'Error al obtener los dispositivos entregados' });
@@ -222,19 +219,23 @@ export const crearActaDevolucion = async (req: Request, res: Response): Promise<
       return;
     }
     
-    // Verificar que todos los dispositivos estén entregados
+    // Verificar que todos los dispositivos existan
     const dispositivosIds = dispositivos.map((d: any) => d.dispositivoId);
     const dispositivosDB = await Dispositivo.findAll({
       where: { id: dispositivosIds },
       transaction
     });
-    
-    const noEntregados = dispositivosDB.filter(d => d.estado !== 'entregado');
-    if (noEntregados.length > 0) {
+
+    // Validar: individuales deben estar en estado 'entregado', stock solo deben existir
+    const noValidos = dispositivosDB.filter(d => {
+      if (d.tipoRegistro === 'stock') return false; // Stock siempre se puede devolver
+      return d.estado !== 'entregado';
+    });
+    if (noValidos.length > 0) {
       await transaction.rollback();
-      res.status(400).json({ 
+      res.status(400).json({
         msg: 'Algunos dispositivos no están en estado entregado',
-        dispositivos: noEntregados.map(d => d.nombre)
+        dispositivos: noValidos.map(d => d.nombre)
       });
       return;
     }
@@ -276,7 +277,7 @@ export const crearActaDevolucion = async (req: Request, res: Response): Promise<
     // Crear detalles del acta y reservar dispositivos
     for (const item of dispositivos) {
       const dispositivo = dispositivosDB.find(d => d.id === item.dispositivoId);
-      
+
       // Crear detalle
       await DetalleDevolucion.create({
         actaDevolucionId: acta.id,
@@ -286,19 +287,21 @@ export const crearActaDevolucion = async (req: Request, res: Response): Promise<
         fotosDevolucion: JSON.stringify(fotosMap[item.dispositivoId] || []),
         observaciones: item.observaciones
       }, { transaction });
-      
-      // Cambiar estado del dispositivo a "reservado" hasta que se firme
-      await Dispositivo.update(
-        { estado: 'reservado' },
-        { where: { id: item.dispositivoId }, transaction }
-      );
-      
+
+      // Stock: no cambiar estado. Individual: cambiar a 'reservado'
+      if (dispositivo?.tipoRegistro !== 'stock') {
+        await Dispositivo.update(
+          { estado: 'reservado' },
+          { where: { id: item.dispositivoId }, transaction }
+        );
+      }
+
       // Registrar movimiento
       await MovimientoDispositivo.create({
         dispositivoId: item.dispositivoId,
         tipoMovimiento: 'reserva' as any,
-        estadoAnterior: 'entregado',
-        estadoNuevo: 'reservado',
+        estadoAnterior: dispositivo?.tipoRegistro === 'stock' ? 'stock' : 'entregado',
+        estadoNuevo: dispositivo?.tipoRegistro === 'stock' ? 'stock' : 'reservado',
         descripcion: `Reservado para devolución por ${nombreEntrega} - Acta ${numeroActa} pendiente de firma`,
         fecha: new Date(),
         Uid
@@ -611,32 +614,49 @@ export const firmarActaDevolucionConToken = async (req: Request, res: Response):
     
     // Cambiar estado de dispositivos a disponible (o dañado/perdido según corresponda)
     for (const detalle of acta.detalles || []) {
+      const dispositivo = detalle.dispositivo;
+      const esStock = dispositivo?.tipoRegistro === 'stock';
+
       let nuevoEstado = 'disponible';
       if (detalle.estadoDevolucion === 'dañado') {
         nuevoEstado = 'dañado';
       } else if (detalle.estadoDevolucion === 'perdido') {
         nuevoEstado = 'perdido';
       }
-      
-      await Dispositivo.update(
-        { 
-          estado: nuevoEstado as any,
-          condicion: detalle.condicionDevolucion
-        },
-        { where: { id: detalle.dispositivoId }, transaction }
-      );
-      
+
+      if (esStock) {
+        // Stock: devolver cantidad al stockActual, NO cambiar estado
+        const cantidadDevuelta = detalle.cantidad || 1;
+        await sequelize.query(`
+          UPDATE dispositivos
+          SET "stockActual" = "stockActual" + :cantidad
+          WHERE id = :id
+        `, {
+          replacements: { cantidad: cantidadDevuelta, id: detalle.dispositivoId },
+          transaction
+        });
+      } else {
+        // Individual: cambiar estado
+        await Dispositivo.update(
+          {
+            estado: nuevoEstado as any,
+            condicion: detalle.condicionDevolucion
+          },
+          { where: { id: detalle.dispositivoId }, transaction }
+        );
+      }
+
       // Registrar movimiento
       await MovimientoDispositivo.create({
         dispositivoId: detalle.dispositivoId,
         tipoMovimiento: 'devolucion',
-        estadoAnterior: 'reservado',
-        estadoNuevo: nuevoEstado,
+        estadoAnterior: esStock ? 'stock' : 'reservado',
+        estadoNuevo: esStock ? 'stock' : nuevoEstado,
         descripcion: `Devolución firmada - ${acta.numeroActa} - Devuelto por ${acta.nombreEntrega}`,
         fecha: new Date()
       }, { transaction });
-      
-      console.log(`   Dispositivo ${detalle.dispositivoId} -> ${nuevoEstado}`);
+
+      console.log(`   Dispositivo ${detalle.dispositivoId} -> ${esStock ? 'stock +cantidad' : nuevoEstado}`);
     }
     
     await transaction.commit();
@@ -731,19 +751,25 @@ export const rechazarActaDevolucionConToken = async (req: Request, res: Response
       motivoRechazo: motivo
     }, { transaction });
     
-    // Revertir estado de dispositivos a "entregado"
+    // Revertir estado de dispositivos individuales a "entregado" (stock no cambia)
     for (const detalle of acta.detalles || []) {
-      await Dispositivo.update(
-        { estado: 'entregado' },
-        { where: { id: detalle.dispositivoId }, transaction }
-      );
-      
+      // Necesitamos saber si es stock - cargar el dispositivo
+      const dispositivo = await Dispositivo.findByPk(detalle.dispositivoId, { transaction });
+      const esStock = dispositivo?.tipoRegistro === 'stock';
+
+      if (!esStock) {
+        await Dispositivo.update(
+          { estado: 'entregado' },
+          { where: { id: detalle.dispositivoId }, transaction }
+        );
+      }
+
       // Registrar movimiento
       await MovimientoDispositivo.create({
         dispositivoId: detalle.dispositivoId,
         tipoMovimiento: 'cambio_estado',
-        estadoAnterior: 'reservado',
-        estadoNuevo: 'entregado',
+        estadoAnterior: esStock ? 'stock' : 'reservado',
+        estadoNuevo: esStock ? 'stock' : 'entregado',
         descripcion: `Devolución rechazada - ${acta.numeroActa} - Motivo: ${motivo}`,
         fecha: new Date()
       }, { transaction });

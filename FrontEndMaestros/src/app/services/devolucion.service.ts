@@ -52,9 +52,14 @@ export class DevolucionService {
 
   /**
    * Obtener dispositivos entregados (disponibles para devolución)
+   * Si se pasa actaId, filtra los dispositivos de esa acta
    */
-  obtenerDispositivosEntregados(): Observable<DispositivoEntregado[]> {
-    return this.http.get<DispositivoEntregado[]>(`${this.apiUrl}api/actas-devolucion/dispositivos-entregados`);
+  obtenerDispositivosEntregados(actaId?: number): Observable<DispositivoEntregado[]> {
+    let params = new HttpParams();
+    if (actaId) {
+      params = params.set('actaId', actaId.toString());
+    }
+    return this.http.get<DispositivoEntregado[]>(`${this.apiUrl}api/actas-devolucion/dispositivos-entregados`, { params });
   }
 
   /**

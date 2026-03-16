@@ -143,15 +143,24 @@ export class CrearDevolucionComponent implements OnInit, AfterViewInit {
 
   cargarDispositivosEntregados(): void {
     this.loadingDispositivos = true;
-    this.devolucionService.obtenerDispositivosEntregados().subscribe({
+
+    // Si viene con actaId, pedir solo los dispositivos de esa acta
+    const actaId = this.actaIdPreseleccionada || undefined;
+
+    this.devolucionService.obtenerDispositivosEntregados(actaId).subscribe({
       next: (data) => {
         this.dispositivosEntregados = data;
         this.dispositivosEntregadosFiltrados = data;
         this.loadingDispositivos = false;
-        
-        // Si viene con actaId, preseleccionar los dispositivos de esa acta
-        if (this.actaIdPreseleccionada) {
+
+        // Si viene con actaId, preseleccionar todos los dispositivos automáticamente
+        if (this.actaIdPreseleccionada && data.length > 0) {
           this.preseleccionarDispositivosDeActa(this.actaIdPreseleccionada);
+          // Auto-llenar el nombre de quien devuelve con el receptor del acta de entrega
+          const receptor = (data[0] as any).receptor;
+          if (receptor) {
+            this.entrega.nombre = receptor;
+          }
         }
       },
       error: (err) => {
