@@ -30,7 +30,6 @@ export const obtenerDispositivos = async (req: Request, res: Response) => {
     
     if (busqueda) {
       where[Op.or] = [
-        { nombre: { [Op.iLike]: `%${busqueda}%` } },
         { marca: { [Op.iLike]: `%${busqueda}%` } },
         { modelo: { [Op.iLike]: `%${busqueda}%` } },
         { serial: { [Op.iLike]: `%${busqueda}%` } },
@@ -172,7 +171,6 @@ export const obtenerDispositivoPorId = async (req: Request, res: Response): Prom
 export const registrarDispositivo = async (req: Request, res: Response): Promise<void> => {
   try {
     const {
-      nombre,
       categoria,
       marca,
       modelo,
@@ -188,6 +186,9 @@ export const registrarDispositivo = async (req: Request, res: Response): Promise
       cantidad, // Para tipo 'stock'
       stockMinimo
     } = req.body;
+
+    // Auto-generar nombre a partir de marca + modelo
+    const nombre = [marca, modelo].filter(Boolean).join(' ') || categoria || 'Dispositivo';
     
     const tipo = tipoRegistro || 'individual';
     
@@ -329,7 +330,6 @@ export const actualizarDispositivo = async (req: Request, res: Response): Promis
   try {
     const { id } = req.params;
     const {
-      nombre,
       categoria,
       marca,
       modelo,
@@ -342,6 +342,9 @@ export const actualizarDispositivo = async (req: Request, res: Response): Promis
       observaciones,
       Uid
     } = req.body;
+
+    // Auto-generar nombre a partir de marca + modelo
+    const nombre = [marca, modelo].filter(Boolean).join(' ') || categoria || 'Dispositivo';
     
     const dispositivo = await Dispositivo.findByPk(Number(id));
     

@@ -115,8 +115,7 @@ export class InventarioComponent implements OnInit, OnDestroy {
     this.dispositivosFiltrados = this.dispositivos.filter(d => {
       const cumpleEstado = this.filtroEstado === 'todos' || d.estado === this.filtroEstado;
       const cumpleCategoria = this.filtroCategoria === 'todas' || d.categoria === this.filtroCategoria;
-      const cumpleBusqueda = !this.filtroBusqueda || 
-        d.nombre.toLowerCase().includes(this.filtroBusqueda.toLowerCase()) ||
+      const cumpleBusqueda = !this.filtroBusqueda ||
         d.marca?.toLowerCase().includes(this.filtroBusqueda.toLowerCase()) ||
         d.modelo?.toLowerCase().includes(this.filtroBusqueda.toLowerCase()) ||
         d.serial?.toLowerCase().includes(this.filtroBusqueda.toLowerCase()) ||
@@ -235,10 +234,9 @@ export class InventarioComponent implements OnInit, OnDestroy {
       : '';
     
     const confirmar = confirm(
-      `¿Está seguro de eliminar el dispositivo "${dispositivo.nombre}"${cantidadInfo}?\n\n` +
+      `¿Está seguro de eliminar el dispositivo "${dispositivo.marca} ${dispositivo.modelo}"${cantidadInfo}?\n\n` +
       `Categoría: ${dispositivo.categoria}\n` +
-      `Marca: ${dispositivo.marca || 'N/A'}\n` +
-      `Modelo: ${dispositivo.modelo || 'N/A'}\n\n` +
+      `Serial: ${dispositivo.serial || 'N/A'}\n\n` +
       `Esta acción no se puede deshacer.`
     );
     

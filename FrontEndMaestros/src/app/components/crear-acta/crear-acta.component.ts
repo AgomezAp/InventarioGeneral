@@ -95,8 +95,7 @@ export class CrearActaComponent implements OnInit, OnDestroy {
       return;
     }
     
-    this.dispositivosDisponiblesFiltrados = this.dispositivosDisponibles.filter(d => 
-      d.nombre?.toLowerCase().includes(busqueda) ||
+    this.dispositivosDisponiblesFiltrados = this.dispositivosDisponibles.filter(d =>
       d.marca?.toLowerCase().includes(busqueda) ||
       d.modelo?.toLowerCase().includes(busqueda) ||
       d.serial?.toLowerCase().includes(busqueda) ||

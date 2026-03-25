@@ -87,7 +87,6 @@ export class DetalleDispositivoComponent implements OnInit {
     this.guardando = true;
     
     const datosActualizar: any = {
-      nombre: this.dispositivo.nombre,
       categoria: this.dispositivo.categoria,
       marca: this.dispositivo.marca,
       modelo: this.dispositivo.modelo,

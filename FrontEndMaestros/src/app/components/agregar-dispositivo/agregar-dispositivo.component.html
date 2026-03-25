@@ -20,7 +20,7 @@
           ></span>
           <span
             class="progress-dot"
-            [class.completed]="dispositivo.nombre"
+            [class.completed]="dispositivo.marca"
             title="Info"
           ></span>
           <span
@@ -174,30 +174,9 @@
               <h3>Información básica</h3>
             </div>
 
-            <div class="form-group-compact">
-              <label for="nombre">Nombre <span class="required">*</span></label>
-              <input
-                type="text"
-                id="nombre"
-                [(ngModel)]="dispositivo.nombre"
-                name="nombre"
-                placeholder="Ej: iPhone 13 Pro"
-                class="input-compact"
-                required
-                #nombreInput="ngModel"
-                [class.invalid]="nombreInput.invalid && nombreInput.touched"
-              />
-              <span
-                class="error-message"
-                *ngIf="nombreInput.invalid && nombreInput.touched"
-              >
-                <i class="pi pi-exclamation-circle"></i> El nombre es requerido
-              </span>
-            </div>
-
             <div class="form-row-compact">
               <div class="form-group-compact">
-                <label for="marca">Marca</label>
+                <label for="marca">Marca <span class="required">*</span></label>
                 <input
                   type="text"
                   id="marca"
@@ -205,10 +184,19 @@
                   name="marca"
                   placeholder="Apple, Samsung..."
                   class="input-compact"
+                  required
+                  #marcaInput="ngModel"
+                  [class.invalid]="marcaInput.invalid && marcaInput.touched"
                 />
+                <span
+                  class="error-message"
+                  *ngIf="marcaInput.invalid && marcaInput.touched"
+                >
+                  <i class="pi pi-exclamation-circle"></i> La marca es requerida
+                </span>
               </div>
               <div class="form-group-compact">
-                <label for="modelo">Modelo</label>
+                <label for="modelo">Modelo <span class="required">*</span></label>
                 <input
                   type="text"
                   id="modelo"
@@ -216,7 +204,16 @@
                   name="modelo"
                   placeholder="Modelo"
                   class="input-compact"
+                  required
+                  #modeloInput="ngModel"
+                  [class.invalid]="modeloInput.invalid && modeloInput.touched"
                 />
+                <span
+                  class="error-message"
+                  *ngIf="modeloInput.invalid && modeloInput.touched"
+                >
+                  <i class="pi pi-exclamation-circle"></i> El modelo es requerido
+                </span>
               </div>
             </div>
 
@@ -327,7 +324,7 @@
                   type="submit"
                   class="btn btn-accent btn-compact"
                   [disabled]="
-                    loading || !dispositivo.nombre || !dispositivo.categoria
+                    loading || !dispositivo.marca || !dispositivo.modelo || !dispositivo.categoria
                   "
                   [class.loading]="loading"
                 >
@@ -445,7 +442,7 @@
           <!-- Resumen mini -->
           <section
             class="summary-mini"
-            *ngIf="dispositivo.nombre && dispositivo.categoria"
+            *ngIf="dispositivo.marca && dispositivo.categoria"
           >
             <div class="summary-header">
               <i class="pi pi-check-circle"></i>
@@ -459,9 +456,7 @@
                 ></i>
                 {{ getCategoriaLabel(dispositivo.categoria) }}
               </span>
-              <span>{{ dispositivo.nombre }}</span>
-              <span *ngIf="dispositivo.marca"
-                >{{ dispositivo.marca }} {{ dispositivo.modelo }}</span
+              <span>{{ dispositivo.marca }} {{ dispositivo.modelo }}</span>
               >
               <span *ngIf="dispositivo.condicion">{{
                 getCondicionLabel(dispositivo.condicion)

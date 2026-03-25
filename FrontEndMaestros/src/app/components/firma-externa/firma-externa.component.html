@@ -108,7 +108,7 @@
             <span *ngIf="!['Laptop','Monitor','Teclado','Mouse','Impresora','Teléfono'].includes(dispositivo.categoria)">📟</span>
           </div>
           <div class="dispositivo-info">
-            <h3>{{ dispositivo.nombre || dispositivo.categoria }}</h3>
+            <h3>{{ dispositivo.marca }} {{ dispositivo.modelo || dispositivo.categoria }}</h3>
             <p class="marca-modelo">{{ dispositivo.marca }} {{ dispositivo.modelo }}</p>
             <p class="serial" *ngIf="dispositivo.serial">Serial: {{ dispositivo.serial }}</p>
             <p class="condicion" *ngIf="dispositivo.condicion">Estado: {{ dispositivo.condicion }}</p>

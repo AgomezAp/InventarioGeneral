@@ -182,10 +182,9 @@
                       [ngClass]="getCategoriaIcon(disp.categoria)"
                     ></i>
                     <div class="disp-chip-info">
-                      <span class="disp-chip-name">{{ disp.nombre }}</span>
+                      <span class="disp-chip-name">{{ disp.marca }} {{ disp.modelo }}</span>
                       <span class="disp-chip-meta">
-                        <span *ngIf="disp.marca">{{ disp.marca }}</span>
-                        <span *ngIf="disp.modelo">{{ disp.modelo }}</span>
+                        <span>{{ disp.categoria | titlecase }}</span>
                         <span *ngIf="disp.color" class="disp-chip-color">{{ disp.color }}</span>
                       </span>
                     </div>
@@ -264,10 +263,9 @@
                       ></i>
                     </div>
                     <div class="disp-card-title">
-                      <h4>{{ item.dispositivo.nombre }}</h4>
+                      <h4>{{ item.dispositivo.marca }} {{ item.dispositivo.modelo }}</h4>
                       <span class="disp-card-subtitle">
-                        {{ item.dispositivo.marca }}
-                        {{ item.dispositivo.modelo }}
+                        {{ item.dispositivo.categoria | titlecase }}
                         <span *ngIf="item.dispositivo.color"> &middot; {{ item.dispositivo.color }}</span>
                       </span>
                     </div>

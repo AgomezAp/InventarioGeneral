@@ -190,7 +190,7 @@
                   ></i>
                 </div>
                 <div class="item-title">
-                  <strong>{{ item.dispositivo.nombre }}</strong>
+                  <strong>{{ item.dispositivo.marca }} {{ item.dispositivo.modelo }}</strong>
                   <span class="item-details"
                     >{{ item.dispositivo.marca }}
                     {{ item.dispositivo.modelo }}</span
@@ -274,7 +274,7 @@
               ></i>
             </div>
             <div class="detalle-title">
-              <strong>{{ item.dispositivo.nombre }}</strong>
+              <strong>{{ item.dispositivo.marca }} {{ item.dispositivo.modelo }}</strong>
               <span
                 class="badge"
                 [ngClass]="getCondicionClass(item.condicionDevolucion)"
@@ -414,7 +414,7 @@
               [ngClass]="getCategoriaIcon(item.dispositivo.categoria)"
             ></i>
             <span class="dispositivo-nombre">{{
-              item.dispositivo.nombre
+              item.dispositivo.marca }} {{ item.dispositivo.modelo
             }}</span>
             <span *ngIf="item.dispositivo.imei" class="dispositivo-imei"
               >(IMEI: {{ item.dispositivo.imei }})</span

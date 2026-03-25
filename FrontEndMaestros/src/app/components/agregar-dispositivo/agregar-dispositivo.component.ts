@@ -129,8 +129,12 @@ export class AgregarDispositivoComponent {
   }
 
   validarFormulario(): boolean {
-    if (!this.dispositivo.nombre?.trim()) {
-      this.errorMessage = 'El nombre es requerido';
+    if (!this.dispositivo.marca?.trim()) {
+      this.errorMessage = 'La marca es requerida';
+      return false;
+    }
+    if (!this.dispositivo.modelo?.trim()) {
+      this.errorMessage = 'El modelo es requerido';
       return false;
     }
     if (!this.dispositivo.categoria) {

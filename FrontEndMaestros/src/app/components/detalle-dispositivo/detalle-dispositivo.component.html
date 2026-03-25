@@ -64,14 +64,7 @@
       </div>
       
       <div class="dispositivo-titulo">
-        <h1 *ngIf="!modoEdicion">{{ dispositivo.nombre }}</h1>
-        <input 
-          *ngIf="modoEdicion" 
-          type="text" 
-          [(ngModel)]="dispositivo.nombre" 
-          class="input-titulo"
-          placeholder="Nombre del dispositivo"
-        />
+        <h1>{{ dispositivo.marca }} {{ dispositivo.modelo }}</h1>
         
         <div class="badges-row">
           <span class="estado-badge" [ngClass]="getEstadoClass(dispositivo.estado)">

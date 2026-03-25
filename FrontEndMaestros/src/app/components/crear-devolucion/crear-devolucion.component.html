@@ -230,7 +230,7 @@
                   class="disp-chip"
                   *ngFor="let disp of dispositivosEntregadosFiltrados"
                   (click)="agregarDispositivo(disp)"
-                  [title]="'Clic para agregar: ' + disp.nombre"
+                  [title]="'Clic para agregar: ' + disp.marca + ' ' + disp.modelo"
                 >
                   <div class="disp-chip-icon-wrapper">
                     <i
@@ -239,10 +239,9 @@
                     ></i>
                   </div>
                   <div class="disp-chip-info">
-                    <span class="disp-chip-name">{{ disp.nombre }}</span>
+                    <span class="disp-chip-name">{{ disp.marca }} {{ disp.modelo }}</span>
                     <span class="disp-chip-detail">
-                      {{ disp.marca }}
-                      <span *ngIf="disp.modelo"> — {{ disp.modelo }}</span>
+                      {{ disp.categoria | titlecase }}
                     </span>
                     <span
                       class="disp-chip-serial"
@@ -317,7 +316,7 @@
                       ></i>
                     </div>
                     <div class="disp-card-title">
-                      <h4>{{ item.dispositivo.nombre }}</h4>
+                      <h4>{{ item.dispositivo.marca }} {{ item.dispositivo.modelo }}</h4>
                       <span
                         >{{ item.dispositivo.marca }}
                         {{ item.dispositivo.modelo }}</span

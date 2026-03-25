@@ -119,7 +119,6 @@
       <thead>
         <tr>
           <th>Categoría</th>
-          <th>Nombre</th>
           <th>Marca / Modelo</th>
           <th>Serial / IMEI</th>
           <th>Cantidad</th>
@@ -137,11 +136,8 @@
               {{ dispositivo.categoria | titlecase }}
             </span>
           </td>
-          <td class="td-nombre">
-            <strong>{{ dispositivo.nombre }}</strong>
-          </td>
           <td class="td-marca">
-            <span *ngIf="dispositivo.marca">{{ dispositivo.marca }}</span>
+            <strong *ngIf="dispositivo.marca">{{ dispositivo.marca }}</strong>
             <span *ngIf="dispositivo.modelo" class="modelo">{{ dispositivo.modelo }}</span>
           </td>
           <td class="td-serial">

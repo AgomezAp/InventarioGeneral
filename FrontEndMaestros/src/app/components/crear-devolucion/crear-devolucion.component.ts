@@ -194,8 +194,7 @@ export class CrearDevolucionComponent implements OnInit, AfterViewInit {
       return;
     }
     
-    this.dispositivosEntregadosFiltrados = this.dispositivosEntregados.filter((d: any) => 
-      d.nombre?.toLowerCase().includes(busqueda) ||
+    this.dispositivosEntregadosFiltrados = this.dispositivosEntregados.filter((d: any) =>
       d.marca?.toLowerCase().includes(busqueda) ||
       d.modelo?.toLowerCase().includes(busqueda) ||
       d.serial?.toLowerCase().includes(busqueda) ||

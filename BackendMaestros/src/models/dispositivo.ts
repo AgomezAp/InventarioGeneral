@@ -39,8 +39,8 @@ Dispositivo.init(
     },
     nombre: {
       type: DataTypes.STRING,
-      allowNull: false,
-      comment: 'Nombre identificador del dispositivo'
+      allowNull: true,
+      comment: 'Auto-generado como marca + modelo'
     },
     categoria: {
       type: DataTypes.STRING,
