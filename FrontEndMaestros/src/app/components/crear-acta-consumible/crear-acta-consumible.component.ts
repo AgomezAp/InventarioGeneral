@@ -22,8 +22,8 @@ interface ArticuloSeleccionado {
   styleUrl: './crear-acta-consumible.component.css'
 })
 export class CrearActaConsumibleComponent implements OnInit {
-  // Tipo de inventario (aseo o papeleria)
-  tipoInventario: 'aseo' | 'papeleria' = 'aseo';
+  // Tipo de inventario (aseo, papeleria o botiquin)
+  tipoInventario: 'aseo' | 'papeleria' | 'botiquin' = 'aseo';
   tituloTipo = 'Aseo';
   iconoTipo = 'fa-broom';
   colorTema = '#00acc1';
@@ -84,7 +84,7 @@ export class CrearActaConsumibleComponent implements OnInit {
     // Obtener tipo de la ruta
     this.route.params.subscribe(params => {
       const tipo = params['tipo'];
-      if (tipo === 'aseo' || tipo === 'papeleria') {
+      if (tipo === 'aseo' || tipo === 'papeleria' || tipo === 'botiquin') {
         this.tipoInventario = tipo;
         this.configurarTipo();
         this.cargarArticulosDisponibles();
@@ -97,10 +97,14 @@ export class CrearActaConsumibleComponent implements OnInit {
       this.tituloTipo = 'Aseo';
       this.iconoTipo = 'fa-broom';
       this.colorTema = '#00acc1';
-    } else {
+    } else if (this.tipoInventario === 'papeleria') {
       this.tituloTipo = 'Papelería';
       this.iconoTipo = 'fa-pen';
       this.colorTema = '#ffa726';
+    } else {
+      this.tituloTipo = 'Botiquín';
+      this.iconoTipo = 'fa-kit-medical';
+      this.colorTema = '#dc3545';
     }
   }
 

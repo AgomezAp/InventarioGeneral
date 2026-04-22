@@ -104,6 +104,14 @@ export const inicializarTiposInventario = async () => {
       icono: 'fa-paperclip',
       color: '#ffc107',
       orden: 4
+    },
+    {
+      nombre: 'Botiquín',
+      codigo: 'botiquin',
+      descripcion: 'Artículos médicos y de primeros auxilios',
+      icono: 'fa-kit-medical',
+      color: '#dc3545',
+      orden: 5
     }
   ];
 

@@ -99,4 +99,21 @@ export class NavbarComponent {
   verActasPapeleria() {
     this.router.navigate(['/actas-papeleria']);
   }
+
+  // ==================== BOTIQUÍN ====================
+  irBotiquin() {
+    this.router.navigate(['/inventario-botiquin']);
+  }
+
+  agregarBotiquin() {
+    this.router.navigate(['/agregar-consumible/botiquin']);
+  }
+
+  crearActaBotiquin() {
+    this.router.navigate(['/crear-acta-consumible/botiquin']);
+  }
+
+  verActasBotiquin() {
+    this.router.navigate(['/actas-botiquin']);
+  }
 }

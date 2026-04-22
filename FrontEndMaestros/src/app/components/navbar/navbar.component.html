@@ -215,6 +215,44 @@
             </ul>
           </li>
 
+          <!-- Dropdown Botiquín -->
+          <li class="nav-item dropdown">
+            <button
+              class="nav-btn nav-btn-firstaid dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i class="fa-solid fa-kit-medical"></i>
+              <span>Botiquín</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-custom">
+              <li class="dropdown-header">Inventario</li>
+              <li>
+                <a class="dropdown-item" (click)="irBotiquin()">
+                  <i class="fa-solid fa-boxes-stacked"></i>Ver Inventario
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="agregarBotiquin()">
+                  <i class="fa-solid fa-plus"></i>Agregar Producto
+                </a>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li class="dropdown-header">Actas de Entrega</li>
+              <li>
+                <a class="dropdown-item" (click)="crearActaBotiquin()">
+                  <i class="fa-solid fa-file-signature"></i>Nueva Acta Entrega
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="verActasBotiquin()">
+                  <i class="fa-solid fa-folder-open"></i>Ver Actas Entrega
+                </a>
+              </li>
+            </ul>
+          </li>
+
           <!-- Separador visual -->
           <li class="nav-divider"></li>
 

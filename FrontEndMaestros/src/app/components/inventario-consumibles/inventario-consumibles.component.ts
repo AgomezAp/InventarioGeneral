@@ -19,7 +19,7 @@ import { NavbarComponent } from '../navbar/navbar.component';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
-  @Input() tipoInventarioCodigo: 'aseo' | 'papeleria' = 'aseo';
+  @Input() tipoInventarioCodigo: 'aseo' | 'papeleria' | 'botiquin' = 'aseo';
   
   tipoInventario: TipoInventario | null = null;
   consumibles: Consumible[] = [];
@@ -44,6 +44,7 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
   // Categorías según tipo
   categoriasAseo = ['limpieza', 'desinfección', 'higiene', 'ambientador', 'otro'];
   categoriasPapeleria = ['escritura', 'archivo', 'impresión', 'adhesivos', 'otro'];
+  categoriasBotiquin = ['medicamentos', 'vendajes', 'antisépticos', 'instrumentos', 'otro'];
 
   // Modal de stock
   mostrarModalStock = false;
@@ -294,19 +295,27 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
   }
 
   get categorias(): string[] {
-    return this.tipoInventarioCodigo === 'aseo' ? this.categoriasAseo : this.categoriasPapeleria;
+    if (this.tipoInventarioCodigo === 'aseo') return this.categoriasAseo;
+    if (this.tipoInventarioCodigo === 'papeleria') return this.categoriasPapeleria;
+    return this.categoriasBotiquin;
   }
 
   get tituloInventario(): string {
-    return this.tipoInventarioCodigo === 'aseo' ? 'Inventario de Aseo' : 'Inventario de Papelería';
+    if (this.tipoInventarioCodigo === 'aseo') return 'Inventario de Aseo';
+    if (this.tipoInventarioCodigo === 'papeleria') return 'Inventario de Papelería';
+    return 'Inventario de Botiquín';
   }
 
   get iconoInventario(): string {
-    return this.tipoInventarioCodigo === 'aseo' ? 'fa-broom' : 'fa-paperclip';
+    if (this.tipoInventarioCodigo === 'aseo') return 'fa-broom';
+    if (this.tipoInventarioCodigo === 'papeleria') return 'fa-paperclip';
+    return 'fa-kit-medical';
   }
 
   get colorPrincipal(): string {
-    return this.tipoInventarioCodigo === 'aseo' ? '#0dcaf0' : '#ffc107';
+    if (this.tipoInventarioCodigo === 'aseo') return '#0dcaf0';
+    if (this.tipoInventarioCodigo === 'papeleria') return '#ffc107';
+    return '#dc3545';
   }
 
   aplicarFiltros(): void {

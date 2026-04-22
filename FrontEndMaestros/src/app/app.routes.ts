@@ -140,6 +140,17 @@ export const routes: Routes = [
     component: ActasConsumiblesComponent,
     data: { tipo: 'papeleria' }
   },
+  // ==================== BOTIQUÍN ====================
+  {
+    path: 'inventario-botiquin',
+    component: InventarioConsumiblesComponent,
+    data: { tipoInventario: 'botiquin' }
+  },
+  {
+    path: 'actas-botiquin',
+    component: ActasConsumiblesComponent,
+    data: { tipo: 'botiquin' }
+  },
   // ==================== CONSUMIBLES GENERALES ====================
   {
     path: 'agregar-consumible/:tipo',

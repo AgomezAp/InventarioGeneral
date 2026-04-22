@@ -286,6 +286,26 @@
   color: var(--color-primary);
 }
 
+/* Botiquín - Rojo médico sutil */
+.nav-btn-firstaid {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-color: rgba(220, 53, 69, 0.2);
+}
+
+.nav-btn-firstaid:hover {
+  background-color: var(--color-secondary);
+  border-color: var(--color-secondary);
+  color: var(--color-primary);
+}
+
+.nav-btn-firstaid i {
+  color: #e57373;
+}
+
+.nav-btn-firstaid:hover i {
+  color: var(--color-primary);
+}
+
 /* Logout - Rojo sutil */
 .nav-btn-logout {
   background-color: transparent;

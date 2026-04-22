@@ -23,7 +23,7 @@ import Swal from 'sweetalert2';
 export class AgregarConsumibleComponent implements OnInit {
   consumibleForm!: FormGroup;
   loading = false;
-  tipoInventario: 'aseo' | 'papeleria' = 'aseo';
+  tipoInventario: 'aseo' | 'papeleria' | 'botiquin' = 'aseo';
 
   // Configuración según tipo
   tituloTipo = 'Aseo';
@@ -59,6 +59,17 @@ export class AgregarConsumibleComponent implements OnInit {
     'Otro',
   ];
 
+  categoriasBotiquin = [
+    'Medicamentos',
+    'Vendajes y Apósitos',
+    'Antisépticos y Desinfectantes',
+    'Instrumentos Médicos',
+    'Protección Personal',
+    'Termómetros y Diagnóstico',
+    'Sueros y Soluciones',
+    'Otro',
+  ];
+
   categorias: string[] = [];
 
   // Unidades de medida
@@ -85,7 +96,7 @@ export class AgregarConsumibleComponent implements OnInit {
     // Obtener tipo de la ruta
     this.route.params.subscribe((params) => {
       const tipo = params['tipo'];
-      if (tipo === 'aseo' || tipo === 'papeleria') {
+      if (tipo === 'aseo' || tipo === 'papeleria' || tipo === 'botiquin') {
         this.tipoInventario = tipo;
         this.configurarTipo();
       }
@@ -100,11 +111,16 @@ export class AgregarConsumibleComponent implements OnInit {
       this.iconoTipo = 'fa-broom';
       this.colorTema = '#00acc1';
       this.categorias = this.categoriasAseo;
-    } else {
+    } else if (this.tipoInventario === 'papeleria') {
       this.tituloTipo = 'Papelería';
       this.iconoTipo = 'fa-pen';
       this.colorTema = '#ffa726';
       this.categorias = this.categoriasPapeleria;
+    } else {
+      this.tituloTipo = 'Botiquín';
+      this.iconoTipo = 'fa-kit-medical';
+      this.colorTema = '#dc3545';
+      this.categorias = this.categoriasBotiquin;
     }
   }
 
