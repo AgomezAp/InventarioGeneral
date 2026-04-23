@@ -4,11 +4,11 @@
 ======================================== */
 
 .crear-acta-container {
-  height: 100vh;
+  min-height: 100vh;
   background-color: var(--bg-secondary);
   padding: var(--spacing-md);
   font-family: var(--font-family);
-  overflow: hidden; /* SIN SCROLL EN EL CONTENEDOR */
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
@@ -17,10 +17,8 @@
   max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 /* ========================================
@@ -164,11 +162,8 @@
    FORMULARIO - OCUPA EL RESTO
 ======================================== */
 .form-content {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  min-height: 0; /* Importante para que flex funcione con overflow */
 }
 
 /* ========================================
@@ -178,27 +173,20 @@
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
   gap: var(--spacing-md);
-  flex: 1;
-  min-height: 0; /* Importante para que el grid respete el overflow */
-  overflow: hidden;
 }
 
 .form-column {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  min-height: 0;
-  overflow: hidden;
 }
 
-/* Columna izquierda - con scroll interno en dispositivos */
+/* Columna izquierda */
 .form-column:first-child {
-  overflow: hidden;
 }
 
-/* Columna derecha - sin scroll, altura auto */
+/* Columna derecha */
 .form-column:last-child {
-  overflow-y: auto;
 }
 
 /* ========================================
@@ -281,11 +269,8 @@
    SECCIÓN DISPOSITIVOS - CON SCROLL
 ======================================== */
 .section-devices {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .section-devices .section-header-inline {
@@ -293,15 +278,11 @@
 }
 
 .section-devices > .disponibles-area {
-  flex-shrink: 0;
 }
 
 .section-devices > .seleccionados-area {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 /* ========================================
@@ -488,7 +469,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  max-height: 220px;
+  max-height: 380px;
   overflow-y: auto;
   padding: var(--spacing-sm);
   background: var(--bg-secondary);
@@ -498,7 +479,7 @@
 
 /* Reduce available list height when devices are selected */
 .disponibles-scroll.compacta {
-  max-height: 120px;
+  max-height: 220px;
 }
 
 .disp-chip {
@@ -735,9 +716,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  max-height: 600px;
   overflow-y: auto;
-  flex: 1;
-  min-height: 0;
   padding-right: var(--spacing-xs);
 }
 
@@ -1364,28 +1344,24 @@
    SCROLLBAR PERSONALIZADO
 ======================================== */
 .disponibles-scroll::-webkit-scrollbar,
-.seleccionados-list::-webkit-scrollbar,
-.form-column:last-child::-webkit-scrollbar {
+.seleccionados-list::-webkit-scrollbar {
   width: 6px;
 }
 
 .disponibles-scroll::-webkit-scrollbar-track,
-.seleccionados-list::-webkit-scrollbar-track,
-.form-column:last-child::-webkit-scrollbar-track {
+.seleccionados-list::-webkit-scrollbar-track {
   background: var(--bg-secondary);
   border-radius: var(--border-radius-full);
 }
 
 .disponibles-scroll::-webkit-scrollbar-thumb,
-.seleccionados-list::-webkit-scrollbar-thumb,
-.form-column:last-child::-webkit-scrollbar-thumb {
+.seleccionados-list::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: var(--border-radius-full);
 }
 
 .disponibles-scroll::-webkit-scrollbar-thumb:hover,
-.seleccionados-list::-webkit-scrollbar-thumb:hover,
-.form-column:last-child::-webkit-scrollbar-thumb:hover {
+.seleccionados-list::-webkit-scrollbar-thumb:hover {
   background: var(--color-secondary);
 }
 
@@ -1436,38 +1412,12 @@ body.dark-mode .btn.btn-secondary.btn-compact {
    RESPONSIVE
 ======================================== */
 @media (max-width: 900px) {
-  .crear-acta-container {
-    height: auto;
-    min-height: 100vh;
-    overflow: auto;
-  }
-
-  .form-wrapper {
-    height: auto;
-    overflow: visible;
-  }
-
-  .form-content {
-    overflow: visible;
-  }
-
   .form-grid-main {
     grid-template-columns: 1fr;
-    overflow: visible;
-  }
-
-  .form-column {
-    overflow: visible;
-  }
-
-  .section-devices {
-    max-height: none;
-    overflow: visible;
   }
 
   .seleccionados-list {
     max-height: 500px;
-    overflow-y: auto;
   }
 }
 

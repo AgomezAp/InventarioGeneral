@@ -23,7 +23,7 @@ import Swal from 'sweetalert2';
 export class AgregarConsumibleComponent implements OnInit {
   consumibleForm!: FormGroup;
   loading = false;
-  tipoInventario: 'aseo' | 'papeleria' | 'botiquin' | 'desechables' = 'aseo';
+  tipoInventario: 'aseo' | 'papeleria' | 'botiquin' | 'desechables' | 'dotacion' = 'aseo';
 
   // Configuración según tipo
   tituloTipo = 'Aseo';
@@ -82,6 +82,18 @@ export class AgregarConsumibleComponent implements OnInit {
     'Otro',
   ];
 
+  categoriasDotacion = [
+    'Camisas y Camisetas',
+    'Pantalones',
+    'Chaquetas y Chalecos',
+    'Calzado',
+    'Implementos de Seguridad',
+    'Gorras y Cascos',
+    'Guantes de Trabajo',
+    'Overoles',
+    'Otro',
+  ];
+
   categorias: string[] = [];
 
   // Unidades de medida
@@ -108,7 +120,7 @@ export class AgregarConsumibleComponent implements OnInit {
     // Obtener tipo de la ruta
     this.route.params.subscribe((params) => {
       const tipo = params['tipo'];
-      if (tipo === 'aseo' || tipo === 'papeleria' || tipo === 'botiquin' || tipo === 'desechables') {
+      if (tipo === 'aseo' || tipo === 'papeleria' || tipo === 'botiquin' || tipo === 'desechables' || tipo === 'dotacion') {
         this.tipoInventario = tipo;
         this.configurarTipo();
       }
@@ -133,11 +145,16 @@ export class AgregarConsumibleComponent implements OnInit {
       this.iconoTipo = 'fa-kit-medical';
       this.colorTema = '#dc3545';
       this.categorias = this.categoriasBotiquin;
-    } else {
+    } else if (this.tipoInventario === 'desechables') {
       this.tituloTipo = 'Desechables';
       this.iconoTipo = 'fa-trash-can';
       this.colorTema = '#6f42c1';
       this.categorias = this.categoriasDesechables;
+    } else {
+      this.tituloTipo = 'Dotación';
+      this.iconoTipo = 'fa-shirt';
+      this.colorTema = '#20c997';
+      this.categorias = this.categoriasDotacion;
     }
   }
 

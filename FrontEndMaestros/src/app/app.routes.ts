@@ -162,6 +162,17 @@ export const routes: Routes = [
     component: ActasConsumiblesComponent,
     data: { tipo: 'desechables' }
   },
+  // ==================== DOTACIÓN ====================
+  {
+    path: 'inventario-dotacion',
+    component: InventarioConsumiblesComponent,
+    data: { tipoInventario: 'dotacion' }
+  },
+  {
+    path: 'actas-dotacion',
+    component: ActasConsumiblesComponent,
+    data: { tipo: 'dotacion' }
+  },
   // ==================== CONSUMIBLES GENERALES ====================
   {
     path: 'agregar-consumible/:tipo',

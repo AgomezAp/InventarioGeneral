@@ -120,6 +120,14 @@ export const inicializarTiposInventario = async () => {
       icono: 'fa-trash-can',
       color: '#6f42c1',
       orden: 6
+    },
+    {
+      nombre: 'Dotación',
+      codigo: 'dotacion',
+      descripcion: 'Ropa de trabajo y elementos de dotación: camisas, pantalones, calzado, overoles, etc.',
+      icono: 'fa-shirt',
+      color: '#20c997',
+      orden: 7
     }
   ];
 

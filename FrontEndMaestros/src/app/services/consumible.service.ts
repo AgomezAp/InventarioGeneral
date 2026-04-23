@@ -48,7 +48,7 @@ export class ConsumibleService {
   /**
    * Obtener consumibles por tipo de inventario (aseo o papeleria)
    */
-  obtenerConsumiblesPorTipo(codigo: 'aseo' | 'papeleria' | 'botiquin' | 'desechables', filtros?: {
+  obtenerConsumiblesPorTipo(codigo: 'aseo' | 'papeleria' | 'botiquin' | 'desechables' | 'dotacion', filtros?: {
     categoria?: string;
     stockBajo?: boolean;
     busqueda?: string;

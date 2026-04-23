@@ -133,4 +133,21 @@ export class NavbarComponent {
   verActasDesechables() {
     this.router.navigate(['/actas-desechables']);
   }
+
+  // ==================== DOTACIÓN ====================
+  irDotacion() {
+    this.router.navigate(['/inventario-dotacion']);
+  }
+
+  agregarDotacion() {
+    this.router.navigate(['/agregar-consumible/dotacion']);
+  }
+
+  crearActaDotacion() {
+    this.router.navigate(['/crear-acta-consumible/dotacion']);
+  }
+
+  verActasDotacion() {
+    this.router.navigate(['/actas-dotacion']);
+  }
 }

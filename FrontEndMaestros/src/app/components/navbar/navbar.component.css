@@ -326,6 +326,26 @@
   color: var(--color-primary);
 }
 
+/* Dotación - Verde-teal sutil */
+.nav-btn-dotacion {
+  background-color: rgba(32, 201, 151, 0.1);
+  border-color: rgba(32, 201, 151, 0.2);
+}
+
+.nav-btn-dotacion:hover {
+  background-color: var(--color-secondary);
+  border-color: var(--color-secondary);
+  color: var(--color-primary);
+}
+
+.nav-btn-dotacion i {
+  color: #63e6be;
+}
+
+.nav-btn-dotacion:hover i {
+  color: var(--color-primary);
+}
+
 /* Logout - Rojo sutil */
 .nav-btn-logout {
   background-color: transparent;
@@ -598,6 +618,9 @@
   }
   .navbar-nav .nav-item:nth-child(9) {
     animation-delay: 0.45s;
+  }
+  .navbar-nav .nav-item:nth-child(10) {
+    animation-delay: 0.5s;
   }
 
   @keyframes navItemFadeIn {
