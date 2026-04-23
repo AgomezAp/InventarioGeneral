@@ -19,7 +19,7 @@ import { NavbarComponent } from '../navbar/navbar.component';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
-  @Input() tipoInventarioCodigo: 'aseo' | 'papeleria' | 'botiquin' = 'aseo';
+  @Input() tipoInventarioCodigo: 'aseo' | 'papeleria' | 'botiquin' | 'desechables' = 'aseo';
   
   tipoInventario: TipoInventario | null = null;
   consumibles: Consumible[] = [];
@@ -45,6 +45,7 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
   categoriasAseo = ['limpieza', 'desinfección', 'higiene', 'ambientador', 'otro'];
   categoriasPapeleria = ['escritura', 'archivo', 'impresión', 'adhesivos', 'otro'];
   categoriasBotiquin = ['medicamentos', 'vendajes', 'antisépticos', 'instrumentos', 'otro'];
+  categoriasDesechables = ['vasos y platos', 'cubiertos', 'bolsas', 'servilletas', 'guantes', 'tapabocas', 'otro'];
 
   // Modal de stock
   mostrarModalStock = false;
@@ -297,25 +298,29 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
   get categorias(): string[] {
     if (this.tipoInventarioCodigo === 'aseo') return this.categoriasAseo;
     if (this.tipoInventarioCodigo === 'papeleria') return this.categoriasPapeleria;
-    return this.categoriasBotiquin;
+    if (this.tipoInventarioCodigo === 'botiquin') return this.categoriasBotiquin;
+    return this.categoriasDesechables;
   }
 
   get tituloInventario(): string {
     if (this.tipoInventarioCodigo === 'aseo') return 'Inventario de Aseo';
     if (this.tipoInventarioCodigo === 'papeleria') return 'Inventario de Papelería';
-    return 'Inventario de Botiquín';
+    if (this.tipoInventarioCodigo === 'botiquin') return 'Inventario de Botiquín';
+    return 'Inventario de Desechables';
   }
 
   get iconoInventario(): string {
     if (this.tipoInventarioCodigo === 'aseo') return 'fa-broom';
     if (this.tipoInventarioCodigo === 'papeleria') return 'fa-paperclip';
-    return 'fa-kit-medical';
+    if (this.tipoInventarioCodigo === 'botiquin') return 'fa-kit-medical';
+    return 'fa-trash-can';
   }
 
   get colorPrincipal(): string {
     if (this.tipoInventarioCodigo === 'aseo') return '#0dcaf0';
     if (this.tipoInventarioCodigo === 'papeleria') return '#ffc107';
-    return '#dc3545';
+    if (this.tipoInventarioCodigo === 'botiquin') return '#dc3545';
+    return '#6f42c1';
   }
 
   aplicarFiltros(): void {

@@ -253,6 +253,44 @@
             </ul>
           </li>
 
+          <!-- Dropdown Desechables -->
+          <li class="nav-item dropdown">
+            <button
+              class="nav-btn nav-btn-disposable dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i class="fa-solid fa-trash-can"></i>
+              <span>Desechables</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-custom">
+              <li class="dropdown-header">Inventario</li>
+              <li>
+                <a class="dropdown-item" (click)="irDesechables()">
+                  <i class="fa-solid fa-boxes-stacked"></i>Ver Inventario
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="agregarDesechable()">
+                  <i class="fa-solid fa-plus"></i>Agregar Producto
+                </a>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li class="dropdown-header">Actas de Entrega</li>
+              <li>
+                <a class="dropdown-item" (click)="crearActaDesechables()">
+                  <i class="fa-solid fa-file-signature"></i>Nueva Acta Entrega
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="verActasDesechables()">
+                  <i class="fa-solid fa-folder-open"></i>Ver Actas Entrega
+                </a>
+              </li>
+            </ul>
+          </li>
+
           <!-- Separador visual -->
           <li class="nav-divider"></li>
 

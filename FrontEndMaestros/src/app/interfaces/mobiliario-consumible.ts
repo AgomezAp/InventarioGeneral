@@ -159,7 +159,7 @@ export interface ConsumibleRequest {
 // Crear Consumible (usado en formulario)
 export interface CrearConsumibleRequest {
   nombre: string;
-  tipoInventarioCodigo: 'aseo' | 'papeleria' | 'botiquin';
+  tipoInventarioCodigo: 'aseo' | 'papeleria' | 'botiquin' | 'desechables';
   categoria?: string;
   descripcion?: string;
   unidadMedida: string;

@@ -112,6 +112,14 @@ export const inicializarTiposInventario = async () => {
       icono: 'fa-kit-medical',
       color: '#dc3545',
       orden: 5
+    },
+    {
+      nombre: 'Desechables',
+      codigo: 'desechables',
+      descripcion: 'Productos de un solo uso: vasos, platos, cubiertos, bolsas, guantes, etc.',
+      icono: 'fa-trash-can',
+      color: '#6f42c1',
+      orden: 6
     }
   ];
 

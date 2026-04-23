@@ -116,4 +116,21 @@ export class NavbarComponent {
   verActasBotiquin() {
     this.router.navigate(['/actas-botiquin']);
   }
+
+  // ==================== DESECHABLES ====================
+  irDesechables() {
+    this.router.navigate(['/inventario-desechables']);
+  }
+
+  agregarDesechable() {
+    this.router.navigate(['/agregar-consumible/desechables']);
+  }
+
+  crearActaDesechables() {
+    this.router.navigate(['/crear-acta-consumible/desechables']);
+  }
+
+  verActasDesechables() {
+    this.router.navigate(['/actas-desechables']);
+  }
 }

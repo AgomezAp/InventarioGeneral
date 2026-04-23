@@ -23,7 +23,7 @@ import Swal from 'sweetalert2';
 export class AgregarConsumibleComponent implements OnInit {
   consumibleForm!: FormGroup;
   loading = false;
-  tipoInventario: 'aseo' | 'papeleria' | 'botiquin' = 'aseo';
+  tipoInventario: 'aseo' | 'papeleria' | 'botiquin' | 'desechables' = 'aseo';
 
   // Configuración según tipo
   tituloTipo = 'Aseo';
@@ -70,6 +70,18 @@ export class AgregarConsumibleComponent implements OnInit {
     'Otro',
   ];
 
+  categoriasDesechables = [
+    'Vasos y Platos',
+    'Cubiertos',
+    'Bolsas y Envolturas',
+    'Servilletas',
+    'Cajas y Bandejas',
+    'Pajillas',
+    'Guantes Desechables',
+    'Tapabocas',
+    'Otro',
+  ];
+
   categorias: string[] = [];
 
   // Unidades de medida
@@ -96,7 +108,7 @@ export class AgregarConsumibleComponent implements OnInit {
     // Obtener tipo de la ruta
     this.route.params.subscribe((params) => {
       const tipo = params['tipo'];
-      if (tipo === 'aseo' || tipo === 'papeleria' || tipo === 'botiquin') {
+      if (tipo === 'aseo' || tipo === 'papeleria' || tipo === 'botiquin' || tipo === 'desechables') {
         this.tipoInventario = tipo;
         this.configurarTipo();
       }
@@ -116,11 +128,16 @@ export class AgregarConsumibleComponent implements OnInit {
       this.iconoTipo = 'fa-pen';
       this.colorTema = '#ffa726';
       this.categorias = this.categoriasPapeleria;
-    } else {
+    } else if (this.tipoInventario === 'botiquin') {
       this.tituloTipo = 'Botiquín';
       this.iconoTipo = 'fa-kit-medical';
       this.colorTema = '#dc3545';
       this.categorias = this.categoriasBotiquin;
+    } else {
+      this.tituloTipo = 'Desechables';
+      this.iconoTipo = 'fa-trash-can';
+      this.colorTema = '#6f42c1';
+      this.categorias = this.categoriasDesechables;
     }
   }
 

@@ -151,6 +151,17 @@ export const routes: Routes = [
     component: ActasConsumiblesComponent,
     data: { tipo: 'botiquin' }
   },
+  // ==================== DESECHABLES ====================
+  {
+    path: 'inventario-desechables',
+    component: InventarioConsumiblesComponent,
+    data: { tipoInventario: 'desechables' }
+  },
+  {
+    path: 'actas-desechables',
+    component: ActasConsumiblesComponent,
+    data: { tipo: 'desechables' }
+  },
   // ==================== CONSUMIBLES GENERALES ====================
   {
     path: 'agregar-consumible/:tipo',

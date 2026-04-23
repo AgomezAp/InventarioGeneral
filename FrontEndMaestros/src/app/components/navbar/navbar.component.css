@@ -306,6 +306,26 @@
   color: var(--color-primary);
 }
 
+/* Desechables - Morado sutil */
+.nav-btn-disposable {
+  background-color: rgba(111, 66, 193, 0.1);
+  border-color: rgba(111, 66, 193, 0.2);
+}
+
+.nav-btn-disposable:hover {
+  background-color: var(--color-secondary);
+  border-color: var(--color-secondary);
+  color: var(--color-primary);
+}
+
+.nav-btn-disposable i {
+  color: #b085f5;
+}
+
+.nav-btn-disposable:hover i {
+  color: var(--color-primary);
+}
+
 /* Logout - Rojo sutil */
 .nav-btn-logout {
   background-color: transparent;
@@ -572,6 +592,12 @@
   }
   .navbar-nav .nav-item:nth-child(7) {
     animation-delay: 0.35s;
+  }
+  .navbar-nav .nav-item:nth-child(8) {
+    animation-delay: 0.4s;
+  }
+  .navbar-nav .nav-item:nth-child(9) {
+    animation-delay: 0.45s;
   }
 
   @keyframes navItemFadeIn {
