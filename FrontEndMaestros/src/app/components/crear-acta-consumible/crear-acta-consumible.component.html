@@ -1,385 +1,471 @@
 <app-navbar></app-navbar>
 
-<div
-  class="crear-acta-container"
-  [class.aseo]="tipoInventario === 'aseo'"
-  [class.papeleria]="tipoInventario === 'papeleria'"
->
+<div class="crear-acta-container">
   <div class="form-wrapper">
-    <!-- Header Negro -->
+    <!-- ═══ HEADER DE PÁGINA ═══ -->
     <header class="page-header">
-      <div class="header-content">
-        <button class="btn-back" (click)="cancelar()" aria-label="Volver">
+      <div class="page-header__left">
+        <button
+          class="page-header__back"
+          (click)="cancelar()"
+          aria-label="Volver"
+        >
           <i class="pi pi-arrow-left"></i>
         </button>
-        <div class="header-info">
-          <h1>
-            <i class="pi pi-file-edit"></i>
-            Acta de Entrega - {{ tituloTipo }}
-          </h1>
+        <div class="page-header__icon">
+          <i class="pi pi-file-edit"></i>
         </div>
-        <div class="header-badge" [ngClass]="'badge-' + tipoInventario">
-          <i class="pi" [ngClass]="iconoTipo"></i>
+        <div class="page-header__text">
+          <h1 class="page-header__title">Acta de Entrega - {{ tituloTipo }}</h1>
+          <p class="page-header__subtitle">
+            Registro de entrega de artículos de inventario
+          </p>
+        </div>
+      </div>
+      <div class="page-header__right">
+        <div
+          class="page-header__badge"
+          [ngClass]="'page-header__badge--' + tipoInventario"
+        >
+          <i class="fa-solid" [ngClass]="iconoTipo"></i>
           <span>{{ tipoInventario | titlecase }}</span>
         </div>
-        <div class="header-progress">
+        <div class="page-header__steps">
           <span
-            class="progress-dot"
-            [class.completed]="receptor.nombre && receptor.correo"
-          ></span>
+            class="page-header__step"
+            [class.page-header__step--done]="receptor.nombre && receptor.correo"
+          >
+            <i class="pi pi-user"></i>
+          </span>
           <span
-            class="progress-dot"
-            [class.completed]="articulosSeleccionados.length > 0"
-          ></span>
-          <span
-            class="progress-dot"
-            [class.completed]="
-              articulosSeleccionados.length > 0 && receptor.nombre
+            class="page-header__step-line"
+            [class.page-header__step-line--done]="
+              receptor.nombre && receptor.correo
             "
           ></span>
+          <span
+            class="page-header__step"
+            [class.page-header__step--done]="articulosSeleccionados.length > 0"
+          >
+            <i class="pi pi-box"></i>
+          </span>
+          <span
+            class="page-header__step-line"
+            [class.page-header__step-line--done]="
+              articulosSeleccionados.length > 0
+            "
+          ></span>
+          <span
+            class="page-header__step"
+            [class.page-header__step--done]="
+              articulosSeleccionados.length > 0 && receptor.nombre
+            "
+          >
+            <i class="pi pi-send"></i>
+          </span>
         </div>
       </div>
     </header>
 
-    <!-- Alertas -->
-    <div class="alert alert-error" *ngIf="errorMessage">
+    <!-- ═══ ALERTAS ═══ -->
+    <div
+      class="alert alert--danger"
+      *ngIf="errorMessage"
+      style="animation-delay: 0.03s"
+    >
       <i class="pi pi-exclamation-circle"></i>
       <span>{{ errorMessage }}</span>
-      <button class="alert-close" (click)="errorMessage = ''">
+      <button class="alert__close" (click)="errorMessage = ''">
         <i class="pi pi-times"></i>
       </button>
     </div>
 
-    <div class="alert alert-success" *ngIf="successMessage">
+    <div
+      class="alert alert--success"
+      *ngIf="successMessage"
+      style="animation-delay: 0.03s"
+    >
       <i class="pi pi-check-circle"></i>
       <span>{{ successMessage }}</span>
-      <button class="alert-close" (click)="successMessage = ''">
+      <button class="alert__close" (click)="successMessage = ''">
         <i class="pi pi-times"></i>
       </button>
     </div>
 
-    <form (ngSubmit)="crearActa()" class="form-content">
-      <div class="form-grid-main">
-        <!-- COLUMNA IZQUIERDA -->
-        <div class="form-column">
-          <!-- Datos del receptor -->
-          <section class="section-card section-compact">
-            <div class="section-header-inline">
-              <i class="pi pi-user section-icon-sm"></i>
-              <h3>Datos del receptor</h3>
+    <!-- ═══ FORM CONTENT ═══ -->
+    <form (ngSubmit)="crearActa()" class="form-main">
+      <div class="form-layout">
+        <!-- ══ COLUMNA IZQUIERDA ══ -->
+        <div class="form-col form-col--left">
+          <!-- Card: Datos del Receptor -->
+          <div class="card" style="animation-delay: 0.06s">
+            <div class="card__head">
+              <i class="pi pi-user"></i>
+              <h3 class="card__title">Datos del receptor</h3>
             </div>
-
-            <div class="form-row-compact">
-              <div class="form-group-compact">
-                <label for="nombre"
-                  >Nombre <span class="required">*</span></label
-                >
-                <input
-                  type="text"
-                  id="nombre"
-                  [(ngModel)]="receptor.nombre"
-                  name="nombre"
-                  placeholder="Nombre completo"
-                  class="input-compact"
-                  required
-                />
-              </div>
-              <div class="form-group-compact">
-                <label for="cargo">Cargo <span class="required">*</span></label>
-                <input
-                  type="text"
-                  id="cargo"
-                  [(ngModel)]="receptor.cargo"
-                  name="cargo"
-                  placeholder="Cargo o posición"
-                  class="input-compact"
-                  required
-                />
-              </div>
-            </div>
-
-            <div class="form-row-compact">
-              <div class="form-group-compact">
-                <label for="area">Área</label>
-                <div class="select-wrapper">
-                  <select
-                    id="area"
-                    [(ngModel)]="receptor.area"
-                    name="area"
-                    class="select-compact"
+            <div class="card__body">
+              <div class="field-row">
+                <div class="form-field">
+                  <label class="form-field__label" for="nombre"
+                    >Nombre <span class="form-field__req">*</span></label
                   >
-                    <option value="">Seleccione...</option>
-                    <option *ngFor="let a of areas" [value]="a">{{ a }}</option>
-                  </select>
-                  <i class="pi pi-chevron-down"></i>
+                  <input
+                    class="form-field__input"
+                    type="text"
+                    id="nombre"
+                    [(ngModel)]="receptor.nombre"
+                    name="nombre"
+                    placeholder="Nombre completo"
+                    required
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="form-field__label" for="cargo"
+                    >Cargo <span class="form-field__req">*</span></label
+                  >
+                  <input
+                    class="form-field__input"
+                    type="text"
+                    id="cargo"
+                    [(ngModel)]="receptor.cargo"
+                    name="cargo"
+                    placeholder="Cargo o posición"
+                    required
+                  />
                 </div>
               </div>
-              <div class="form-group-compact">
-                <label for="correo"
-                  >Correo <span class="required">*</span></label
+
+              <div class="field-row">
+                <div class="form-field">
+                  <label class="form-field__label" for="area">Área</label>
+                  <div class="form-field__select-wrap">
+                    <select
+                      class="form-field__select"
+                      id="area"
+                      [(ngModel)]="receptor.area"
+                      name="area"
+                    >
+                      <option value="">Seleccione...</option>
+                      <option *ngFor="let a of areas" [value]="a">
+                        {{ a }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-field">
+                  <label class="form-field__label" for="correo"
+                    >Correo <span class="form-field__req">*</span></label
+                  >
+                  <input
+                    class="form-field__input"
+                    type="email"
+                    id="correo"
+                    [(ngModel)]="receptor.correo"
+                    name="correo"
+                    placeholder="correo&#64;ejemplo.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="field-hint">
+                <i class="pi pi-info-circle"></i>
+                <span
+                  >El receptor recibirá un enlace para firmar digitalmente</span
                 >
-                <input
-                  type="email"
-                  id="correo"
-                  [(ngModel)]="receptor.correo"
-                  name="correo"
-                  placeholder="correo@ejemplo.com"
-                  class="input-compact"
-                  required
-                />
               </div>
             </div>
+          </div>
 
-            <div class="field-hint">
-              <i class="pi pi-info-circle"></i>
-              <span
-                >El receptor recibirá un enlace para firmar digitalmente</span
-              >
+          <!-- Card: Observaciones -->
+          <div class="card" style="animation-delay: 0.09s">
+            <div class="card__head">
+              <i class="pi pi-comment"></i>
+              <h3 class="card__title">Observaciones</h3>
             </div>
-          </section>
-
-          <!-- Observaciones -->
-          <section class="section-card section-compact">
-            <div class="section-header-inline">
-              <i class="pi pi-comment section-icon-sm"></i>
-              <h3>Observaciones</h3>
+            <div class="card__body">
+              <div class="form-field">
+                <textarea
+                  class="form-field__textarea"
+                  id="observaciones"
+                  [(ngModel)]="observacionesEntrega"
+                  name="observaciones"
+                  rows="3"
+                  placeholder="Notas adicionales sobre la entrega..."
+                ></textarea>
+              </div>
             </div>
-            <textarea
-              id="observaciones"
-              [(ngModel)]="observacionesEntrega"
-              name="observaciones"
-              rows="3"
-              placeholder="Notas adicionales sobre la entrega..."
-              class="textarea-compact"
-            ></textarea>
-          </section>
-
+          </div>
         </div>
 
-        <!-- COLUMNA DERECHA -->
-        <div class="form-column column-articulos">
-          <section class="section-card section-compact section-articulos">
-            <div class="section-header-inline">
-              <i class="pi pi-box section-icon-sm tipo"></i>
-              <h3>Artículos a entregar</h3>
+        <!-- ══ COLUMNA DERECHA ══ -->
+        <div class="form-col form-col--right">
+          <!-- Card: Artículos -->
+          <div class="card card--sticky" style="animation-delay: 0.12s">
+            <div class="card__head">
+              <i class="pi pi-box"></i>
+              <h3 class="card__title">Artículos a entregar</h3>
               <span
-                class="badge-count"
+                class="card__badge"
                 *ngIf="articulosSeleccionados.length > 0"
+                >{{ getTotalArticulos() }}</span
               >
-                {{ getTotalArticulos() }}
-              </span>
             </div>
+            <div class="card__body card__body--no-pad">
+              <!-- Disponibles -->
+              <div class="available-section">
+                <div class="available-section__header">
+                  <span class="available-section__label">Disponibles</span>
+                </div>
 
-            <!-- Disponibles -->
-            <div class="disponibles-area">
-              <label class="mini-label">Disponibles:</label>
+                <!-- Buscador -->
+                <div class="search-bar">
+                  <i class="pi pi-search search-bar__icon"></i>
+                  <input
+                    class="search-bar__input"
+                    type="text"
+                    [(ngModel)]="busquedaArticulo"
+                    (input)="filtrarArticulos()"
+                    placeholder="Buscar por nombre, categoría..."
+                    name="busquedaArticulo"
+                  />
+                  <button
+                    type="button"
+                    class="search-bar__clear"
+                    *ngIf="busquedaArticulo"
+                    (click)="busquedaArticulo = ''; filtrarArticulos()"
+                  >
+                    <i class="pi pi-times"></i>
+                  </button>            
+                </div>
 
-              <!-- Buscador de artículos -->
-              <div class="buscador-dispositivos">
-                <i class="pi pi-search"></i>
-                <input
-                  type="text"
-                  [(ngModel)]="busquedaArticulo"
-                  (input)="filtrarArticulos()"
-                  placeholder="Buscar por nombre, categoría..."
-                  class="input-busqueda"
-                  name="busquedaArticulo"
-                />
-                <button
-                  type="button"
-                  class="btn-limpiar-busqueda"
-                  *ngIf="busquedaArticulo"
-                  (click)="busquedaArticulo = ''; filtrarArticulos()"
-                >
-                  <i class="pi pi-times"></i>
-                </button>
-              </div>
+                <!-- Loading -->
+                <div class="loading-inline" *ngIf="loadingArticulos">
+                  <div class="loading-inline__spinner"></div>
+                  <span class="loading-inline__text">Cargando...</span>
+                </div>
 
-              <div class="loading-inline" *ngIf="loadingArticulos">
-                <div class="spinner-sm"></div>
-                <span>Cargando...</span>
-              </div>
-
-              <div
-                class="disponibles-scroll"
-                *ngIf="!loadingArticulos && articulosFiltrados.length > 0"
-              >
+                <!-- Lista disponibles -->
                 <div
-                  class="art-chip-wrapper"
-                  *ngFor="let art of articulosFiltrados"
+                  class="available-list"
+                  [class.available-list--compact]="
+                    articulosSeleccionados.length > 0
+                  "
+                  *ngIf="!loadingArticulos && articulosFiltrados.length > 0"
                 >
                   <div
-                    class="art-chip"
-                    (click)="agregarArticulo(art)"
-                    tabindex="0"
+                    class="available-item-wrap"
+                    *ngFor="let art of articulosFiltrados"
                   >
-                    <i class="pi" [ngClass]="getCategoriaIcon(art.categoria)"></i>
-                    <div class="art-chip-info">
-                      <span class="art-chip-name">{{ art.nombre }}</span>
-                      <span class="art-chip-stock"
-                        >{{ art.stockActual }} disp.</span
+                    <div
+                      class="available-item"
+                      (click)="agregarArticulo(art)"
+                      tabindex="0"
+                    >
+                      <div class="available-item__icon">
+                        <i
+                          class="fa-solid"
+                          [ngClass]="getCategoriaIcon(art.categoria)"
+                        ></i>
+                      </div>
+                      <div class="available-item__info">
+                        <span class="available-item__name">{{
+                          art.nombre
+                        }}</span>
+                        <span class="available-item__meta"
+                          >{{ art.stockActual }} disp.</span
+                        >
+                      </div>
+                      <button
+                        type="button"
+                        class="available-item__desc-btn"
+                        *ngIf="art.descripcion"
+                        (click)="
+                          toggleDescripcion(art.id!); $event.stopPropagation()
+                        "
+                        title="Ver descripción"
                       >
+                        <i class="pi pi-info-circle"></i>
+                      </button>
+                      <div class="available-item__add">
+                        <i class="pi pi-plus"></i>
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      class="btn-info-desc"
-                      *ngIf="art.descripcion"
-                      (click)="toggleDescripcion(art.id!); $event.stopPropagation()"
-                      title="Ver descripción"
+                    <div
+                      class="available-item__desc-panel"
+                      *ngIf="descripcionExpandida.has(art.id!)"
+                    >
+                      <p>{{ art.descripcion }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Empty search -->
+                <div
+                  class="empty-mini"
+                  *ngIf="
+                    !loadingArticulos &&
+                    articulosFiltrados.length === 0 &&
+                    busquedaArticulo
+                  "
+                >
+                  <i class="pi pi-search"></i>
+                  <span
+                    >No se encontraron artículos con "{{
+                      busquedaArticulo
+                    }}"</span
+                  >
+                </div>
+
+                <!-- Empty all -->
+                <div
+                  class="empty-mini"
+                  *ngIf="
+                    !loadingArticulos &&
+                    articulosDisponibles.length === 0 &&
+                    !busquedaArticulo
+                  "
+                >
+                  <i class="pi pi-inbox"></i>
+                  <span>No hay artículos disponibles</span>
+                </div>
+              </div>
+
+              <!-- ── Seleccionados ── -->
+              <div
+                class="selected-section"
+                *ngIf="articulosSeleccionados.length > 0"
+              >
+                <div class="selected-section__header">
+                  <i class="pi pi-check-circle"></i>
+                  <span class="selected-section__label"
+                    >Seleccionados ({{ articulosSeleccionados.length }})</span
+                  >
+                </div>
+
+                <div class="selected-list">
+                  <div
+                    class="selected-card"
+                    *ngFor="let item of articulosSeleccionados; let i = index"
+                  >
+                    <div class="selected-card__head">
+                      <div class="selected-card__icon">
+                        <i
+                          class="fa-solid"
+                          [ngClass]="
+                            getCategoriaIcon(item.consumible.categoria)
+                          "
+                        ></i>
+                      </div>
+                      <div class="selected-card__title">
+                        <h4>{{ item.consumible.nombre }}</h4>
+                        <span>{{
+                          item.consumible.categoria || "Sin categoría"
+                        }}</span>
+                      </div>
+                      <button
+                        type="button"
+                        class="selected-card__remove"
+                        (click)="quitarArticulo(i)"
+                      >
+                        <i class="pi pi-times"></i>
+                      </button>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div
+                      class="selected-card__desc"
+                      *ngIf="item.consumible.descripcion"
                     >
                       <i class="pi pi-info-circle"></i>
-                    </button>
-                    <i class="pi pi-plus add-icon"></i>
-                  </div>
-                  <div class="descripcion-expandida" *ngIf="descripcionExpandida.has(art.id!)">
-                    <p>{{ art.descripcion }}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                class="empty-mini"
-                *ngIf="!loadingArticulos && articulosFiltrados.length === 0 && busquedaArticulo"
-              >
-                <i class="pi pi-search"></i>
-                <span>No se encontraron artículos con "{{ busquedaArticulo }}"</span>
-              </div>
-
-              <div
-                class="empty-mini"
-                *ngIf="!loadingArticulos && articulosDisponibles.length === 0 && !busquedaArticulo"
-              >
-                <i class="pi pi-inbox"></i>
-                <span>No hay artículos disponibles</span>
-              </div>
-            </div>
-
-            <!-- Seleccionados -->
-            <div
-              class="seleccionados-area"
-              *ngIf="articulosSeleccionados.length > 0"
-            >
-              <label class="mini-label success">
-                <i class="pi pi-check-circle"></i>
-                Seleccionados ({{ articulosSeleccionados.length }}):
-              </label>
-
-              <div class="seleccionados-list">
-                <div
-                  class="art-card"
-                  *ngFor="let item of articulosSeleccionados; let i = index"
-                >
-                  <div class="art-card-header">
-                    <div class="art-card-icon">
-                      <i
-                        class="pi"
-                        [ngClass]="getCategoriaIcon(item.consumible.categoria)"
-                      ></i>
+                      <span>{{ item.consumible.descripcion }}</span>
                     </div>
-                    <div class="art-card-title">
-                      <h4>{{ item.consumible.nombre }}</h4>
-                      <span>{{
-                        item.consumible.categoria || "Sin categoría"
-                      }}</span>
-                    </div>
-                    <button
-                      type="button"
-                      class="btn-remove-card"
-                      (click)="quitarArticulo(i)"
-                    >
-                      <i class="pi pi-times"></i>
-                    </button>
-                  </div>
 
-                  <!-- Descripción del artículo -->
-                  <div class="art-card-descripcion" *ngIf="item.consumible.descripcion">
-                    <i class="pi pi-info-circle"></i>
-                    <span>{{ item.consumible.descripcion }}</span>
-                  </div>
-
-                  <div class="art-card-form">
-                    <div class="cantidad-row">
-                      <label>Cantidad:</label>
-                      <div class="cantidad-control">
-                        <button
-                          type="button"
-                          class="btn-qty"
-                          (click)="
-                            item.cantidad =
-                              item.cantidad > 1 ? item.cantidad - 1 : 1
-                          "
+                    <div class="selected-card__form">
+                      <div class="qty-row">
+                        <label class="qty-row__label">Cantidad:</label>
+                        <div class="qty-control">
+                          <button
+                            type="button"
+                            class="qty-control__btn"
+                            (click)="
+                              item.cantidad =
+                                item.cantidad > 1 ? item.cantidad - 1 : 1
+                            "
+                          >
+                            <i class="pi pi-minus"></i>
+                          </button>
+                          <input
+                            class="qty-control__input"
+                            type="number"
+                            [(ngModel)]="item.cantidad"
+                            [name]="'cant_' + i"
+                            min="1"
+                            [max]="item.consumible.stockActual"
+                            (change)="validarCantidad(i)"
+                          />
+                          <button
+                            type="button"
+                            class="qty-control__btn"
+                            (click)="
+                              item.cantidad =
+                                item.cantidad < item.consumible.stockActual
+                                  ? item.cantidad + 1
+                                  : item.consumible.stockActual
+                            "
+                          >
+                            <i class="pi pi-plus"></i>
+                          </button>
+                        </div>
+                        <span class="qty-row__stock"
+                          >de {{ item.consumible.stockActual }}
+                          {{ item.consumible.unidadMedida }}</span
                         >
-                          <i class="pi pi-minus"></i>
-                        </button>
-                        <input
-                          type="number"
-                          [(ngModel)]="item.cantidad"
-                          [name]="'cant_' + i"
-                          min="1"
-                          [max]="item.consumible.stockActual"
-                          (change)="validarCantidad(i)"
-                          class="input-qty"
-                        />
-                        <button
-                          type="button"
-                          class="btn-qty"
-                          (click)="
-                            item.cantidad =
-                              item.cantidad < item.consumible.stockActual
-                                ? item.cantidad + 1
-                                : item.consumible.stockActual
-                          "
-                        >
-                          <i class="pi pi-plus"></i>
-                        </button>
                       </div>
-                      <span class="stock-info"
-                        >de {{ item.consumible.stockActual }}
-                        {{ item.consumible.unidadMedida }}</span
-                      >
-                    </div>
 
-                    <div class="form-field">
-                      <label>Observaciones:</label>
-                      <input
-                        type="text"
-                        [(ngModel)]="item.observaciones"
-                        [name]="'obs_' + i"
-                        placeholder="Opcional..."
-                        class="input-mini"
-                      />
+                      <div class="form-field form-field--inline">
+                        <label class="form-field__label">Observaciones:</label>
+                        <input
+                          class="form-field__input"
+                          type="text"
+                          [(ngModel)]="item.observaciones"
+                          [name]="'obs_' + i"
+                          placeholder="Opcional..."
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+
+              <!-- Empty seleccionados -->
+              <div
+                class="empty-selected"
+                *ngIf="articulosSeleccionados.length === 0"
+              >
+                <i class="pi pi-arrow-up"></i>
+                <p>Selecciona artículos de la lista superior</p>
+              </div>
             </div>
 
-            <!-- Sin seleccionados -->
-            <div
-              class="empty-seleccionados"
-              *ngIf="articulosSeleccionados.length === 0"
-            >
-              <i class="pi pi-arrow-up"></i>
-              <p>Selecciona artículos de la lista superior</p>
-            </div>
-
-            <!-- Resumen + Botones -->
-            <div
-              class="section-footer-summary"
-              *ngIf="articulosSeleccionados.length > 0"
-            >
-              <div class="summary-mini">
-                <div class="summary-row">
-                  <span>Receptor:</span>
-                  <strong>{{ receptor.nombre || "-" }}</strong>
+            <!-- Resumen + Acciones -->
+            <div class="card__footer" *ngIf="articulosSeleccionados.length > 0">
+              <div class="summary">
+                <div class="summary__row">
+                  <span class="summary__label">Receptor:</span>
+                  <strong class="summary__value">{{
+                    receptor.nombre || "—"
+                  }}</strong>
                 </div>
-                <div class="summary-row">
-                  <span>Área:</span>
-                  <strong>{{ receptor.area || "-" }}</strong>
+                <div class="summary__row">
+                  <span class="summary__label">Área:</span>
+                  <strong class="summary__value">{{
+                    receptor.area || "—"
+                  }}</strong>
                 </div>
-                <div class="summary-row highlight">
-                  <span>Total:</span>
-                  <strong
+                <div class="summary__row summary__row--highlight">
+                  <span class="summary__label">Total:</span>
+                  <strong class="summary__value"
                     >{{ getTotalArticulos() }} unidades ({{
                       articulosSeleccionados.length
                     }}
@@ -387,18 +473,17 @@
                   >
                 </div>
               </div>
-
-              <div class="section-footer">
+              <div class="card__actions">
                 <button
                   type="button"
-                  class="btn btn-secondary btn-compact"
+                  class="btn btn--outline"
                   (click)="cancelar()"
                 >
                   <i class="pi pi-times"></i> Cancelar
                 </button>
                 <button
                   type="submit"
-                  class="btn btn-accent btn-compact"
+                  class="btn btn--primary"
                   [disabled]="
                     loading ||
                     enviandoCorreo ||
@@ -406,7 +491,7 @@
                     !receptor.nombre ||
                     !receptor.correo
                   "
-                  [class.loading]="loading || enviandoCorreo"
+                  [class.btn--loading]="loading || enviandoCorreo"
                 >
                   <i
                     class="pi"
@@ -427,23 +512,25 @@
               </div>
             </div>
 
-            <!-- Sin artículos -->
+            <!-- Footer sin artículos -->
             <div
-              class="section-footer"
+              class="card__footer"
               *ngIf="articulosSeleccionados.length === 0"
             >
-              <button
-                type="button"
-                class="btn btn-secondary btn-compact"
-                (click)="cancelar()"
-              >
-                <i class="pi pi-times"></i> Cancelar
-              </button>
-              <button type="submit" class="btn btn-accent btn-compact" disabled>
-                <i class="pi pi-send"></i> Crear y Enviar
-              </button>
+              <div class="card__actions">
+                <button
+                  type="button"
+                  class="btn btn--outline"
+                  (click)="cancelar()"
+                >
+                  <i class="pi pi-times"></i> Cancelar
+                </button>
+                <button type="submit" class="btn btn--primary" disabled>
+                  <i class="pi pi-send"></i> Crear y Enviar
+                </button>
+              </div>
             </div>
-          </section>
+          </div>
         </div>
       </div>
     </form>

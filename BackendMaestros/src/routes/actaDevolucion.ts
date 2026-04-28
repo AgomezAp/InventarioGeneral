@@ -10,7 +10,8 @@ import {
   obtenerActaDevolucionPorToken,
   firmarActaDevolucionConToken,
   rechazarActaDevolucionConToken,
-  reenviarCorreoDevolucion
+  reenviarCorreoDevolucion,
+  eliminarActaDevolucion
 } from '../controllers/actaDevolucion.js';
 
 const router = Router();
@@ -50,5 +51,8 @@ router.post('/enviar-firma/:id', validateToken, enviarSolicitudFirmaDevolucion);
 
 // Reenviar correo de firma
 router.post('/reenviar-firma/:id', validateToken, reenviarCorreoDevolucion);
+
+// Eliminar acta de devolución
+router.delete('/:id', validateToken, eliminarActaDevolucion);
 
 export default router;

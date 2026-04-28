@@ -1,254 +1,334 @@
 <app-navbar></app-navbar>
 
-<div class="inventario-container">
-  <!-- Header con estadísticas -->
-  <div class="header-section">
-    <div class="header-title">
-      <h1><i class="fa-solid fa-warehouse"></i> Inventario de Dispositivos</h1>
-      <p class="subtitle">Gestión completa del inventario tecnológico</p>
+<div class="inv-wrapper">
+
+  <!-- ═══ HERO HEADER ═══ -->
+  <header class="inv-header">
+    <div class="inv-header__left">
+      <div class="inv-header__icon-wrap">
+        <i class="fa-solid fa-microchip"></i>
+      </div>
+      <div class="inv-header__text">
+        <h1 class="inv-header__title">Inventario de Dispositivos</h1>
+        <p class="inv-header__subtitle">
+          <i class="fa-solid fa-circle-nodes"></i>
+          Gestión completa del inventario tecnológico
+        </p>
+      </div>
     </div>
-    
-    <div class="header-actions">
-      <button class="btn-agregar" (click)="irAAgregar()">
-        <i class="fa-solid fa-plus"></i> Agregar Dispositivo
+    <div class="inv-header__actions">
+      <button class="btn btn--primary" (click)="irAAgregar()">
+        <i class="fa-solid fa-plus"></i>
+        <span>Agregar Dispositivo</span>
       </button>
-      <button class="btn-entrega" (click)="irAEntrega()">
-        <i class="fa-solid fa-file-signature"></i> Crear Acta de Entrega
+      <button class="btn btn--outline" (click)="irAEntrega()">
+        <i class="fa-solid fa-file-signature"></i>
+        <span>Crear Acta de Entrega</span>
       </button>
     </div>
+  </header>
+
+  <!-- ═══ KPI CARDS ═══ -->
+  <section class="kpi-grid">
+    <div class="kpi-card kpi-card--total">
+      <div class="kpi-card__icon">
+        <i class="fa-solid fa-boxes-stacked"></i>
+      </div>
+      <div class="kpi-card__body">
+        <span class="kpi-card__value">{{ contarTotalDispositivos() }}</span>
+        <span class="kpi-card__label">Total Dispositivos</span>
+      </div>
+      <div class="kpi-card__decoration"></div>
+    </div>
+
+    <div class="kpi-card kpi-card--success">
+      <div class="kpi-card__icon">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div class="kpi-card__body">
+        <span class="kpi-card__value">{{ contarPorEstado('disponible') }}</span>
+        <span class="kpi-card__label">Disponibles</span>
+      </div>
+      <div class="kpi-card__decoration"></div>
+    </div>
+
+    <div class="kpi-card kpi-card--info">
+      <div class="kpi-card__icon">
+        <i class="fa-solid fa-hand-holding"></i>
+      </div>
+      <div class="kpi-card__body">
+        <span class="kpi-card__value">{{ contarPorEstado('prestado') }}</span>
+        <span class="kpi-card__label">Prestados</span>
+      </div>
+      <div class="kpi-card__decoration"></div>
+    </div>
+
+    <div class="kpi-card kpi-card--warning">
+      <div class="kpi-card__icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div class="kpi-card__body">
+        <span class="kpi-card__value">{{ contarPorEstado('dañado') }}</span>
+        <span class="kpi-card__label">Dañados</span>
+      </div>
+      <div class="kpi-card__decoration"></div>
+    </div>
+
+    <div class="kpi-card kpi-card--danger">
+      <div class="kpi-card__icon">
+        <i class="fa-solid fa-circle-question"></i>
+      </div>
+      <div class="kpi-card__body">
+        <span class="kpi-card__value">{{ contarPorEstado('perdido') }}</span>
+        <span class="kpi-card__label">Perdidos</span>
+      </div>
+      <div class="kpi-card__decoration"></div>
+    </div>
+
+    <div class="kpi-card kpi-card--muted">
+      <div class="kpi-card__icon">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+      </div>
+      <div class="kpi-card__body">
+        <span class="kpi-card__value">{{ contarPorEstado('obsoleto') }}</span>
+        <span class="kpi-card__label">Obsoletos</span>
+      </div>
+      <div class="kpi-card__decoration"></div>
+    </div>
+  </section>
+
+  <!-- ═══ FILTROS PANEL ═══ -->
+  <section class="filters-panel">
+    <div class="filters-panel__header">
+      <i class="fa-solid fa-sliders"></i>
+      <span>Filtros de búsqueda</span>
+    </div>
+    <div class="filters-panel__body">
+      <div class="filter-field">
+        <label class="filter-field__label">Estado</label>
+        <div class="filter-field__input-wrap">
+          <i class="fa-solid fa-tag"></i>
+          <select [(ngModel)]="filtroEstado" (change)="aplicarFiltros()">
+            <option value="todos">Todos los estados</option>
+            <option *ngFor="let estado of estados" [value]="estado">
+              {{ estado | titlecase }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-field">
+        <label class="filter-field__label">Categoría</label>
+        <div class="filter-field__input-wrap">
+          <i class="fa-solid fa-layer-group"></i>
+          <select [(ngModel)]="filtroCategoria" (change)="aplicarFiltros()">
+            <option value="todas">Todas las categorías</option>
+            <option *ngFor="let cat of categorias" [value]="cat">
+              {{ cat | titlecase }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-field filter-field--search">
+        <label class="filter-field__label">Buscar</label>
+        <div class="filter-field__input-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input
+            type="text"
+            [(ngModel)]="filtroBusqueda"
+            (input)="aplicarFiltros()"
+            placeholder="Nombre, marca, modelo, serial, IMEI..."
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ ERROR ═══ -->
+  <div class="alert alert--error" *ngIf="error">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span>{{ error }}</span>
   </div>
 
-  <!-- Tarjetas de estadísticas -->
-  <div class="stats-grid">
-    <div class="stat-card stat-total">
-      <div class="stat-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
-      <div class="stat-info">
-        <span class="stat-number">{{ contarTotalDispositivos() }}</span>
-        <span class="stat-label">Total Dispositivos</span>
-      </div>
-    </div>
-    
-    <div class="stat-card stat-disponible">
-      <div class="stat-icon"><i class="fa-solid fa-check-circle"></i></div>
-      <div class="stat-info">
-        <span class="stat-number">{{ contarPorEstado('disponible') }}</span>
-        <span class="stat-label">Disponibles</span>
-      </div>
-    </div>
-    
-    <div class="stat-card stat-prestado">
-      <div class="stat-icon"><i class="fa-solid fa-hand-holding"></i></div>
-      <div class="stat-info">
-        <span class="stat-number">{{ contarPorEstado('prestado') }}</span>
-        <span class="stat-label">Prestados</span>
-      </div>
-    </div>
-    
-    <div class="stat-card stat-danado">
-      <div class="stat-icon"><i class="fa-solid fa-exclamation-triangle"></i></div>
-      <div class="stat-info">
-        <span class="stat-number">{{ contarPorEstado('dañado') }}</span>
-        <span class="stat-label">Dañados</span>
-      </div>
-    </div>
-    
-    <div class="stat-card stat-perdido">
-      <div class="stat-icon"><i class="fa-solid fa-question-circle"></i></div>
-      <div class="stat-info">
-        <span class="stat-number">{{ contarPorEstado('perdido') }}</span>
-        <span class="stat-label">Perdidos</span>
-      </div>
-    </div>
-    
-    <div class="stat-card stat-obsoleto">
-      <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
-      <div class="stat-info">
-        <span class="stat-number">{{ contarPorEstado('obsoleto') }}</span>
-        <span class="stat-label">Obsoletos</span>
-      </div>
-    </div>
+  <!-- ═══ LOADING ═══ -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="loading-state__spinner"></div>
+    <span>Cargando dispositivos...</span>
   </div>
 
-  <!-- Filtros -->
-  <div class="filtros-section">
-    <div class="filtro-grupo">
-      <label>Estado:</label>
-      <select [(ngModel)]="filtroEstado" (change)="aplicarFiltros()">
-        <option value="todos">Todos los estados</option>
-        <option *ngFor="let estado of estados" [value]="estado">
-          {{ estado | titlecase }}
-        </option>
-      </select>
+  <!-- ═══ TABLA ═══ -->
+  <section class="table-panel" *ngIf="!loading">
+    <div class="table-panel__header">
+      <div class="table-panel__title">
+        <i class="fa-solid fa-list-check"></i>
+        <h2>Listado de Dispositivos</h2>
+      </div>
+      <span class="table-panel__count">
+        {{ dispositivosFiltrados.length }} registros
+      </span>
     </div>
-    
-    <div class="filtro-grupo">
-      <label>Categoría:</label>
-      <select [(ngModel)]="filtroCategoria" (change)="aplicarFiltros()">
-        <option value="todas">Todas las categorías</option>
-        <option *ngFor="let cat of categorias" [value]="cat">
-          {{ cat | titlecase }}
-        </option>
-      </select>
-    </div>
-    
-    <div class="filtro-grupo filtro-busqueda">
-      <label>Buscar:</label>
-      <input 
-        type="text" 
-        [(ngModel)]="filtroBusqueda" 
-        (input)="aplicarFiltros()"
-        placeholder="Nombre, marca, modelo, serial, IMEI..."
-      />
-      <i class="fa-solid fa-search"></i>
-    </div>
-  </div>
 
-  <!-- Mensaje de error -->
-  <div class="error-message" *ngIf="error">
-    <i class="fa-solid fa-exclamation-circle"></i> {{ error }}
-  </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Categoría</th>
+            <th>Marca / Modelo</th>
+            <th>Serial / IMEI</th>
+            <th class="text-center">Cantidad</th>
+            <th class="text-center">Estado</th>
+            <th class="text-center">Condición</th>
+            <th>Ubicación</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let dispositivo of dispositivosPaginados; let i = index"
+              [class]="'row-state row-state--' + dispositivo.estado">
 
-  <!-- Loading -->
-  <div class="loading" *ngIf="loading">
-    <i class="fa-solid fa-spinner fa-spin"></i> Cargando dispositivos...
-  </div>
+            <!-- Categoría -->
+            <td>
+              <div class="cell-category">
+                <span class="cell-category__icon">
+                  <i class="fa-solid" [ngClass]="getCategoriaIcon(dispositivo.categoria)"></i>
+                </span>
+                <span class="cell-category__text">{{ dispositivo.categoria | titlecase }}</span>
+              </div>
+            </td>
 
-  <!-- Tabla de dispositivos -->
-  <div class="tabla-container" *ngIf="!loading">
-    <table class="tabla-dispositivos">
-      <thead>
-        <tr>
-          <th>Categoría</th>
-          <th>Marca / Modelo</th>
-          <th>Serial / IMEI</th>
-          <th>Cantidad</th>
-          <th>Estado</th>
-          <th>Condición</th>
-          <th>Ubicación</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let dispositivo of dispositivosPaginados" [class]="'row-' + dispositivo.estado">
-          <td class="td-categoria">
-            <span class="categoria-badge">
-              <i class="fa-solid" [ngClass]="getCategoriaIcon(dispositivo.categoria)"></i>
-              {{ dispositivo.categoria | titlecase }}
-            </span>
-          </td>
-          <td class="td-marca">
-            <strong *ngIf="dispositivo.marca">{{ dispositivo.marca }}</strong>
-            <span *ngIf="dispositivo.modelo" class="modelo">{{ dispositivo.modelo }}</span>
-          </td>
-          <td class="td-serial">
-            <span *ngIf="dispositivo.serial" class="serial">S/N: {{ dispositivo.serial }}</span>
-            <span *ngIf="dispositivo.imei" class="imei">IMEI: {{ dispositivo.imei }}</span>
-            <span *ngIf="dispositivo.tipoRegistro === 'stock' && !dispositivo.serial && !dispositivo.imei" class="sin-serial">Por cantidad</span>
-          </td>
-          <td class="td-cantidad">
-            <span *ngIf="dispositivo.tipoRegistro === 'stock'" class="cantidad-badge" [class.stock-bajo]="dispositivo.stockActual! <= (dispositivo.stockMinimo || 0)">
-              <button 
-                class="btn-stock btn-restar" 
-                (click)="restarStock(dispositivo)"
-                [disabled]="dispositivo.stockActual! <= 0 || stockEnProceso.has(dispositivo.id!)"
-                title="Restar 1 unidad"
-              >
-                <i class="fa-solid" [ngClass]="stockEnProceso.has(dispositivo.id!) ? 'fa-spinner fa-spin' : 'fa-minus'"></i>
-              </button>
-              <span class="stock-numero">
-                <i class="fa-solid fa-cubes"></i>
-                {{ dispositivo.stockActual || 0 }}
+            <!-- Marca / Modelo -->
+            <td>
+              <div class="cell-brand">
+                <strong *ngIf="dispositivo.marca">{{ dispositivo.marca }}</strong>
+                <small *ngIf="dispositivo.modelo">{{ dispositivo.modelo }}</small>
+              </div>
+            </td>
+
+            <!-- Serial / IMEI -->
+            <td>
+              <div class="cell-serial">
+                <code *ngIf="dispositivo.serial">S/N: {{ dispositivo.serial }}</code>
+                <code *ngIf="dispositivo.imei">IMEI: {{ dispositivo.imei }}</code>
+                <span *ngIf="dispositivo.tipoRegistro === 'stock' && !dispositivo.serial && !dispositivo.imei"
+                      class="cell-serial__stock">
+                  Por cantidad
+                </span>
+              </div>
+            </td>
+
+            <!-- Cantidad -->
+            <td class="text-center">
+              <div *ngIf="dispositivo.tipoRegistro === 'stock'" class="cell-qty">
+                <button class="cell-qty__btn cell-qty__btn--minus"
+                        (click)="restarStock(dispositivo)"
+                        [disabled]="dispositivo.stockActual! <= 0 || stockEnProceso.has(dispositivo.id!)"
+                        title="Restar 1">
+                  <i class="fa-solid"
+                     [ngClass]="stockEnProceso.has(dispositivo.id!) ? 'fa-spinner fa-spin' : 'fa-minus'"></i>
+                </button>
+                <span class="cell-qty__number"
+                      [class.cell-qty__number--low]="dispositivo.stockActual! <= (dispositivo.stockMinimo || 0)">
+                  {{ dispositivo.stockActual || 0 }}
+                </span>
+                <button class="cell-qty__btn cell-qty__btn--plus"
+                        (click)="sumarStock(dispositivo)"
+                        [disabled]="stockEnProceso.has(dispositivo.id!)"
+                        title="Agregar 1">
+                  <i class="fa-solid"
+                     [ngClass]="stockEnProceso.has(dispositivo.id!) ? 'fa-spinner fa-spin' : 'fa-plus'"></i>
+                </button>
+              </div>
+              <div *ngIf="dispositivo.tipoRegistro !== 'stock'" class="cell-qty-single">
+                <i class="fa-solid fa-cube"></i> 1
+              </div>
+            </td>
+
+            <!-- Estado -->
+            <td class="text-center">
+              <span class="badge-status" [ngClass]="getEstadoClass(dispositivo.estado)">
+                <i class="fa-solid" [ngClass]="getEstadoIcon(dispositivo.estado)"></i>
+                {{ dispositivo.estado | uppercase }}
               </span>
-              <button 
-                class="btn-stock btn-sumar" 
-                (click)="sumarStock(dispositivo)"
-                [disabled]="stockEnProceso.has(dispositivo.id!)"
-                title="Agregar 1 unidad"
-              >
-                <i class="fa-solid" [ngClass]="stockEnProceso.has(dispositivo.id!) ? 'fa-spinner fa-spin' : 'fa-plus'"></i>
-              </button>
-              <span *ngIf="dispositivo.stockMinimo" class="stock-minimo">(mín: {{ dispositivo.stockMinimo }})</span>
-            </span>
-            <span *ngIf="dispositivo.tipoRegistro !== 'stock'" class="cantidad-individual">
-              <i class="fa-solid fa-cube"></i> 1
-            </span>
-          </td>
-          <td class="td-estado">
-            <span class="estado-badge" [ngClass]="getEstadoClass(dispositivo.estado)">
-              <i class="fa-solid" [ngClass]="getEstadoIcon(dispositivo.estado)"></i>
-              {{ dispositivo.estado | uppercase }}
-            </span>
-          </td>
-          <td class="td-condicion">
-            <span class="condicion-badge condicion-{{ dispositivo.condicion }}">
-              {{ dispositivo.condicion | titlecase }}
-            </span>
-          </td>
-          <td class="td-ubicacion">
-            <i class="fa-solid fa-location-dot"></i>
-            {{ dispositivo.ubicacion || 'Sin ubicación' }}
-          </td>
-          <td class="td-acciones">
-            <button class="btn-accion btn-ver" (click)="verDetalle(dispositivo)" title="Ver detalle completo">
-              <i class="fa-solid fa-eye"></i>
-            </button>
-            <button class="btn-accion btn-editar" (click)="editarDispositivo(dispositivo)" title="Editar dispositivo">
-              <i class="fa-solid fa-edit"></i>
-            </button>
-            <button class="btn-accion btn-historial" (click)="verTrazabilidad(dispositivo)" title="Ver historial">
-              <i class="fa-solid fa-history"></i>
-            </button>
-            <button 
-              class="btn-accion btn-estado" 
-              (click)="cambiarEstado(dispositivo)" 
-              title="Cambiar estado"
-            >
-              <i class="fa-solid fa-exchange-alt"></i>
-            </button>
-            <button 
-              class="btn-accion btn-eliminar" 
-              (click)="eliminarDispositivo(dispositivo)" 
-              title="Eliminar dispositivo"
-            >
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </td>
-        </tr>
-        
-        <tr *ngIf="dispositivosFiltrados.length === 0">
-          <td colspan="9" class="sin-datos">
-            <i class="fa-solid fa-inbox"></i>
-            <p>No se encontraron dispositivos</p>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+            </td>
 
-  <!-- Paginación -->
-  <div class="paginacion" *ngIf="totalPaginas > 1">
-    <button 
-      class="btn-pagina" 
-      (click)="cambiarPagina(paginaActual - 1)"
-      [disabled]="paginaActual === 1"
-    >
+            <!-- Condición -->
+            <td class="text-center">
+              <span class="badge-condition badge-condition--{{ dispositivo.condicion }}">
+                {{ dispositivo.condicion | titlecase }}
+              </span>
+            </td>
+
+            <!-- Ubicación -->
+            <td>
+              <div class="cell-location">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>{{ dispositivo.ubicacion || 'Sin ubicación' }}</span>
+              </div>
+            </td>
+
+            <!-- Acciones -->
+            <td class="text-center">
+              <div class="cell-actions">
+                <button class="action-btn action-btn--view" (click)="verDetalle(dispositivo)" title="Ver detalle">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button class="action-btn action-btn--edit" (click)="editarDispositivo(dispositivo)" title="Editar">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button class="action-btn action-btn--history" (click)="verTrazabilidad(dispositivo)" title="Historial">
+                  <i class="fa-solid fa-clock-rotate-left"></i>
+                </button>
+                <button class="action-btn action-btn--switch" (click)="cambiarEstado(dispositivo)" title="Cambiar estado">
+                  <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                </button>
+                <button class="action-btn action-btn--delete" (click)="eliminarDispositivo(dispositivo)" title="Eliminar">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Sin datos -->
+          <tr *ngIf="dispositivosFiltrados.length === 0">
+            <td colspan="8">
+              <div class="empty-state">
+                <div class="empty-state__icon">
+                  <i class="fa-solid fa-box-open"></i>
+                </div>
+                <h3>No se encontraron dispositivos</h3>
+                <p>Intenta ajustar los filtros o agrega un nuevo dispositivo</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══ PAGINACIÓN ═══ -->
+  <nav class="pagination" *ngIf="totalPaginas > 1">
+    <button class="pagination__btn"
+            (click)="cambiarPagina(paginaActual - 1)"
+            [disabled]="paginaActual === 1">
       <i class="fa-solid fa-chevron-left"></i>
     </button>
-    
-    <span class="pagina-info">
-      Página {{ paginaActual }} de {{ totalPaginas }}
-    </span>
-    
-    <button 
-      class="btn-pagina" 
-      (click)="cambiarPagina(paginaActual + 1)"
-      [disabled]="paginaActual === totalPaginas"
-    >
+
+    <div class="pagination__info">
+      <span class="pagination__current">{{ paginaActual }}</span>
+      <span class="pagination__sep">de</span>
+      <span class="pagination__total">{{ totalPaginas }}</span>
+    </div>
+
+    <button class="pagination__btn"
+            (click)="cambiarPagina(paginaActual + 1)"
+            [disabled]="paginaActual === totalPaginas">
       <i class="fa-solid fa-chevron-right"></i>
     </button>
-    
-    <span class="total-info">
-      ({{ dispositivosFiltrados.length }} dispositivos)
+
+    <span class="pagination__count">
+      {{ dispositivosFiltrados.length }} dispositivos en total
     </span>
-  </div>
+  </nav>
+
 </div>

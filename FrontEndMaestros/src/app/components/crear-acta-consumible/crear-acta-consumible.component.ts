@@ -22,8 +22,8 @@ interface ArticuloSeleccionado {
   styleUrl: './crear-acta-consumible.component.css'
 })
 export class CrearActaConsumibleComponent implements OnInit {
-  // Tipo de inventario (aseo, papeleria o botiquin)
-  tipoInventario: 'aseo' | 'papeleria' | 'botiquin' = 'aseo';
+  // Tipo de inventario
+  tipoInventario: 'aseo' | 'papeleria' | 'botiquin' | 'desechables' | 'dotacion' = 'aseo';
   tituloTipo = 'Aseo';
   iconoTipo = 'fa-broom';
   colorTema = '#00acc1';
@@ -84,7 +84,7 @@ export class CrearActaConsumibleComponent implements OnInit {
     // Obtener tipo de la ruta
     this.route.params.subscribe(params => {
       const tipo = params['tipo'];
-      if (tipo === 'aseo' || tipo === 'papeleria' || tipo === 'botiquin') {
+      if (tipo === 'aseo' || tipo === 'papeleria' || tipo === 'botiquin' || tipo === 'desechables' || tipo === 'dotacion') {
         this.tipoInventario = tipo;
         this.configurarTipo();
         this.cargarArticulosDisponibles();
@@ -101,10 +101,18 @@ export class CrearActaConsumibleComponent implements OnInit {
       this.tituloTipo = 'Papelería';
       this.iconoTipo = 'fa-pen';
       this.colorTema = '#ffa726';
-    } else {
+    } else if (this.tipoInventario === 'botiquin') {
       this.tituloTipo = 'Botiquín';
       this.iconoTipo = 'fa-kit-medical';
       this.colorTema = '#dc3545';
+    } else if (this.tipoInventario === 'desechables') {
+      this.tituloTipo = 'Desechables';
+      this.iconoTipo = 'fa-trash-can';
+      this.colorTema = '#6f42c1';
+    } else {
+      this.tituloTipo = 'Dotación';
+      this.iconoTipo = 'fa-shirt';
+      this.colorTema = '#20c997';
     }
   }
 

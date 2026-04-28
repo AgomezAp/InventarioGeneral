@@ -1,23 +1,35 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ConnectionIndicatorComponent } from '../connection-indicator/connection-indicator.component';
 
 @Component({
   selector: 'app-navbar',
-  imports: [FormsModule, ConnectionIndicatorComponent],
+  imports: [FormsModule],
   templateUrl: './navbar.component.html',
-  styleUrl: './navbar.component.css'
+  styleUrl: './navbar.component.css',
 })
 export class NavbarComponent {
   constructor(private router: Router) {}
-  
+  mobileMenuOpen = false;
+  mobileGroups: Record<string, boolean> = {};
+
   logOut() {
     localStorage.removeItem('token');
     localStorage.clear();
     this.router.navigate(['/logIn']);
   }
-  
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.nav-main__item--dropdown')) {
+      document
+        .querySelectorAll('.nav-main__item--dropdown.is-open')
+        .forEach((el) => {
+          el.classList.remove('is-open');
+        });
+    }
+  }
   // ==================== TECNOLOGÍA ====================
   irInventario() {
     this.router.navigate(['/inventario']);
@@ -149,5 +161,32 @@ export class NavbarComponent {
 
   verActasDotacion() {
     this.router.navigate(['/actas-dotacion']);
+  }
+  toggleDropdown(event: Event): void {
+    const btn = event.currentTarget as HTMLElement;
+    const parent = btn.closest('.nav-main__item--dropdown');
+
+    // Cerrar otros dropdowns abiertos
+    document
+      .querySelectorAll('.nav-main__item--dropdown.is-open')
+      .forEach((el) => {
+        if (el !== parent) el.classList.remove('is-open');
+      });
+
+    parent?.classList.toggle('is-open');
+  }
+
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+    document.body.style.overflow = this.mobileMenuOpen ? 'hidden' : '';
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen = false;
+    document.body.style.overflow = '';
+  }
+
+  toggleMobileGroup(group: string): void {
+    this.mobileGroups[group] = !this.mobileGroups[group];
   }
 }

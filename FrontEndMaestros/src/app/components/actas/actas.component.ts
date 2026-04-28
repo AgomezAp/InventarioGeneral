@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { InventarioService } from '../../services/inventario.service';
 import { FirmaService } from '../../services/firma.service';
 import { WebsocketService } from '../../services/websocket.service';
+import { PdfService } from '../../services/pdf.service';
 import { ActaEntrega, DetalleActa } from '../../interfaces/inventario';
 import { NavbarComponent } from '../navbar/navbar.component';
 
@@ -65,6 +66,7 @@ export class ActasComponent implements OnInit, OnDestroy {
     private inventarioService: InventarioService,
     private firmaService: FirmaService,
     private websocketService: WebsocketService,
+    private pdfService: PdfService,
     private router: Router,
   ) {}
 
@@ -284,6 +286,18 @@ export class ActasComponent implements OnInit, OnDestroy {
 
   irAInventario(): void {
     this.router.navigate(['/inventario']);
+  }
+
+  generarPDF(acta: ActaEntrega): void {
+    if (acta.detalles && acta.detalles.length > 0) {
+      this.pdfService.generarActaEntrega(acta);
+    } else {
+      // Obtener detalle completo primero si no tiene detalles
+      this.inventarioService.obtenerActaPorId(acta.id!).subscribe({
+        next: (data) => this.pdfService.generarActaEntrega(data),
+        error: () => this.pdfService.generarActaEntrega(acta),
+      });
+    }
   }
 
   // Métodos para contar por estado (usados en el template)

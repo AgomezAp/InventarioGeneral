@@ -51,7 +51,7 @@ export interface DetalleActaConsumible {
 }
 
 export interface CrearActaConsumibleRequest {
-  tipoInventarioCodigo: 'aseo' | 'papeleria' | 'botiquin';
+  tipoInventarioCodigo: 'aseo' | 'papeleria' | 'botiquin' | 'desechables' | 'dotacion';
   nombreReceptor: string;
   cedulaReceptor?: string;
   cargoReceptor: string;
@@ -95,7 +95,7 @@ export class ActaConsumibleService {
   /**
    * Obtener actas por tipo (aseo o papeleria)
    */
-  obtenerActasPorTipo(codigo: 'aseo' | 'papeleria' | 'botiquin', estado?: string): Observable<ActaConsumible[]> {
+  obtenerActasPorTipo(codigo: 'aseo' | 'papeleria' | 'botiquin' | 'desechables' | 'dotacion', estado?: string): Observable<ActaConsumible[]> {
     let params = new HttpParams();
     if (estado) params = params.set('estado', estado);
     

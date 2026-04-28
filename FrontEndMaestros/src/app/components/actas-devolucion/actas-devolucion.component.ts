@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { DevolucionService } from '../../services/devolucion.service';
 import { WebsocketService } from '../../services/websocket.service';
+import { PdfService } from '../../services/pdf.service';
 import { SpinnerComponent } from '../../shared/spinner/spinner/spinner.component';
 import { NavbarComponent } from '../navbar/navbar.component';
 
@@ -36,6 +37,7 @@ export class ActasDevolucionComponent implements OnInit, OnDestroy {
   // Modal detalle
   actaSeleccionada: any = null;
   mostrarModal = false;
+  loadingDetalle = false;
 
   // Suscripciones WebSocket
   private subscriptions: Subscription[] = [];
@@ -43,6 +45,7 @@ export class ActasDevolucionComponent implements OnInit, OnDestroy {
   constructor(
     private devolucionService: DevolucionService,
     private websocketService: WebsocketService,
+    private pdfService: PdfService,
   ) {}
 
   ngOnInit(): void {
@@ -184,13 +187,61 @@ export class ActasDevolucionComponent implements OnInit, OnDestroy {
   }
 
   verDetalle(acta: any): void {
-    this.actaSeleccionada = acta;
     this.mostrarModal = true;
+    this.loadingDetalle = true;
+    this.actaSeleccionada = acta;
+
+    this.devolucionService.obtenerActaDevolucionPorId(acta.id).subscribe({
+      next: (data: any) => {
+        this.actaSeleccionada = data;
+        this.loadingDetalle = false;
+      },
+      error: () => {
+        // Si falla, usar los datos del listado como fallback
+        this.loadingDetalle = false;
+      },
+    });
+  }
+
+  getNombreDispositivo(detalle: any): string {
+    const d = detalle.dispositivo;
+    if (!d) return 'Dispositivo sin información';
+    if (d.nombre) return d.nombre;
+    const partes = [d.categoria, d.marca, d.modelo].filter(Boolean);
+    return partes.length > 0 ? partes.join(' ') : `ID #${d.id}`;
   }
 
   cerrarModal(): void {
     this.mostrarModal = false;
     this.actaSeleccionada = null;
+  }
+
+  generarPDF(acta: any): void {
+    this.pdfService.generarActaDevolucion(acta);
+  }
+
+  eliminarActa(acta: any): void {
+    const msg = `¿Está seguro de eliminar el acta ${acta.numeroActa}?\n\nEsta acción no se puede deshacer.`;
+    if (!confirm(msg)) return;
+
+    this.loading = true;
+    this.error = '';
+    this.success = '';
+
+    this.devolucionService.eliminarActaDevolucion(acta.id).subscribe({
+      next: (response: any) => {
+        this.success = response.msg || 'Acta eliminada correctamente';
+        this.loading = false;
+        this.cerrarModal();
+        this.cargarActas();
+        setTimeout(() => (this.success = ''), 5000);
+      },
+      error: (err) => {
+        console.error('Error eliminando acta:', err);
+        this.error = err.error?.msg || 'Error al eliminar el acta';
+        this.loading = false;
+      },
+    });
   }
 
   reenviarCorreo(acta: any): void {

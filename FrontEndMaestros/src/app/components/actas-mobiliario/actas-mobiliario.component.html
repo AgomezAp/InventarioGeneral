@@ -2,194 +2,467 @@
 
 <div class="actas-container">
   <div class="content-wrapper">
-    <!-- Header -->
+    <!-- ═══ HEADER DE PÁGINA ═══ -->
     <header class="page-header">
-      <div class="header-content">
-        <div class="header-info">
-          <h1><i class="fa-solid fa-chair"></i> Actas de Mobiliario</h1>
-          <p>Gestiona las actas de entrega y devolucion de mobiliario</p>
+      <div class="page-header__left">
+        <div class="page-header__icon">
+          <i class="fa-solid fa-chair"></i>
         </div>
-        <button class="btn-crear" (click)="crearNuevaActa()">
+        <div class="page-header__text">
+          <h1 class="page-header__title">Actas de Mobiliario</h1>
+          <p class="page-header__subtitle">
+            Gestiona las actas de entrega y devolución de mobiliario
+          </p>
+        </div>
+      </div>
+      <div class="page-header__actions">
+        <button class="btn btn--primary" (click)="crearNuevaActa()">
           <i class="fa-solid fa-plus"></i> Nueva Acta
         </button>
       </div>
     </header>
 
-    <!-- Filtros -->
-    <div class="filtros-bar">
-      <div class="filtro-busqueda">
-        <i class="fa-solid fa-search"></i>
-        <input type="text" [(ngModel)]="busqueda" (input)="filtrar()" placeholder="Buscar por numero, receptor..." />
+    <!-- ═══ FILTROS ═══ -->
+    <section class="filters-panel" style="animation-delay: 0.06s">
+      <div class="filters-panel__header">
+        <i class="fa-solid fa-filter"></i>
+        <span>Filtros</span>
       </div>
-      <div class="filtro-estado">
-        <select [(ngModel)]="filtroEstado" (change)="cambiarFiltro()">
-          <option *ngFor="let e of estados" [value]="e.value">{{ e.label }}</option>
-        </select>
-      </div>
-      <button class="btn-refresh" (click)="cargarActas()"><i class="fa-solid fa-refresh"></i></button>
-    </div>
-
-    <!-- Loading -->
-    <div class="loading-state" *ngIf="loading">
-      <div class="spinner"></div>
-      <span>Cargando actas...</span>
-    </div>
-
-    <!-- Lista de actas -->
-    <div class="actas-grid" *ngIf="!loading && actasFiltradas.length > 0">
-      <div class="acta-card" *ngFor="let acta of actasFiltradas" (click)="verDetalle(acta)">
-        <div class="acta-card-top">
-          <span class="acta-numero">{{ acta.numeroActa }}</span>
-          <span class="badge" [ngClass]="getEstadoClass(acta.estado)">{{ getEstadoLabel(acta.estado) }}</span>
+      <div class="filters-panel__body">
+        <div class="filter-group filter-group--search">
+          <label class="filter-group__label" for="busquedaActa">Buscar</label>
+          <div class="filter-group__input-wrap">
+            <i class="fa-solid fa-search filter-group__input-icon"></i>
+            <input
+              class="filter-group__input"
+              type="text"
+              id="busquedaActa"
+              [(ngModel)]="busqueda"
+              (input)="filtrar()"
+              placeholder="Buscar por número, receptor..."
+            />
+          </div>
         </div>
-        <div class="acta-card-body">
-          <div class="acta-receptor">
-            <i class="fa-solid fa-user"></i>
-            <div>
+
+        <div class="filter-group">
+          <label class="filter-group__label" for="filtroEstadoActa"
+            >Estado</label
+          >
+          <div class="filter-group__select-wrap">
+            <select
+              class="filter-group__select"
+              id="filtroEstadoActa"
+              [(ngModel)]="filtroEstado"
+              (change)="cambiarFiltro()"
+            >
+              <option *ngFor="let e of estados" [value]="e.value">
+                {{ e.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-group filter-group--action">
+          <label class="filter-group__label">&nbsp;</label>
+          <button class="btn-refresh" (click)="cargarActas()" title="Recargar">
+            <i class="fa-solid fa-refresh"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ LOADING ═══ -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="loading-state__spinner"></div>
+      <span class="loading-state__text">Cargando actas...</span>
+    </div>
+
+    <!-- ═══ GRID DE ACTAS ═══ -->
+    <section class="actas-grid" *ngIf="!loading && actasFiltradas.length > 0">
+      <div
+        class="acta-card"
+        *ngFor="let acta of actasFiltradas; let i = index"
+        (click)="verDetalle(acta)"
+        [style.animation-delay.s]="0.09 + i * 0.03"
+      >
+        <div class="acta-card__top">
+          <span class="acta-card__numero">
+            <i class="fa-solid fa-file-lines"></i>
+            {{ acta.numeroActa }}
+          </span>
+          <span class="status-badge" [ngClass]="getEstadoClass(acta.estado)">
+            {{ getEstadoLabel(acta.estado) }}
+          </span>
+        </div>
+
+        <div class="acta-card__body">
+          <div class="acta-card__receptor">
+            <div class="acta-card__receptor-icon">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="acta-card__receptor-info">
               <strong>{{ acta.nombreReceptor }}</strong>
               <span>{{ acta.cargoReceptor }}</span>
             </div>
           </div>
-          <div class="acta-meta">
-            <span><i class="fa-solid fa-calendar"></i> {{ acta.fechaEntrega | date:'dd/MM/yyyy' }}</span>
-            <span><i class="fa-solid fa-couch"></i> {{ getTotalItems(acta) }} und.</span>
-            <span *ngIf="getTotalDevueltos(acta) > 0"><i class="fa-solid fa-undo"></i> {{ getTotalDevueltos(acta) }} dev.</span>
+
+          <div class="acta-card__meta">
+            <span class="acta-card__meta-item">
+              <i class="fa-solid fa-calendar"></i>
+              {{ acta.fechaEntrega | date: "dd/MM/yyyy" }}
+            </span>
+            <span class="acta-card__meta-item">
+              <i class="fa-solid fa-couch"></i>
+              {{ getTotalItems(acta) }} und.
+            </span>
+            <span
+              class="acta-card__meta-item acta-card__meta-item--return"
+              *ngIf="getTotalDevueltos(acta) > 0"
+            >
+              <i class="fa-solid fa-undo"></i>
+              {{ getTotalDevueltos(acta) }} dev.
+            </span>
           </div>
         </div>
-        <div class="acta-card-actions" (click)="$event.stopPropagation()">
-          <button *ngIf="acta.estado === 'pendiente_firma'" class="btn-action btn-send" (click)="reenviarFirma(acta)" title="Reenviar correo">
+
+        <div class="acta-card__actions" (click)="$event.stopPropagation()">
+          <button
+            *ngIf="acta.estado === 'pendiente_firma'"
+            class="btn-action btn-action--info"
+            (click)="reenviarFirma(acta)"
+            title="Reenviar correo"
+          >
             <i class="fa-solid fa-envelope"></i>
           </button>
-          <button *ngIf="acta.estado === 'activa' || acta.estado === 'devuelta_parcial'" class="btn-action btn-return" (click)="abrirDevolucion(acta)" title="Registrar devolucion">
+          <button
+            *ngIf="
+              acta.estado === 'activa' || acta.estado === 'devuelta_parcial'
+            "
+            class="btn-action btn-action--warning"
+            (click)="abrirDevolucion(acta)"
+            title="Registrar devolución"
+          >
             <i class="fa-solid fa-undo-alt"></i>
           </button>
-          <button *ngIf="acta.estado === 'pendiente_firma'" class="btn-action btn-cancel" (click)="cancelarActa(acta)" title="Cancelar acta">
+          <button
+            *ngIf="acta.estado === 'pendiente_firma'"
+            class="btn-action btn-action--danger"
+            (click)="cancelarActa(acta)"
+            title="Cancelar acta"
+          >
             <i class="fa-solid fa-ban"></i>
           </button>
-          <button *ngIf="acta.estado == 'cancelada' || acta.estado == 'rechazada'" class="btn-action btn-delete" (click)="eliminarActa(acta)" title="Eliminar acta">
+          <button
+            *ngIf="acta.estado == 'cancelada' || acta.estado == 'rechazada'"
+            class="btn-action btn-action--danger"
+            (click)="eliminarActa(acta)"
+            title="Eliminar acta"
+          >
             <i class="fa-solid fa-trash"></i>
           </button>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Empty -->
+    <!-- ═══ EMPTY STATE ═══ -->
     <div class="empty-state" *ngIf="!loading && actasFiltradas.length === 0">
-      <i class="fa-solid fa-folder-open"></i>
-      <h3>No hay actas</h3>
-      <p>No se encontraron actas de mobiliario con los filtros aplicados</p>
-      <button class="btn-crear" (click)="crearNuevaActa()"><i class="fa-solid fa-plus"></i> Crear primera acta</button>
+      <div class="empty-state__icon">
+        <i class="fa-solid fa-folder-open"></i>
+      </div>
+      <h4 class="empty-state__title">No hay actas</h4>
+      <p class="empty-state__desc">
+        No se encontraron actas de mobiliario con los filtros aplicados
+      </p>
+      <button
+        class="btn btn--primary"
+        (click)="crearNuevaActa()"
+        style="margin-top: 0.75rem"
+      >
+        <i class="fa-solid fa-plus"></i> Crear primera acta
+      </button>
     </div>
   </div>
 </div>
 
-<!-- Modal Detalle -->
+<!-- ═══════════════════════════════════ -->
+<!-- MODAL: DETALLE DE ACTA             -->
+<!-- ═══════════════════════════════════ -->
 <div class="modal-overlay" *ngIf="mostrarDetalle" (click)="cerrarDetalle()">
-  <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2><i class="fa-solid fa-file-lines"></i> {{ actaSeleccionada?.numeroActa }}</h2>
-      <span class="badge" [ngClass]="getEstadoClass(actaSeleccionada?.estado || '')">{{ getEstadoLabel(actaSeleccionada?.estado || '') }}</span>
-      <button class="btn-close-modal" (click)="cerrarDetalle()"><i class="fa-solid fa-xmark"></i></button>
+  <div class="modal modal--lg" (click)="$event.stopPropagation()">
+    <div class="modal__header modal__header--default">
+      <div class="modal__header-left">
+        <div class="modal__header-icon">
+          <i class="fa-solid fa-file-lines"></i>
+        </div>
+        <h2 class="modal__title">{{ actaSeleccionada?.numeroActa }}</h2>
+        <span
+          class="status-badge status-badge--sm"
+          [ngClass]="getEstadoClass(actaSeleccionada?.estado || '')"
+        >
+          {{ getEstadoLabel(actaSeleccionada?.estado || "") }}
+        </span>
+      </div>
+      <button class="modal__close" (click)="cerrarDetalle()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
     </div>
-    <div class="modal-body" *ngIf="actaSeleccionada">
-      <div class="detalle-grid">
-        <div class="detalle-item"><label>Receptor</label><span>{{ actaSeleccionada.nombreReceptor }}</span></div>
-        <div class="detalle-item"><label>Cargo</label><span>{{ actaSeleccionada.cargoReceptor }}</span></div>
-        <div class="detalle-item"><label>Correo</label><span>{{ actaSeleccionada.correoReceptor }}</span></div>
-        <div class="detalle-item"><label>Fecha Entrega</label><span>{{ actaSeleccionada.fechaEntrega | date:'dd/MM/yyyy HH:mm' }}</span></div>
-        <div class="detalle-item" *ngIf="actaSeleccionada.fechaFirma"><label>Fecha Firma</label><span>{{ actaSeleccionada.fechaFirma | date:'dd/MM/yyyy HH:mm' }}</span></div>
-        <div class="detalle-item" *ngIf="actaSeleccionada.observacionesEntrega"><label>Observaciones</label><span>{{ actaSeleccionada.observacionesEntrega }}</span></div>
+
+    <div class="modal__body" *ngIf="actaSeleccionada">
+      <!-- Detalle Grid -->
+      <div class="detail-grid">
+        <div class="detail-grid__item">
+          <label class="detail-grid__label">Receptor</label>
+          <span class="detail-grid__value">{{
+            actaSeleccionada.nombreReceptor
+          }}</span>
+        </div>
+        <div class="detail-grid__item">
+          <label class="detail-grid__label">Cargo</label>
+          <span class="detail-grid__value">{{
+            actaSeleccionada.cargoReceptor
+          }}</span>
+        </div>
+        <div class="detail-grid__item">
+          <label class="detail-grid__label">Correo</label>
+          <span class="detail-grid__value">{{
+            actaSeleccionada.correoReceptor
+          }}</span>
+        </div>
+        <div class="detail-grid__item">
+          <label class="detail-grid__label">Fecha Entrega</label>
+          <span class="detail-grid__value">{{
+            actaSeleccionada.fechaEntrega | date: "dd/MM/yyyy HH:mm"
+          }}</span>
+        </div>
+        <div class="detail-grid__item" *ngIf="actaSeleccionada.fechaFirma">
+          <label class="detail-grid__label">Fecha Firma</label>
+          <span class="detail-grid__value">{{
+            actaSeleccionada.fechaFirma | date: "dd/MM/yyyy HH:mm"
+          }}</span>
+        </div>
+        <div
+          class="detail-grid__item detail-grid__item--full"
+          *ngIf="actaSeleccionada.observacionesEntrega"
+        >
+          <label class="detail-grid__label">Observaciones</label>
+          <span class="detail-grid__value">{{
+            actaSeleccionada.observacionesEntrega
+          }}</span>
+        </div>
       </div>
 
-      <h3 class="section-title">Muebles ({{ actaSeleccionada.detalles?.length || 0 }})</h3>
-      <div class="detalles-table">
-        <table>
-          <thead>
-            <tr>
-              <th>Mueble</th>
-              <th>Categoria</th>
-              <th>Cantidad</th>
-              <th>Condicion</th>
-              <th>Devueltos</th>
-              <th>Pendiente</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let d of actaSeleccionada.detalles">
-              <td>{{ d.mobiliario?.nombre }}</td>
-              <td>{{ d.mobiliario?.categoria }}</td>
-              <td class="text-center">{{ d.cantidad }}</td>
-              <td><span class="badge-sm">{{ d.condicionEntrega }}</span></td>
-              <td class="text-center">{{ d.cantidadDevuelta }}</td>
-              <td class="text-center">{{ d.cantidad - d.cantidadDevuelta }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Tabla de Muebles -->
+      <div class="detail-section">
+        <h3 class="detail-section__title">
+          <i class="fa-solid fa-couch"></i>
+          Muebles
+          <span class="detail-section__count">{{
+            actaSeleccionada.detalles?.length || 0
+          }}</span>
+        </h3>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mueble</th>
+                <th>Categoría</th>
+                <th>Cantidad</th>
+                <th>Condición</th>
+                <th>Devueltos</th>
+                <th>Pendiente</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let d of actaSeleccionada.detalles">
+                <td data-label="Mueble">
+                  <strong class="td-main-text">{{
+                    d.mobiliario?.nombre
+                  }}</strong>
+                </td>
+                <td data-label="Categoría">
+                  <span class="categoria-badge">{{
+                    d.mobiliario?.categoria
+                  }}</span>
+                </td>
+                <td data-label="Cantidad" class="text-center">
+                  <span class="qty-badge">{{ d.cantidad }}</span>
+                </td>
+                <td data-label="Condición">
+                  <span class="condition-badge">{{ d.condicionEntrega }}</span>
+                </td>
+                <td data-label="Devueltos" class="text-center">
+                  <span
+                    class="qty-badge qty-badge--returned"
+                    *ngIf="d.cantidadDevuelta > 0"
+                    >{{ d.cantidadDevuelta }}</span
+                  >
+                  <span class="sin-datos" *ngIf="d.cantidadDevuelta === 0"
+                    >0</span
+                  >
+                </td>
+                <td data-label="Pendiente" class="text-center">
+                  <span
+                    class="qty-badge"
+                    [class.qty-badge--pending]="
+                      d.cantidad - d.cantidadDevuelta > 0
+                    "
+                    >{{ d.cantidad - d.cantidadDevuelta }}</span
+                  >
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button *ngIf="actaSeleccionada?.estado === 'pendiente_firma'" class="btn btn-primary" (click)="enviarFirma(actaSeleccionada!)"><i class="fa-solid fa-paper-plane"></i> Enviar Firma</button>
-      <button *ngIf="actaSeleccionada?.estado === 'activa' || actaSeleccionada?.estado === 'devuelta_parcial'" class="btn btn-info" (click)="cerrarDetalle(); abrirDevolucion(actaSeleccionada!)"><i class="fa-solid fa-undo-alt"></i> Registrar Devolucion</button>
-      <button class="btn btn-secondary" (click)="cerrarDetalle()">Cerrar</button>
+
+    <div class="modal__footer">
+      <button class="btn btn--outline" (click)="cerrarDetalle()">Cerrar</button>
+      <button
+        *ngIf="actaSeleccionada?.estado === 'pendiente_firma'"
+        class="btn btn--primary"
+        (click)="enviarFirma(actaSeleccionada!)"
+      >
+        <i class="fa-solid fa-paper-plane"></i> Enviar Firma
+      </button>
+      <button
+        *ngIf="
+          actaSeleccionada?.estado === 'activa' ||
+          actaSeleccionada?.estado === 'devuelta_parcial'
+        "
+        class="btn btn--info"
+        (click)="cerrarDetalle(); abrirDevolucion(actaSeleccionada!)"
+      >
+        <i class="fa-solid fa-undo-alt"></i> Registrar Devolución
+      </button>
     </div>
   </div>
 </div>
 
-<!-- Modal Devolucion -->
-<div class="modal-overlay" *ngIf="mostrarDevolucion" (click)="cerrarDevolucion()">
-  <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h2><i class="fa-solid fa-undo-alt"></i> Devolucion - {{ actaDevolucion?.numeroActa }}</h2>
-      <button class="btn-close-modal" (click)="cerrarDevolucion()"><i class="fa-solid fa-xmark"></i></button>
+<!-- ═══════════════════════════════════ -->
+<!-- MODAL: DEVOLUCIÓN                  -->
+<!-- ═══════════════════════════════════ -->
+<div
+  class="modal-overlay"
+  *ngIf="mostrarDevolucion"
+  (click)="cerrarDevolucion()"
+>
+  <div class="modal modal--lg" (click)="$event.stopPropagation()">
+    <div class="modal__header modal__header--warning">
+      <div class="modal__header-left">
+        <div class="modal__header-icon">
+          <i class="fa-solid fa-undo-alt"></i>
+        </div>
+        <h2 class="modal__title">
+          Devolución - {{ actaDevolucion?.numeroActa }}
+        </h2>
+      </div>
+      <button class="modal__close" (click)="cerrarDevolucion()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
     </div>
-    <div class="modal-body">
-      <p class="modal-desc">Indique la cantidad a devolver por cada mueble:</p>
 
-      <div class="devolucion-items">
-        <div class="devolucion-item" *ngFor="let item of devolucionItems; let i = index">
-          <div class="devolucion-item-header">
-            <strong>{{ item.nombre }}</strong>
-            <span class="pendiente-badge">{{ item.pendiente }} pendientes</span>
+    <div class="modal__body">
+      <p class="modal__desc">Indique la cantidad a devolver por cada mueble:</p>
+
+      <div class="devolucion-list">
+        <div
+          class="devolucion-card"
+          *ngFor="let item of devolucionItems; let i = index"
+        >
+          <div class="devolucion-card__head">
+            <div class="devolucion-card__icon">
+              <i class="fa-solid fa-couch"></i>
+            </div>
+            <div class="devolucion-card__title">
+              <strong>{{ item.nombre }}</strong>
+            </div>
+            <span class="devolucion-card__pending"
+              >{{ item.pendiente }} pendientes</span
+            >
           </div>
-          <div class="devolucion-item-form">
-            <div class="dev-field">
-              <label>Cantidad:</label>
-              <input type="number" [(ngModel)]="item.cantidadDevolver" [name]="'devCant_' + i" min="0" [max]="item.pendiente" class="input-sm" />
+
+          <div class="devolucion-card__form">
+            <div class="form-field">
+              <label class="form-field__label">Cantidad</label>
+              <input
+                class="form-field__input form-field__input--sm"
+                type="number"
+                [(ngModel)]="item.cantidadDevolver"
+                [name]="'devCant_' + i"
+                min="0"
+                [max]="item.pendiente"
+              />
             </div>
-            <div class="dev-field">
-              <label>Estado:</label>
-              <select [(ngModel)]="item.estadoDevolucion" [name]="'devEst_' + i" class="select-sm">
-                <option value="disponible">Disponible</option>
-                <option value="dañado">Danado</option>
-                <option value="perdido">Perdido</option>
-              </select>
+            <div class="form-field">
+              <label class="form-field__label">Estado</label>
+              <div class="form-field__select-wrap">
+                <select
+                  class="form-field__select form-field__select--sm"
+                  [(ngModel)]="item.estadoDevolucion"
+                  [name]="'devEst_' + i"
+                >
+                  <option value="disponible">Disponible</option>
+                  <option value="dañado">Dañado</option>
+                  <option value="perdido">Perdido</option>
+                </select>
+              </div>
             </div>
-            <div class="dev-field">
-              <label>Condicion:</label>
-              <select [(ngModel)]="item.condicionDevolucion" [name]="'devCond_' + i" class="select-sm">
-                <option value="bueno">Bueno</option>
-                <option value="regular">Regular</option>
-                <option value="malo">Malo</option>
-              </select>
+            <div class="form-field">
+              <label class="form-field__label">Condición</label>
+              <div class="form-field__select-wrap">
+                <select
+                  class="form-field__select form-field__select--sm"
+                  [(ngModel)]="item.condicionDevolucion"
+                  [name]="'devCond_' + i"
+                >
+                  <option value="bueno">Bueno</option>
+                  <option value="regular">Regular</option>
+                  <option value="malo">Malo</option>
+                </select>
+              </div>
             </div>
-            <div class="dev-field full">
-              <label>Obs:</label>
-              <input type="text" [(ngModel)]="item.observaciones" [name]="'devObs_' + i" placeholder="Opcional..." class="input-sm" />
+            <div class="form-field form-field--full">
+              <label class="form-field__label">Observaciones</label>
+              <input
+                class="form-field__input form-field__input--sm"
+                type="text"
+                [(ngModel)]="item.observaciones"
+                [name]="'devObs_' + i"
+                placeholder="Opcional..."
+              />
             </div>
           </div>
         </div>
       </div>
 
-      <div class="dev-observaciones">
-        <label>Observaciones generales:</label>
-        <textarea [(ngModel)]="observacionesDevolucion" name="obsDevGen" rows="2" placeholder="Notas adicionales..." class="textarea-sm"></textarea>
+      <div class="form-field" style="margin-top: 0.65rem">
+        <label class="form-field__label">Observaciones generales</label>
+        <textarea
+          class="form-field__textarea"
+          [(ngModel)]="observacionesDevolucion"
+          name="obsDevGen"
+          rows="2"
+          placeholder="Notas adicionales..."
+        ></textarea>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="cerrarDevolucion()">Cancelar</button>
-      <button class="btn btn-primary" (click)="registrarDevolucion()" [disabled]="loadingDevolucion">
-        <i class="fa-solid" [ngClass]="loadingDevolucion ? 'fa-spinner fa-spin' : 'fa-check'"></i>
-        {{ loadingDevolucion ? 'Procesando...' : 'Registrar Devolucion' }}
+
+    <div class="modal__footer">
+      <button class="btn btn--outline" (click)="cerrarDevolucion()">
+        Cancelar
+      </button>
+      <button
+        class="btn btn--primary"
+        (click)="registrarDevolucion()"
+        [disabled]="loadingDevolucion"
+      >
+        <i
+          class="fa-solid"
+          [ngClass]="loadingDevolucion ? 'fa-spinner fa-spin' : 'fa-check'"
+        ></i>
+        {{ loadingDevolucion ? "Procesando..." : "Registrar Devolución" }}
       </button>
     </div>
   </div>

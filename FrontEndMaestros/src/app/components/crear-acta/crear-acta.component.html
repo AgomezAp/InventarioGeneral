@@ -1,103 +1,114 @@
 <app-navbar></app-navbar>
 
-<div class="crear-acta-container">
-  <div class="form-wrapper">
-    <!-- Header Compacto -->
-    <header class="page-header">
-      <div class="header-content">
-        <button class="btn-back" (click)="cancelar()" aria-label="Volver">
-          <i class="pi pi-arrow-left"></i>
-        </button>
-        <div class="header-info">
-          <h1><i class="pi pi-file-edit"></i> Crear Acta de Entrega</h1>
-        </div>
-        <!-- Indicador de pasos -->
-        <div class="header-steps">
-          <span
-            class="step"
-            [class.completed]="receptor.nombre && receptor.correo"
-          >
-            <i class="pi pi-user"></i>
-          </span>
-          <span
-            class="step"
-            [class.completed]="dispositivosSeleccionados.length > 0"
-          >
-            <i class="pi pi-box"></i>
-          </span>
-          <span
-            class="step"
-            [class.completed]="
-              dispositivosSeleccionados.length > 0 && receptor.nombre
-            "
-          >
-            <i class="pi pi-send"></i>
-          </span>
-        </div>
+<div class="acta-wrapper">
+  <!-- ═══ HEADER ═══ -->
+  <header class="acta-header">
+    <div class="acta-header__left">
+      <button class="acta-header__back" (click)="cancelar()" title="Volver">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div class="acta-header__icon">
+        <i class="pi pi-file-edit"></i>
       </div>
-    </header>
-
-    <!-- Alertas -->
-    <div class="alert alert-error" *ngIf="errorMessage">
-      <i class="pi pi-exclamation-circle"></i>
-      <span>{{ errorMessage }}</span>
-      <button class="alert-close" (click)="errorMessage = ''">
-        <i class="pi pi-times"></i>
-      </button>
+      <div class="acta-header__text">
+        <h1>Crear Acta de Entrega</h1>
+        <p>Complete los datos del receptor y seleccione los dispositivos</p>
+      </div>
     </div>
-
-    <div class="alert alert-success" *ngIf="successMessage">
-      <i class="pi pi-check-circle"></i>
-      <span>{{ successMessage }}</span>
-      <button class="alert-close" (click)="successMessage = ''">
-        <i class="pi pi-times"></i>
-      </button>
+    <div class="acta-header__steps">
+      <div
+        class="step-dot"
+        [class.step-dot--done]="receptor.nombre && receptor.correo"
+      >
+        <i class="pi pi-user"></i>
+      </div>
+      <div
+        class="step-line"
+        [class.step-line--done]="receptor.nombre && receptor.correo"
+      ></div>
+      <div
+        class="step-dot"
+        [class.step-dot--done]="dispositivosSeleccionados.length > 0"
+      >
+        <i class="pi pi-box"></i>
+      </div>
+      <div
+        class="step-line"
+        [class.step-line--done]="
+          dispositivosSeleccionados.length > 0 && receptor.nombre
+        "
+      ></div>
+      <div
+        class="step-dot"
+        [class.step-dot--done]="
+          dispositivosSeleccionados.length > 0 &&
+          receptor.nombre &&
+          receptor.correo
+        "
+      >
+        <i class="pi pi-send"></i>
+      </div>
     </div>
+  </header>
 
-    <form (ngSubmit)="crearActa()" class="form-content">
-      <!-- Layout de 2 columnas -->
-      <div class="form-grid-main">
-        <!-- COLUMNA IZQUIERDA -->
-        <div class="form-column">
-          <!-- Datos del receptor - Compacto -->
-          <section class="section-card section-compact">
-            <div class="section-header-inline">
-              <i class="pi pi-user section-icon-sm"></i>
-              <h3>Datos del receptor</h3>
-            </div>
+  <!-- ═══ ALERTAS ═══ -->
+  <div class="acta-alert acta-alert--error" *ngIf="errorMessage">
+    <i class="pi pi-exclamation-circle"></i>
+    <span>{{ errorMessage }}</span>
+    <button class="acta-alert__close" (click)="errorMessage = ''">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
 
-            <div class="form-row-compact">
-              <div class="form-group-compact">
-                <label for="nombre"
-                  >Nombre <span class="required">*</span></label
-                >
+  <div class="acta-alert acta-alert--success" *ngIf="successMessage">
+    <i class="pi pi-check-circle"></i>
+    <span>{{ successMessage }}</span>
+    <button class="acta-alert__close" (click)="successMessage = ''">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+
+  <!-- ═══ FORMULARIO ═══ -->
+  <form (ngSubmit)="crearActa()" class="acta-form">
+    <div class="acta-grid">
+      <!-- ══════════════════════════════
+           COLUMNA IZQUIERDA
+           ══════════════════════════════ -->
+      <div class="acta-col acta-col--left">
+        <!-- Receptor -->
+        <section class="card">
+          <div class="card__head">
+            <i class="pi pi-user"></i>
+            <h3>Datos del receptor</h3>
+          </div>
+          <div class="card__body">
+            <div class="field-row">
+              <div class="field">
+                <label for="nombre">Nombre <span class="req">*</span></label>
                 <input
                   type="text"
                   id="nombre"
                   [(ngModel)]="receptor.nombre"
                   name="nombre"
                   placeholder="Nombre completo"
-                  class="input-compact"
                   required
                 />
               </div>
-              <div class="form-group-compact">
-                <label for="cargo">Cargo <span class="required">*</span></label>
+              <div class="field">
+                <label for="cargo">Cargo <span class="req">*</span></label>
                 <input
                   type="text"
                   id="cargo"
                   [(ngModel)]="receptor.cargo"
                   name="cargo"
                   placeholder="Cargo o posición"
-                  class="input-compact"
                   required
                 />
               </div>
             </div>
-
-            <div class="form-group-compact">
-              <label for="correo">Correo <span class="required">*</span></label>
-              <div class="input-icon-wrapper">
+            <div class="field">
+              <label for="correo">Correo <span class="req">*</span></label>
+              <div class="field__icon-wrap">
                 <i class="pi pi-envelope"></i>
                 <input
                   type="email"
@@ -105,432 +116,492 @@
                   [(ngModel)]="receptor.correo"
                   name="correo"
                   placeholder="correo@ejemplo.com"
-                  class="input-compact with-icon"
                   required
                 />
               </div>
-              <span class="field-hint">
+              <span class="field__hint">
                 <i class="pi pi-info-circle"></i>
                 El receptor recibirá un enlace para firmar digitalmente
               </span>
             </div>
-          </section>
+          </div>
+        </section>
 
-          <!-- Dispositivos a entregar -->
-          <section class="section-card section-compact section-devices">
-            <div class="section-header-inline">
-              <i class="pi pi-box section-icon-sm"></i>
-              <h3>Dispositivos a entregar</h3>
-              <span
-                class="badge-count"
-                *ngIf="dispositivosSeleccionados.length > 0"
+        <!-- Dispositivos -->
+        <section class="card card--devices">
+          <div class="card__head">
+            <i class="pi pi-box"></i>
+            <h3>Dispositivos a entregar</h3>
+            <span
+              class="card__badge"
+              *ngIf="dispositivosSeleccionados.length > 0"
+            >
+              {{ dispositivosSeleccionados.length }}
+            </span>
+          </div>
+          <div class="card__body">
+            <!-- Buscador -->
+            <div class="search-bar">
+              <i class="pi pi-search"></i>
+              <input
+                type="text"
+                [(ngModel)]="busquedaDispositivo"
+                (input)="filtrarDispositivos()"
+                placeholder="Buscar por nombre, marca, modelo, serial..."
+                name="busquedaDispositivo"
+              />
+              <button
+                type="button"
+                class="search-bar__clear"
+                *ngIf="busquedaDispositivo"
+                (click)="busquedaDispositivo = ''; filtrarDispositivos()"
               >
-                {{ dispositivosSeleccionados.length }}
-              </span>
+                <i class="pi pi-times"></i>
+              </button>
             </div>
 
-            <!-- Dispositivos disponibles -->
-            <div class="disponibles-area">
-              <label class="mini-label">Disponibles:</label>
+            <!-- Loading -->
+            <div class="inline-loader" *ngIf="loadingDispositivos">
+              <div class="inline-loader__spin"></div>
+              <span>Cargando dispositivos...</span>
+            </div>
 
-              <!-- Buscador de dispositivos -->
-              <div class="buscador-dispositivos">
-                <i class="pi pi-search"></i>
-                <input 
-                  type="text" 
-                  [(ngModel)]="busquedaDispositivo"
-                  (input)="filtrarDispositivos()"
-                  placeholder="Buscar por nombre, marca, modelo, serial o IMEI..."
-                  class="input-busqueda"
-                  name="busquedaDispositivo"
-                />
-                <button 
-                  type="button"
-                  class="btn-limpiar-busqueda" 
-                  *ngIf="busquedaDispositivo"
-                  (click)="busquedaDispositivo = ''; filtrarDispositivos()"
-                >
-                  <i class="pi pi-times"></i>
-                </button>
-              </div>
-
-              <!-- Loading -->
-              <div class="loading-inline" *ngIf="loadingDispositivos">
-                <div class="spinner-sm"></div>
-                <span>Cargando...</span>
-              </div>
-
-              <!-- Lista compacta de disponibles -->
+            <!-- Lista disponibles -->
+            <div
+              class="avail-list"
+              [class.avail-list--compact]="dispositivosSeleccionados.length > 0"
+              *ngIf="
+                !loadingDispositivos &&
+                dispositivosDisponiblesFiltrados.length > 0
+              "
+            >
               <div
-                class="disponibles-scroll"
-                [class.compacta]="dispositivosSeleccionados.length > 0"
-                *ngIf="
-                  !loadingDispositivos && dispositivosDisponiblesFiltrados.length > 0
-                "
+                class="avail-item-wrap"
+                *ngFor="let disp of dispositivosDisponiblesFiltrados"
               >
                 <div
-                  class="disp-chip-wrapper"
-                  *ngFor="let disp of dispositivosDisponiblesFiltrados"
+                  class="avail-item"
+                  (click)="agregarDispositivo(disp)"
+                  tabindex="0"
                 >
-                  <div
-                    class="disp-chip"
-                    (click)="agregarDispositivo(disp)"
-                    tabindex="0"
-                  >
+                  <div class="avail-item__icon">
                     <i
                       class="pi"
                       [ngClass]="getCategoriaIcon(disp.categoria)"
                     ></i>
-                    <div class="disp-chip-info">
-                      <span class="disp-chip-name">{{ disp.marca }} {{ disp.modelo }}</span>
-                      <span class="disp-chip-meta">
-                        <span>{{ disp.categoria | titlecase }}</span>
-                        <span *ngIf="disp.color" class="disp-chip-color">{{ disp.color }}</span>
-                      </span>
-                    </div>
-                    <span class="disp-chip-cat">{{ disp.categoria | titlecase }}</span>
-                    <span class="disp-chip-stock" *ngIf="disp.tipoRegistro === 'stock'">
-                      x{{ disp.stockDisponible ?? disp.stockActual }}
-                    </span>
-                    <span class="disp-chip-detail disp-chip-serial" *ngIf="disp.imei || disp.serial">
-                      {{ disp.imei || disp.serial }}
-                    </span>
-                    <button
-                      type="button"
-                      class="btn-info-desc"
-                      *ngIf="disp.descripcion"
-                      (click)="toggleDescripcion(disp.id!); $event.stopPropagation()"
-                      title="Ver descripción"
+                  </div>
+                  <div class="avail-item__info">
+                    <span class="avail-item__name"
+                      >{{ disp.marca }} {{ disp.modelo }}</span
                     >
-                      <i class="pi pi-info-circle"></i>
-                    </button>
-                    <i class="pi pi-plus add-icon"></i>
+                    <span class="avail-item__meta">
+                      {{ disp.categoria | titlecase }}
+                      <span *ngIf="disp.color">&middot; {{ disp.color }}</span>
+                      <span *ngIf="disp.serial"
+                        >&middot; S/N: {{ disp.serial }}</span
+                      >
+                      <span *ngIf="disp.imei"
+                        >&middot; IMEI: {{ disp.imei }}</span
+                      >
+                    </span>
                   </div>
-                  <div class="descripcion-expandida" *ngIf="descripcionExpandida.has(disp.id!)">
-                    <p>{{ disp.descripcion }}</p>
-                  </div>
+                  <span
+                    class="avail-item__stock"
+                    *ngIf="disp.tipoRegistro === 'stock'"
+                  >
+                    x{{ disp.stockDisponible ?? disp.stockActual }}
+                  </span>
+                  <button
+                    type="button"
+                    class="avail-item__desc-btn"
+                    *ngIf="disp.descripcion"
+                    (click)="
+                      toggleDescripcion(disp.id!); $event.stopPropagation()
+                    "
+                    title="Ver descripción"
+                  >
+                    <i class="pi pi-info-circle"></i>
+                  </button>
+                  <i class="pi pi-plus avail-item__add"></i>
                 </div>
-              </div>
-
-              <!-- Sin resultados de búsqueda -->
-              <div
-                class="empty-mini"
-                *ngIf="
-                  !loadingDispositivos && dispositivosDisponiblesFiltrados.length === 0 && busquedaDispositivo
-                "
-              >
-                <i class="pi pi-search"></i>
-                <span>No se encontraron dispositivos con "{{ busquedaDispositivo }}"</span>
-              </div>
-
-              <!-- Sin disponibles -->
-              <div
-                class="empty-mini"
-                *ngIf="
-                  !loadingDispositivos && dispositivosDisponibles.length === 0 && !busquedaDispositivo
-                "
-              >
-                <i class="pi pi-inbox"></i>
-                <span>No hay dispositivos disponibles</span>
+                <div
+                  class="avail-item__desc-panel"
+                  *ngIf="descripcionExpandida.has(disp.id!)"
+                >
+                  <p>{{ disp.descripcion }}</p>
+                </div>
               </div>
             </div>
 
-            <!-- Dispositivos seleccionados - EXPANDIDO -->
+            <!-- Sin resultados -->
             <div
-              class="seleccionados-area"
+              class="empty-msg"
+              *ngIf="
+                !loadingDispositivos &&
+                dispositivosDisponiblesFiltrados.length === 0 &&
+                busquedaDispositivo
+              "
+            >
+              <i class="pi pi-search"></i>
+              <span
+                >No se encontraron resultados para "{{
+                  busquedaDispositivo
+                }}"</span
+              >
+            </div>
+
+            <div
+              class="empty-msg"
+              *ngIf="
+                !loadingDispositivos &&
+                dispositivosDisponibles.length === 0 &&
+                !busquedaDispositivo
+              "
+            >
+              <i class="pi pi-inbox"></i>
+              <span>No hay dispositivos disponibles</span>
+            </div>
+
+            <!-- ═══ SELECCIONADOS ═══ -->
+            <div
+              class="selected-area"
               *ngIf="dispositivosSeleccionados.length > 0"
             >
-              <label class="mini-label success">
+              <div class="selected-area__label">
                 <i class="pi pi-check-circle"></i>
-                Seleccionados ({{ dispositivosSeleccionados.length }}):
-              </label>
+                Seleccionados ({{ dispositivosSeleccionados.length }})
+              </div>
 
-              <!-- Contenedor con scroll solo si hay más de 3 -->
               <div
-                class="seleccionados-list"
-                [class.with-scroll]="dispositivosSeleccionados.length > 3"
+                class="selected-list"
               >
                 <div
-                  class="disp-card"
+                  class="sel-card"
                   *ngFor="let item of dispositivosSeleccionados; let i = index"
                 >
-                  <!-- Header del dispositivo -->
-                  <div class="disp-card-header">
-                    <div class="disp-card-icon">
+                  <!-- Header -->
+                  <div class="sel-card__head">
+                    <div class="sel-card__icon">
                       <i
                         class="pi"
                         [ngClass]="getCategoriaIcon(item.dispositivo.categoria)"
                       ></i>
                     </div>
-                    <div class="disp-card-title">
-                      <h4>{{ item.dispositivo.marca }} {{ item.dispositivo.modelo }}</h4>
-                      <span class="disp-card-subtitle">
+                    <div class="sel-card__title">
+                      <strong
+                        >{{ item.dispositivo.marca }}
+                        {{ item.dispositivo.modelo }}</strong
+                      >
+                      <small>
                         {{ item.dispositivo.categoria | titlecase }}
-                        <span *ngIf="item.dispositivo.color"> &middot; {{ item.dispositivo.color }}</span>
-                      </span>
+                        <span *ngIf="item.dispositivo.color"
+                          >&middot; {{ item.dispositivo.color }}</span
+                        >
+                      </small>
                     </div>
-                    <span class="disp-card-cat-badge">{{ item.dispositivo.categoria | titlecase }}</span>
                     <button
                       type="button"
-                      class="btn-remove-card"
+                      class="sel-card__remove"
                       (click)="quitarDispositivo(i)"
-                      title="Quitar dispositivo"
+                      title="Quitar"
                     >
                       <i class="pi pi-times"></i>
                     </button>
                   </div>
 
-                  <!-- Info rápida del dispositivo -->
-                  <div class="disp-card-info-row">
-                    <div class="info-tag" *ngIf="item.dispositivo.imei">
-                      <i class="pi pi-mobile"></i>
-                      <span class="info-tag-label">IMEI:</span>
-                      <span class="info-tag-value">{{ item.dispositivo.imei }}</span>
-                    </div>
-                    <div class="info-tag" *ngIf="item.dispositivo.serial">
-                      <i class="pi pi-hashtag"></i>
-                      <span class="info-tag-label">Serial:</span>
-                      <span class="info-tag-value">{{ item.dispositivo.serial }}</span>
-                    </div>
-                    <div class="info-tag" *ngIf="item.dispositivo.condicion">
+                  <!-- Tags info -->
+                  <div class="sel-card__tags">
+                    <span class="tag" *ngIf="item.dispositivo.imei">
+                      <i class="pi pi-mobile"></i> IMEI:
+                      {{ item.dispositivo.imei }}
+                    </span>
+                    <span class="tag" *ngIf="item.dispositivo.serial">
+                      <i class="pi pi-hashtag"></i> S/N:
+                      {{ item.dispositivo.serial }}
+                    </span>
+                    <span class="tag" *ngIf="item.dispositivo.condicion">
                       <i class="pi pi-shield"></i>
-                      <span class="info-tag-value condicion-{{ item.dispositivo.condicion }}">{{ item.dispositivo.condicion | titlecase }}</span>
-                    </div>
-                    <div class="info-tag" *ngIf="item.dispositivo.ubicacion">
+                      {{ item.dispositivo.condicion | titlecase }}
+                    </span>
+                    <span class="tag" *ngIf="item.dispositivo.ubicacion">
                       <i class="pi pi-map-marker"></i>
-                      <span class="info-tag-value">{{ item.dispositivo.ubicacion }}</span>
-                    </div>
-                    <div class="info-tag info-tag-stock" *ngIf="item.dispositivo.tipoRegistro === 'stock'">
-                      <i class="pi pi-box"></i>
-                      <span class="info-tag-value">Disponible: {{ item.dispositivo.stockDisponible ?? item.dispositivo.stockActual }}</span>
-                    </div>
+                      {{ item.dispositivo.ubicacion }}
+                    </span>
+                    <span
+                      class="tag tag--stock"
+                      *ngIf="item.dispositivo.tipoRegistro === 'stock'"
+                    >
+                      <i class="pi pi-box"></i> Disp:
+                      {{
+                        item.dispositivo.stockDisponible ??
+                          item.dispositivo.stockActual
+                      }}
+                    </span>
                   </div>
 
-                  <!-- Descripción del dispositivo -->
-                  <div class="disp-card-descripcion" *ngIf="item.dispositivo.descripcion">
+                  <!-- Descripción -->
+                  <div
+                    class="sel-card__desc"
+                    *ngIf="item.dispositivo.descripcion"
+                  >
                     <i class="pi pi-info-circle"></i>
                     <span>{{ item.dispositivo.descripcion }}</span>
                   </div>
 
-                  <!-- Formulario del dispositivo -->
-                  <div class="disp-card-form">
-                    <div class="form-row-device">
-                      <!-- Campo de cantidad solo para dispositivos tipo stock -->
-                      <div class="form-field" *ngIf="item.dispositivo.tipoRegistro === 'stock'">
-                        <label>Cantidad a entregar</label>
-                        <div class="cantidad-input-group">
-                          <button
-                            type="button"
-                            class="btn-cantidad btn-minus"
-                            (click)="item.cantidad = Math.max(1, item.cantidad - 1)"
-                            [disabled]="item.cantidad <= 1"
-                          >
-                            <i class="pi pi-minus"></i>
-                          </button>
-                          <input
-                            type="number"
-                            [(ngModel)]="item.cantidad"
-                            [name]="'cantidad_' + i"
-                            min="1"
-                            [max]="item.dispositivo.stockDisponible || item.dispositivo.stockActual || 999"
-                            class="input-cantidad"
-                          />
-                          <button
-                            type="button"
-                            class="btn-cantidad btn-plus"
-                            (click)="item.cantidad = Math.min(item.dispositivo.stockDisponible || item.dispositivo.stockActual || 999, item.cantidad + 1)"
-                            [disabled]="item.cantidad >= (item.dispositivo.stockDisponible || item.dispositivo.stockActual || 999)"
-                          >
-                            <i class="pi pi-plus"></i>
-                          </button>
-                          <span class="stock-disponible">
-                            / {{ item.dispositivo.stockDisponible ?? item.dispositivo.stockActual ?? 0 }} disp.
-                          </span>
-                        </div>
-                      </div>
-
-                      <div class="form-field">
-                        <label>Condición al entregar</label>
-                        <div class="select-device">
-                          <select
-                            [(ngModel)]="item.condicion"
-                            [name]="'condicion_' + i"
-                          >
-                            <option
-                              *ngFor="let cond of condiciones"
-                              [value]="cond.value"
-                            >
-                              {{ cond.label }}
-                            </option>
-                          </select>
-                          <i class="pi pi-chevron-down"></i>
-                        </div>
-                      </div>
-                      <div class="form-field flex-grow">
-                        <label>Observaciones</label>
+                  <!-- Form inline -->
+                  <div class="sel-card__form">
+                    <!-- Cantidad (solo stock) -->
+                    <div
+                      class="sel-field"
+                      *ngIf="item.dispositivo.tipoRegistro === 'stock'"
+                    >
+                      <label>Cantidad</label>
+                      <div class="qty-control">
+                        <button
+                          type="button"
+                          class="qty-btn qty-btn--minus"
+                          (click)="
+                            item.cantidad = Math.max(1, item.cantidad - 1)
+                          "
+                          [disabled]="item.cantidad <= 1"
+                        >
+                          <i class="pi pi-minus"></i>
+                        </button>
                         <input
-                          type="text"
-                          [(ngModel)]="item.observaciones"
-                          [name]="'obs_' + i"
-                          placeholder="Daños, accesorios incluidos, notas..."
-                          class="input-device"
+                          type="number"
+                          [(ngModel)]="item.cantidad"
+                          [name]="'cant_' + i"
+                          min="1"
+                          [max]="
+                            item.dispositivo.stockDisponible ||
+                            item.dispositivo.stockActual ||
+                            999
+                          "
+                          class="qty-input"
                         />
+                        <button
+                          type="button"
+                          class="qty-btn qty-btn--plus"
+                          (click)="
+                            item.cantidad = Math.min(
+                              item.dispositivo.stockDisponible ||
+                                item.dispositivo.stockActual ||
+                                999,
+                              item.cantidad + 1
+                            )
+                          "
+                          [disabled]="
+                            item.cantidad >=
+                            (item.dispositivo.stockDisponible ||
+                              item.dispositivo.stockActual ||
+                              999)
+                          "
+                        >
+                          <i class="pi pi-plus"></i>
+                        </button>
+                        <span class="qty-max"
+                          >/
+                          {{
+                            item.dispositivo.stockDisponible ??
+                              item.dispositivo.stockActual ??
+                              0
+                          }}</span
+                        >
                       </div>
                     </div>
 
-                    <!-- Fotos del dispositivo -->
-                    <div class="fotos-section">
-                      <label class="fotos-upload-btn" [for]="'fotos_' + i">
-                        <i class="pi pi-camera"></i>
-                        <span>Agregar fotos del estado actual</span>
-                        <input
-                          type="file"
-                          [id]="'fotos_' + i"
-                          multiple
-                          accept="image/*"
-                          (change)="onFotosSelected($event, i)"
-                          hidden
-                        />
-                      </label>
-
-                      <div
-                        class="fotos-preview-grid"
-                        *ngIf="item.fotosPreview.length > 0"
-                      >
-                        <div
-                          class="foto-preview-item"
-                          *ngFor="let foto of item.fotosPreview; let fi = index"
+                    <!-- Condición -->
+                    <div class="sel-field">
+                      <label>Condición</label>
+                      <div class="sel-select-wrap">
+                        <select
+                          [(ngModel)]="item.condicion"
+                          [name]="'cond_' + i"
                         >
-                          <img [src]="foto" alt="Foto del dispositivo" />
-                          <button
-                            type="button"
-                            class="foto-delete"
-                            (click)="eliminarFoto(i, fi)"
+                          <option
+                            *ngFor="let cond of condiciones"
+                            [value]="cond.value"
                           >
-                            <i class="pi pi-trash"></i>
-                          </button>
-                        </div>
+                            {{ cond.label }}
+                          </option>
+                        </select>
+                        <i class="pi pi-chevron-down"></i>
+                      </div>
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div class="sel-field sel-field--grow">
+                      <label>Observaciones</label>
+                      <input
+                        type="text"
+                        [(ngModel)]="item.observaciones"
+                        [name]="'obs_' + i"
+                        placeholder="Notas, accesorios..."
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Fotos -->
+                  <div class="sel-card__fotos">
+                    <label class="foto-upload" [for]="'fotos_' + i">
+                      <i class="pi pi-camera"></i>
+                      <span>Agregar fotos</span>
+                      <input
+                        type="file"
+                        [id]="'fotos_' + i"
+                        multiple
+                        accept="image/*"
+                        (change)="onFotosSelected($event, i)"
+                        hidden
+                      />
+                    </label>
+                    <div class="foto-grid" *ngIf="item.fotosPreview.length > 0">
+                      <div
+                        class="foto-thumb"
+                        *ngFor="let foto of item.fotosPreview; let fi = index"
+                      >
+                        <img [src]="foto" alt="Foto" />
+                        <button
+                          type="button"
+                          class="foto-thumb__del"
+                          (click)="eliminarFoto(i, fi)"
+                        >
+                          <i class="pi pi-trash"></i>
+                        </button>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
+      </div>
 
-        <!-- COLUMNA DERECHA -->
-        <div class="form-column">
-          <!-- Observaciones generales -->
-          <section class="section-card section-compact">
-            <div class="section-header-inline">
-              <i class="pi pi-comment section-icon-sm"></i>
-              <h3>Observaciones</h3>
-            </div>
-            <div class="form-group-compact">
-              <textarea
-                id="observaciones"
-                [(ngModel)]="observacionesEntrega"
-                name="observaciones"
-                rows="3"
-                placeholder="Notas adicionales sobre la entrega..."
-                class="textarea-compact"
-              ></textarea>
-            </div>
-          </section>
-          <!-- Resumen + Botones -->
-          <section
-            class="section-card section-compact summary-section"
-            *ngIf="dispositivosSeleccionados.length > 0"
-          >
-            <div class="section-header-inline">
-              <i class="pi pi-check-circle section-icon-sm success"></i>
-              <h3>Resumen</h3>
-            </div>
+      <!-- ══════════════════════════════
+           COLUMNA DERECHA (sticky)
+           ══════════════════════════════ -->
+      <div class="acta-col acta-col--right">
+        <!-- Observaciones generales -->
+        <section class="card">
+          <div class="card__head">
+            <i class="pi pi-comment"></i>
+            <h3>Observaciones generales</h3>
+          </div>
+          <div class="card__body">
+            <textarea
+              id="observaciones"
+              [(ngModel)]="observacionesEntrega"
+              name="observaciones"
+              rows="3"
+              placeholder="Notas adicionales sobre la entrega..."
+            ></textarea>
+          </div>
+        </section>
 
-            <div class="summary-grid">
-              <div class="summary-item">
-                <span class="summary-label">Receptor</span>
-                <span class="summary-value">{{ receptor.nombre || "-" }}</span>
+        <!-- Resumen -->
+        <section
+          class="card card--summary"
+          *ngIf="dispositivosSeleccionados.length > 0"
+        >
+          <div class="card__head">
+            <i class="pi pi-check-circle"></i>
+            <h3>Resumen del acta</h3>
+          </div>
+          <div class="card__body">
+            <div class="summary-rows">
+              <div class="summary-row">
+                <span class="summary-row__label">Receptor</span>
+                <span class="summary-row__value">{{
+                  receptor.nombre || "—"
+                }}</span>
               </div>
-              <div class="summary-item">
-                <span class="summary-label">Cargo</span>
-                <span class="summary-value">{{ receptor.cargo || "-" }}</span>
+              <div class="summary-row">
+                <span class="summary-row__label">Cargo</span>
+                <span class="summary-row__value">{{
+                  receptor.cargo || "—"
+                }}</span>
               </div>
-              <div class="summary-item">
-                <span class="summary-label">Correo</span>
-                <span class="summary-value">{{ receptor.correo || "-" }}</span>
+              <div class="summary-row">
+                <span class="summary-row__label">Correo</span>
+                <span class="summary-row__value">{{
+                  receptor.correo || "—"
+                }}</span>
               </div>
-              <div class="summary-item highlight">
-                <span class="summary-label">Dispositivos</span>
-                <span class="summary-value">{{
+              <div class="summary-row summary-row--highlight">
+                <span class="summary-row__label">Dispositivos</span>
+                <span class="summary-row__value">{{
                   dispositivosSeleccionados.length
                 }}</span>
               </div>
             </div>
-
-            <!-- Botones de acción -->
-            <div class="section-footer">
-              <button
-                type="button"
-                class="btn btn-secondary btn-compact"
-                (click)="cancelar()"
-              >
-                <i class="pi pi-times"></i> Cancelar
-              </button>
-              <button
-                type="submit"
-                class="btn btn-accent btn-compact"
-                [disabled]="
-                  loading ||
-                  enviandoCorreo ||
-                  dispositivosSeleccionados.length === 0 ||
-                  !receptor.nombre ||
-                  !receptor.correo
+          </div>
+          <div class="card__footer">
+            <button
+              type="button"
+              class="btn-action btn-action--cancel"
+              (click)="cancelar()"
+            >
+              <i class="pi pi-times"></i> Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn-action btn-action--submit"
+              [disabled]="
+                loading ||
+                enviandoCorreo ||
+                dispositivosSeleccionados.length === 0 ||
+                !receptor.nombre ||
+                !receptor.correo
+              "
+              [class.is-loading]="loading || enviandoCorreo"
+            >
+              <i
+                class="pi"
+                [ngClass]="
+                  loading || enviandoCorreo ? 'pi-spin pi-spinner' : 'pi-send'
                 "
-                [class.loading]="loading || enviandoCorreo"
-              >
-                <i
-                  class="pi"
-                  [ngClass]="
-                    loading || enviandoCorreo ? 'pi-spin pi-spinner' : 'pi-send'
-                  "
-                ></i>
-                {{
-                  loading
-                    ? "Creando..."
-                    : enviandoCorreo
-                      ? "Enviando..."
-                      : "Crear y Enviar"
-                }}
-              </button>
-            </div>
-          </section>
+              ></i>
+              {{
+                loading
+                  ? "Creando..."
+                  : enviandoCorreo
+                    ? "Enviando..."
+                    : "Crear y Enviar"
+              }}
+            </button>
+          </div>
+        </section>
 
-          <!-- Si no hay dispositivos seleccionados, mostrar mensaje -->
-          <section
-            class="section-card section-compact empty-summary"
-            *ngIf="dispositivosSeleccionados.length === 0"
-          >
-            <div class="empty-summary-content">
+        <!-- Sin selección -->
+        <section
+          class="card card--empty"
+          *ngIf="dispositivosSeleccionados.length === 0"
+        >
+          <div class="card__body">
+            <div class="empty-summary">
               <i class="pi pi-arrow-left"></i>
               <p>Selecciona al menos un dispositivo para crear el acta</p>
             </div>
-            <div class="section-footer">
-              <button
-                type="button"
-                class="btn btn-secondary btn-compact"
-                (click)="cancelar()"
-              >
-                <i class="pi pi-times"></i> Cancelar
-              </button>
-              <button type="submit" class="btn btn-accent btn-compact" disabled>
-                <i class="pi pi-send"></i> Crear y Enviar
-              </button>
-            </div>
-          </section>
-        </div>
+          </div>
+          <div class="card__footer">
+            <button
+              type="button"
+              class="btn-action btn-action--cancel"
+              (click)="cancelar()"
+            >
+              <i class="pi pi-times"></i> Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn-action btn-action--submit"
+              disabled
+            >
+              <i class="pi pi-send"></i> Crear y Enviar
+            </button>
+          </div>
+        </section>
       </div>
-    </form>
-  </div>
+    </div>
+  </form>
 </div>

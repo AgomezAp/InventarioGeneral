@@ -861,3 +861,76 @@ export const reenviarCorreoDevolucion = async (req: Request, res: Response): Pro
     res.status(500).json({ msg: error.message || 'Error al reenviar el correo' });
   }
 };
+
+/**
+ * Eliminar acta de devolución
+ * - Si pendiente_firma: revierte los dispositivos a estado 'entregado' y cancela tokens
+ * - Si completada / rechazada: elimina el registro directamente
+ */
+export const eliminarActaDevolucion = async (req: Request, res: Response): Promise<void> => {
+  const transaction = await sequelize.transaction();
+  try {
+    const { id } = req.params;
+
+    const acta = await ActaDevolucion.findByPk(Number(id), {
+      include: [
+        {
+          model: DetalleDevolucion,
+          as: 'detalles',
+          include: [{ model: Dispositivo, as: 'dispositivo' }]
+        }
+      ]
+    });
+
+    if (!acta) {
+      await transaction.rollback();
+      res.status(404).json({ msg: 'Acta de devolución no encontrada' });
+      return;
+    }
+
+    // Si estaba pendiente de firma, revertir dispositivos a 'entregado'
+    if (acta.estado === 'pendiente_firma') {
+      for (const detalle of (acta as any).detalles || []) {
+        const dispositivo = await Dispositivo.findByPk(detalle.dispositivoId, { transaction });
+
+        if (dispositivo && dispositivo.tipoRegistro !== 'stock') {
+          await Dispositivo.update(
+            { estado: 'entregado' },
+            { where: { id: detalle.dispositivoId }, transaction }
+          );
+
+          await MovimientoDispositivo.create({
+            dispositivoId: detalle.dispositivoId,
+            tipoMovimiento: 'cambio_estado',
+            estadoAnterior: 'reservado',
+            estadoNuevo: 'entregado',
+            descripcion: `Acta de devolución ${acta.numeroActa} eliminada — dispositivo revertido a entregado`,
+            fecha: new Date()
+          }, { transaction });
+        }
+      }
+
+      // Cancelar tokens pendientes
+      await TokenDevolucion.update(
+        { estado: 'cancelado' },
+        { where: { actaDevolucionId: Number(id) }, transaction }
+      );
+    }
+
+    // Eliminar detalles y tokens, luego el acta
+    await DetalleDevolucion.destroy({ where: { actaDevolucionId: Number(id) }, transaction });
+    await TokenDevolucion.destroy({ where: { actaDevolucionId: Number(id) }, transaction });
+    await ActaDevolucion.destroy({ where: { id: Number(id) }, transaction });
+
+    await transaction.commit();
+
+    const io = getIO();
+    io.to('devoluciones').emit('devolucion:deleted', { actaId: Number(id) });
+
+    res.json({ msg: `Acta ${acta.numeroActa} eliminada correctamente` });
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error al eliminar acta de devolución:', error);
+    res.status(500).json({ msg: 'Error al eliminar el acta de devolución' });
+  }
+};

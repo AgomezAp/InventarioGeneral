@@ -16,8 +16,8 @@ import Swal from 'sweetalert2';
   styleUrl: './actas-consumibles.component.css'
 })
 export class ActasConsumiblesComponent implements OnInit, OnDestroy {
-  // Tipo de inventario (aseo, papeleria o botiquin)
-  tipoInventario: 'aseo' | 'papeleria' | 'botiquin' = 'aseo';
+  // Tipo de inventario
+  tipoInventario: 'aseo' | 'papeleria' | 'botiquin' | 'desechables' | 'dotacion' = 'aseo';
   tituloTipo = 'Aseo';
   iconoTipo = 'fa-broom';
   colorTema = '#00bcd4';
@@ -80,10 +80,18 @@ export class ActasConsumiblesComponent implements OnInit, OnDestroy {
       this.tituloTipo = 'Papelería';
       this.iconoTipo = 'pi-pencil';
       this.colorTema = '#ffa726';
-    } else {
+    } else if (this.tipoInventario === 'botiquin') {
       this.tituloTipo = 'Botiquín';
       this.iconoTipo = 'pi-heart';
       this.colorTema = '#dc3545';
+    } else if (this.tipoInventario === 'desechables') {
+      this.tituloTipo = 'Desechables';
+      this.iconoTipo = 'pi-trash';
+      this.colorTema = '#6f42c1';
+    } else {
+      this.tituloTipo = 'Dotación';
+      this.iconoTipo = 'pi-box';
+      this.colorTema = '#20c997';
     }
   }
 

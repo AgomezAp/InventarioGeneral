@@ -2,58 +2,97 @@
 
 <div class="consumible-container">
   <div class="form-wrapper">
-    <!-- Header Compacto -->
+    <!-- ═══ HEADER DE PÁGINA ═══ -->
     <header class="page-header">
-      <div class="header-content">
-        <button class="btn-back" (click)="cancelar()" aria-label="Volver">
-          <i class="pi pi-arrow-left"></i>
+      <div class="page-header__left">
+        <button
+          class="page-header__back"
+          (click)="cancelar()"
+          aria-label="Volver"
+        >
+          <i class="fa-solid fa-arrow-left"></i>
         </button>
-        <div class="header-info">
-          <h1>
-            <i class="pi pi-plus-circle"></i>
-            Agregar {{ tituloTipo }}
-          </h1>
+        <div class="page-header__icon">
+          <i class="fa-solid fa-plus-circle"></i>
         </div>
-        <div class="header-badge" [ngClass]="'badge-' + tipoInventario">
-          <i class="pi" [ngClass]="iconoTipo"></i>
+        <div class="page-header__text">
+          <h1 class="page-header__title">Agregar {{ tituloTipo }}</h1>
+          <p class="page-header__subtitle">
+            Registre un nuevo artículo con su stock inicial
+          </p>
+        </div>
+      </div>
+      <div class="page-header__right">
+        <div
+          class="page-header__badge"
+          [ngClass]="'page-header__badge--' + tipoInventario"
+        >
+          <i class="fa-solid" [ngClass]="iconoTipo"></i>
           <span>{{ tipoInventario | titlecase }}</span>
         </div>
-        <!-- Progress dots -->
-        <div class="header-progress">
+        <div class="page-header__steps">
           <span
-            class="progress-dot"
-            [class.completed]="consumibleForm.get('nombre')?.valid"
+            class="page-header__step"
+            [class.page-header__step--done]="
+              consumibleForm.get('nombre')?.valid
+            "
+          >
+            <i class="fa-solid fa-tag"></i>
+          </span>
+          <span
+            class="page-header__step-line"
+            [class.page-header__step-line--done]="
+              consumibleForm.get('nombre')?.valid
+            "
           ></span>
           <span
-            class="progress-dot"
-            [class.completed]="consumibleForm.get('stockActual')?.valid"
+            class="page-header__step"
+            [class.page-header__step--done]="
+              consumibleForm.get('stockActual')?.valid
+            "
+          >
+            <i class="fa-solid fa-boxes-stacked"></i>
+          </span>
+          <span
+            class="page-header__step-line"
+            [class.page-header__step-line--done]="
+              consumibleForm.get('stockActual')?.valid
+            "
           ></span>
           <span
-            class="progress-dot"
-            [class.completed]="consumibleForm.get('proveedor')?.value"
-          ></span>
+            class="page-header__step"
+            [class.page-header__step--done]="
+              consumibleForm.get('proveedor')?.value
+            "
+          >
+            <i class="fa-solid fa-truck"></i>
+          </span>
         </div>
       </div>
     </header>
 
+    <!-- ═══ FORM ═══ -->
     <form
       [formGroup]="consumibleForm"
       (ngSubmit)="onSubmit()"
-      class="form-content"
+      class="form-layout"
     >
-      <div class="form-grid-main">
-        <!-- COLUMNA IZQUIERDA -->
-        <div class="form-column">
-          <!-- Información Básica -->
-          <section class="section-card section-compact">
-            <div class="section-header-inline">
-              <i class="pi pi-info-circle section-icon-sm"></i>
-              <h3>Información Básica</h3>
-            </div>
-
-            <div class="form-group-compact">
-              <label for="nombre">Nombre <span class="required">*</span></label>
+      <!-- ══ COLUMNA IZQUIERDA ══ -->
+      <div class="form-col">
+        <!-- Card: Información Básica -->
+        <div class="card" style="animation-delay: 0.06s">
+          <div class="card__head">
+            <i class="fa-solid fa-circle-info"></i>
+            <h3 class="card__title">Información Básica</h3>
+          </div>
+          <div class="card__body">
+            <div class="form-field">
+              <label class="form-field__label" for="nombre"
+                >Nombre <span class="form-field__req">*</span></label
+              >
               <input
+                class="form-field__input"
+                [class.form-field__input--invalid]="isFieldInvalid('nombre')"
                 type="text"
                 id="nombre"
                 formControlName="nombre"
@@ -62,45 +101,43 @@
                     ? 'Ej: Jabón líquido'
                     : 'Ej: Resmas de papel'
                 "
-                class="input-compact"
-                [class.invalid]="isFieldInvalid('nombre')"
               />
-              <span class="error-message" *ngIf="isFieldInvalid('nombre')">
-                <i class="pi pi-exclamation-circle"></i>
+              <span class="form-field__error" *ngIf="isFieldInvalid('nombre')">
+                <i class="fa-solid fa-circle-exclamation"></i>
                 {{ getFieldError("nombre") }}
               </span>
             </div>
 
-            <div class="form-row-compact">
-              <div class="form-group-compact">
-                <label for="categoria"
-                  >Categoría <span class="required">*</span></label
+            <div class="field-row">
+              <div class="form-field">
+                <label class="form-field__label" for="categoria"
+                  >Categoría <span class="form-field__req">*</span></label
                 >
-                <div class="select-wrapper">
+                <div class="form-field__select-wrap">
                   <select
+                    class="form-field__select"
+                    [class.form-field__select--invalid]="
+                      isFieldInvalid('categoria')
+                    "
                     id="categoria"
                     formControlName="categoria"
-                    class="select-compact"
-                    [class.invalid]="isFieldInvalid('categoria')"
                   >
                     <option value="" disabled>Seleccione...</option>
                     <option *ngFor="let cat of categorias" [value]="cat">
                       {{ cat }}
                     </option>
                   </select>
-                  <i class="pi pi-chevron-down"></i>
                 </div>
               </div>
-
-              <div class="form-group-compact">
-                <label for="unidadMedida"
-                  >Unidad <span class="required">*</span></label
+              <div class="form-field">
+                <label class="form-field__label" for="unidadMedida"
+                  >Unidad <span class="form-field__req">*</span></label
                 >
-                <div class="select-wrapper">
+                <div class="form-field__select-wrap">
                   <select
+                    class="form-field__select"
                     id="unidadMedida"
                     formControlName="unidadMedida"
-                    class="select-compact"
                   >
                     <option
                       *ngFor="let unidad of unidadesMedida"
@@ -109,211 +146,224 @@
                       {{ unidad.label }}
                     </option>
                   </select>
-                  <i class="pi pi-chevron-down"></i>
                 </div>
               </div>
             </div>
 
-            <div class="form-group-compact">
-              <label for="descripcion"
-                >Descripción <span class="optional">Opcional</span></label
-              >
+            <div class="form-field">
+              <label class="form-field__label" for="descripcion">
+                Descripción <span class="form-field__optional">Opcional</span>
+              </label>
               <textarea
+                class="form-field__textarea"
                 id="descripcion"
                 formControlName="descripcion"
                 rows="2"
                 placeholder="Detalles adicionales..."
-                class="textarea-compact"
                 maxlength="500"
               ></textarea>
               <span
-                class="char-count"
+                class="form-field__charcount"
                 *ngIf="consumibleForm.get('descripcion')?.value"
               >
                 {{ consumibleForm.get("descripcion")?.value?.length || 0 }}/500
               </span>
             </div>
-          </section>
+          </div>
+        </div>
 
-          <!-- Control de Inventario -->
-          <section class="section-card section-compact">
-            <div class="section-header-inline">
-              <i class="pi pi-box section-icon-sm"></i>
-              <h3>Control de Inventario</h3>
-            </div>
-
-            <div class="form-row-compact three-cols">
-              <div class="form-group-compact">
-                <label for="stockActual"
-                  >Stock Actual <span class="required">*</span></label
+        <!-- Card: Control de Inventario -->
+        <div class="card" style="animation-delay: 0.09s">
+          <div class="card__head">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <h3 class="card__title">Control de Inventario</h3>
+          </div>
+          <div class="card__body">
+            <div class="field-row field-row--3col">
+              <div class="form-field">
+                <label class="form-field__label" for="stockActual"
+                  >Stock Actual <span class="form-field__req">*</span></label
                 >
                 <input
+                  class="form-field__input"
+                  [class.form-field__input--invalid]="
+                    isFieldInvalid('stockActual')
+                  "
                   type="number"
                   id="stockActual"
                   formControlName="stockActual"
                   min="0"
                   placeholder="0"
-                  class="input-compact"
-                  [class.invalid]="isFieldInvalid('stockActual')"
                 />
               </div>
-
-              <div class="form-group-compact">
-                <label for="stockMinimo"
-                  >Mínimo <span class="required">*</span></label
+              <div class="form-field">
+                <label class="form-field__label" for="stockMinimo"
+                  >Mínimo <span class="form-field__req">*</span></label
                 >
                 <input
+                  class="form-field__input"
+                  [class.form-field__input--invalid]="
+                    isFieldInvalid('stockMinimo')
+                  "
                   type="number"
                   id="stockMinimo"
                   formControlName="stockMinimo"
                   min="0"
                   placeholder="5"
-                  class="input-compact"
-                  [class.invalid]="isFieldInvalid('stockMinimo')"
                 />
               </div>
-
-              <div class="form-group-compact">
-                <label for="stockMaximo">Máximo</label>
+              <div class="form-field">
+                <label class="form-field__label" for="stockMaximo"
+                  >Máximo</label
+                >
                 <input
+                  class="form-field__input"
                   type="number"
                   id="stockMaximo"
                   formControlName="stockMaximo"
                   min="0"
                   placeholder="100"
-                  class="input-compact"
                 />
               </div>
             </div>
 
-            <!-- Preview visual del stock -->
+            <!-- Stock Preview -->
             <div
               class="stock-preview"
               *ngIf="consumibleForm.get('stockActual')?.value !== null"
             >
-              <div class="stock-bar">
+              <div class="stock-preview__bar">
                 <div
-                  class="stock-bar-fill"
+                  class="stock-preview__fill"
                   [style.width.%]="getStockPercentage()"
-                  [class.low]="isStockLow()"
-                  [class.ok]="!isStockLow()"
+                  [class.stock-preview__fill--low]="isStockLow()"
+                  [class.stock-preview__fill--ok]="!isStockLow()"
                 ></div>
                 <div
-                  class="stock-min-marker"
+                  class="stock-preview__marker"
                   [style.left.%]="getStockMinPercentage()"
                   *ngIf="consumibleForm.get('stockMinimo')?.value"
                 ></div>
               </div>
-              <div class="stock-labels">
-                <span class="stock-value" [class.warning]="isStockLow()">
+              <div class="stock-preview__labels">
+                <span
+                  class="stock-preview__value"
+                  [class.stock-preview__value--warning]="isStockLow()"
+                >
                   {{ consumibleForm.get("stockActual")?.value || 0 }}
                   {{ consumibleForm.get("unidadMedida")?.value }}
                 </span>
                 <span
-                  class="stock-status"
-                  [class.low]="isStockLow()"
-                  [class.ok]="!isStockLow()"
+                  class="stock-preview__status"
+                  [class.stock-preview__status--low]="isStockLow()"
+                  [class.stock-preview__status--ok]="!isStockLow()"
                 >
                   {{ isStockLow() ? "Stock bajo" : "Stock OK" }}
                 </span>
               </div>
             </div>
 
-            <div class="stock-tip">
-              <i class="pi pi-lightbulb"></i>
+            <div class="field-hint">
+              <i class="fa-solid fa-lightbulb"></i>
               <span
                 >Se alertará cuando el stock sea ≤ al mínimo configurado</span
               >
             </div>
-          </section>
+          </div>
         </div>
+      </div>
 
-        <!-- COLUMNA DERECHA -->
-        <div class="form-column">
-          <!-- Proveedor y Precio -->
-          <section class="section-card section-compact">
-            <div class="section-header-inline">
-              <i class="pi pi-truck section-icon-sm"></i>
-              <h3>Proveedor y Compra</h3>
-            </div>
-
-            <div class="form-group-compact">
-              <label for="proveedor">Proveedor</label>
+      <!-- ══ COLUMNA DERECHA ══ -->
+      <div class="form-col">
+        <!-- Card: Proveedor y Compra -->
+        <div class="card" style="animation-delay: 0.12s">
+          <div class="card__head">
+            <i class="fa-solid fa-truck"></i>
+            <h3 class="card__title">Proveedor y Compra</h3>
+          </div>
+          <div class="card__body">
+            <div class="form-field">
+              <label class="form-field__label" for="proveedor">Proveedor</label>
               <input
+                class="form-field__input"
                 type="text"
                 id="proveedor"
                 formControlName="proveedor"
                 placeholder="Nombre del proveedor"
-                class="input-compact"
               />
             </div>
 
-            <div class="form-row-compact">
-              <div class="form-group-compact">
-                <label for="precioUnitario">Precio Unitario</label>
-                <div class="input-prefix-wrapper">
-                  <span class="input-prefix">$</span>
+            <div class="field-row">
+              <div class="form-field">
+                <label class="form-field__label" for="precioUnitario"
+                  >Precio Unitario</label
+                >
+                <div class="input-prefix">
+                  <span class="input-prefix__symbol">$</span>
                   <input
+                    class="form-field__input form-field__input--prefixed"
                     type="number"
                     id="precioUnitario"
                     formControlName="precioUnitario"
                     min="0"
                     step="0.01"
                     placeholder="0.00"
-                    class="input-compact with-prefix"
                   />
                 </div>
               </div>
-
-              <div class="form-group-compact">
-                <label for="ubicacionAlmacen">Ubicación</label>
+              <div class="form-field">
+                <label class="form-field__label" for="ubicacionAlmacen"
+                  >Ubicación</label
+                >
                 <input
+                  class="form-field__input"
                   type="text"
                   id="ubicacionAlmacen"
                   formControlName="ubicacionAlmacen"
                   placeholder="Estante A, Nivel 3"
-                  class="input-compact"
                 />
               </div>
             </div>
-          </section>
+          </div>
+        </div>
 
-          <!-- Resumen -->
-          <section
-            class="section-card section-compact summary-section"
-            *ngIf="consumibleForm.valid"
-          >
-            <div class="section-header-inline">
-              <i class="pi pi-check-circle section-icon-sm success"></i>
-              <h3>Resumen</h3>
-            </div>
-
+        <!-- Card: Resumen (válido) -->
+        <div
+          class="card card--summary"
+          style="animation-delay: 0.15s"
+          *ngIf="consumibleForm.valid"
+        >
+          <div class="card__head card__head--success">
+            <i class="fa-solid fa-circle-check"></i>
+            <h3 class="card__title">Resumen</h3>
+          </div>
+          <div class="card__body">
             <div class="summary-grid">
-              <div class="summary-item">
-                <span class="summary-label">Artículo</span>
-                <span class="summary-value">{{
+              <div class="summary-grid__item">
+                <span class="summary-grid__label">Artículo</span>
+                <span class="summary-grid__value">{{
                   consumibleForm.get("nombre")?.value
                 }}</span>
               </div>
-              <div class="summary-item">
-                <span class="summary-label">Categoría</span>
-                <span class="summary-value">{{
+              <div class="summary-grid__item">
+                <span class="summary-grid__label">Categoría</span>
+                <span class="summary-grid__value">{{
                   consumibleForm.get("categoria")?.value
                 }}</span>
               </div>
-              <div class="summary-item highlight">
-                <span class="summary-label">Stock Inicial</span>
-                <span class="summary-value">
+              <div class="summary-grid__item summary-grid__item--highlight">
+                <span class="summary-grid__label">Stock Inicial</span>
+                <span class="summary-grid__value">
                   {{ consumibleForm.get("stockActual")?.value }}
                   {{ consumibleForm.get("unidadMedida")?.value }}
                 </span>
               </div>
               <div
-                class="summary-item"
+                class="summary-grid__item"
                 *ngIf="consumibleForm.get('precioUnitario')?.value"
               >
-                <span class="summary-label">Precio</span>
-                <span class="summary-value"
+                <span class="summary-grid__label">Precio</span>
+                <span class="summary-grid__value"
                   >${{
                     consumibleForm.get("precioUnitario")?.value
                       | number: "1.2-2"
@@ -321,53 +371,66 @@
                 >
               </div>
             </div>
-
-            <!-- Botones de acción integrados -->
-            <div class="section-footer">
+          </div>
+          <div class="card__footer">
+            <div class="card__actions">
               <button
                 type="button"
-                class="btn btn-secondary btn-compact"
+                class="btn btn--outline"
                 (click)="cancelar()"
               >
-                <i class="pi pi-times"></i> Cancelar
+                <i class="fa-solid fa-xmark"></i> Cancelar
               </button>
               <button
                 type="submit"
-                class="btn btn-accent btn-compact"
+                class="btn btn--primary"
                 [disabled]="loading || consumibleForm.invalid"
-                [class.loading]="loading"
+                [class.btn--loading]="loading"
               >
                 <i
-                  class="pi"
-                  [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-save'"
+                  class="fa-solid"
+                  [ngClass]="loading ? 'fa-spinner fa-spin' : 'fa-floppy-disk'"
                 ></i>
                 {{ loading ? "Guardando..." : "Guardar" }}
               </button>
             </div>
-          </section>
+          </div>
+        </div>
 
-          <!-- Si el formulario no es válido, mostrar botones aquí -->
-          <section
-            class="section-card section-compact actions-section"
-            *ngIf="!consumibleForm.valid"
-          >
+        <!-- Card: Placeholder (inválido) -->
+        <div
+          class="card"
+          style="animation-delay: 0.15s"
+          *ngIf="!consumibleForm.valid"
+        >
+          <div class="card__head">
+            <i class="fa-solid fa-circle-info"></i>
+            <h3 class="card__title">Resumen</h3>
+          </div>
+          <div class="card__body">
             <div class="empty-summary">
-              <i class="pi pi-info-circle"></i>
-              <p>Complete los campos obligatorios para ver el resumen</p>
+              <div class="empty-summary__icon">
+                <i class="fa-solid fa-clipboard-list"></i>
+              </div>
+              <p class="empty-summary__text">
+                Complete los campos obligatorios para ver el resumen
+              </p>
             </div>
-            <div class="section-footer">
+          </div>
+          <div class="card__footer">
+            <div class="card__actions">
               <button
                 type="button"
-                class="btn btn-secondary btn-compact"
+                class="btn btn--outline"
                 (click)="cancelar()"
               >
-                <i class="pi pi-times"></i> Cancelar
+                <i class="fa-solid fa-xmark"></i> Cancelar
               </button>
-              <button type="submit" class="btn btn-accent btn-compact" disabled>
-                <i class="pi pi-save"></i> Guardar
+              <button type="submit" class="btn btn--primary" disabled>
+                <i class="fa-solid fa-floppy-disk"></i> Guardar
               </button>
             </div>
-          </section>
+          </div>
         </div>
       </div>
     </form>

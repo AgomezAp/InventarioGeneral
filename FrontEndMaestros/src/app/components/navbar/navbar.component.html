@@ -1,355 +1,649 @@
-<nav class="navbar navbar-expand-lg fixed-top navbar-brand-custom">
-  <div class="container-fluid">
-    <!-- Logo -->
-    <div class="navbar-logo">
-      <img src="/LogoBlanco.png" alt="Logo de Andrés Publicidad" />
+<nav class="nav-main">
+  <div class="nav-main__inner">
+    <!-- ═══ LOGO + BRAND ═══ -->
+    <div class="nav-main__brand" (click)="irInventario()">
+      <div class="nav-main__logo">
+        <img src="/LogoBlanco.png" alt="Logo Andrés Publicidad" />
+      </div>
+      <div class="nav-main__brand-text">
+        <span class="nav-main__brand-name">Andrés Publicidad</span>
+        <span class="nav-main__brand-sub">Sistema de Inventario</span>
+      </div>
     </div>
 
-    <!-- Brand -->
-    <a class="navbar-brand" (click)="irInventario()">
-      <span class="brand-text">Sistema de Inventario</span>
-    </a>
+    <!-- ═══ NAV LINKS (Desktop) ═══ -->
+    <div class="nav-main__menu" id="navMenu">
+      <ul class="nav-main__list">
+        <!-- Tecnología -->
+        <li class="nav-main__item nav-main__item--dropdown">
+          <button class="nav-main__link" (click)="toggleDropdown($event)">
+            <i class="fa-solid fa-laptop"></i>
+            <span>Tecnología</span>
+            <i class="fa-solid fa-chevron-down nav-main__chevron"></i>
+          </button>
+          <div class="nav-main__dropdown">
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-boxes-stacked"></i> Inventario
+              </span>
+              <a class="nav-main__dropdown-item" (click)="irInventario()">
+                <i class="fa-solid fa-list"></i> Ver Inventario
+              </a>
+              <a class="nav-main__dropdown-item" (click)="agregarDispositivo()">
+                <i class="fa-solid fa-plus"></i> Agregar Dispositivo
+              </a>
+            </div>
+            <div class="nav-main__dropdown-divider"></div>
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-file-signature"></i> Actas de Entrega
+              </span>
+              <a class="nav-main__dropdown-item" (click)="crearActa()">
+                <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+              </a>
+              <a class="nav-main__dropdown-item" (click)="verActas()">
+                <i class="fa-solid fa-folder-open"></i> Ver Actas
+              </a>
+            </div>
+            <div class="nav-main__dropdown-divider"></div>
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-undo-alt"></i> Devoluciones
+              </span>
+              <a class="nav-main__dropdown-item" (click)="crearDevolucion()">
+                <i class="fa-solid fa-rotate-left"></i> Nueva Devolución
+              </a>
+              <a class="nav-main__dropdown-item" (click)="verActasDevolucion()">
+                <i class="fa-solid fa-folder-open"></i> Ver Devoluciones
+              </a>
+            </div>
+          </div>
+        </li>
 
-    <!-- Toggler para mobile -->
-    <button
-      class="navbar-toggler"
-      type="button"
-      data-bs-toggle="offcanvas"
-      data-bs-target="#offcanvasNavbar"
-      aria-controls="offcanvasNavbar"
-      aria-label="Toggle navigation"
-    >
-      <span class="toggler-icon">
-        <span></span>
-        <span></span>
-        <span></span>
-      </span>
-    </button>
+        <!-- Mobiliario -->
+        <li class="nav-main__item nav-main__item--dropdown">
+          <button class="nav-main__link" (click)="toggleDropdown($event)">
+            <i class="fa-solid fa-chair"></i>
+            <span>Mobiliario</span>
+            <i class="fa-solid fa-chevron-down nav-main__chevron"></i>
+          </button>
+          <div class="nav-main__dropdown">
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-couch"></i> Inventario
+              </span>
+              <a class="nav-main__dropdown-item" (click)="irMobiliario()">
+                <i class="fa-solid fa-list"></i> Ver Inventario
+              </a>
+              <a class="nav-main__dropdown-item" (click)="agregarMobiliario()">
+                <i class="fa-solid fa-plus"></i> Agregar Mueble
+              </a>
+            </div>
+            <div class="nav-main__dropdown-divider"></div>
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-file-signature"></i> Actas
+              </span>
+              <a
+                class="nav-main__dropdown-item"
+                (click)="crearActaMobiliario()"
+              >
+                <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+              </a>
+              <a class="nav-main__dropdown-item" (click)="verActasMobiliario()">
+                <i class="fa-solid fa-folder-open"></i> Ver Actas
+              </a>
+            </div>
+          </div>
+        </li>
 
-    <!-- Offcanvas Menu -->
-    <div
-      class="offcanvas offcanvas-end offcanvas-custom"
-      tabindex="-1"
-      id="offcanvasNavbar"
-      aria-labelledby="offcanvasNavbarLabel"
-    >
-      <!-- Offcanvas Header -->
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">
-          <i class="fa-solid fa-bars me-2"></i>Menú
-        </h5>
-        <button
-          type="button"
-          class="btn-close-custom"
-          data-bs-dismiss="offcanvas"
-          aria-label="Close"
-        >
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <!-- Aseo -->
+        <li class="nav-main__item nav-main__item--dropdown">
+          <button class="nav-main__link" (click)="toggleDropdown($event)">
+            <i class="fa-solid fa-broom"></i>
+            <span>Aseo</span>
+            <i class="fa-solid fa-chevron-down nav-main__chevron"></i>
+          </button>
+          <div class="nav-main__dropdown">
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-spray-can-sparkles"></i> Inventario
+              </span>
+              <a class="nav-main__dropdown-item" (click)="irAseo()">
+                <i class="fa-solid fa-list"></i> Ver Inventario
+              </a>
+              <a class="nav-main__dropdown-item" (click)="agregarAseo()">
+                <i class="fa-solid fa-plus"></i> Agregar Producto
+              </a>
+            </div>
+            <div class="nav-main__dropdown-divider"></div>
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-file-signature"></i> Actas
+              </span>
+              <a class="nav-main__dropdown-item" (click)="crearActaAseo()">
+                <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+              </a>
+              <a class="nav-main__dropdown-item" (click)="verActasAseo()">
+                <i class="fa-solid fa-folder-open"></i> Ver Actas
+              </a>
+            </div>
+          </div>
+        </li>
+
+        <!-- Papelería -->
+        <li class="nav-main__item nav-main__item--dropdown">
+          <button class="nav-main__link" (click)="toggleDropdown($event)">
+            <i class="fa-solid fa-paperclip"></i>
+            <span>Papelería</span>
+            <i class="fa-solid fa-chevron-down nav-main__chevron"></i>
+          </button>
+          <div class="nav-main__dropdown">
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-pen-ruler"></i> Inventario
+              </span>
+              <a class="nav-main__dropdown-item" (click)="irPapeleria()">
+                <i class="fa-solid fa-list"></i> Ver Inventario
+              </a>
+              <a class="nav-main__dropdown-item" (click)="agregarPapeleria()">
+                <i class="fa-solid fa-plus"></i> Agregar Producto
+              </a>
+            </div>
+            <div class="nav-main__dropdown-divider"></div>
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-file-signature"></i> Actas
+              </span>
+              <a class="nav-main__dropdown-item" (click)="crearActaPapeleria()">
+                <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+              </a>
+              <a class="nav-main__dropdown-item" (click)="verActasPapeleria()">
+                <i class="fa-solid fa-folder-open"></i> Ver Actas
+              </a>
+            </div>
+          </div>
+        </li>
+
+        <!-- Botiquín -->
+        <li class="nav-main__item nav-main__item--dropdown">
+          <button class="nav-main__link" (click)="toggleDropdown($event)">
+            <i class="fa-solid fa-kit-medical"></i>
+            <span>Botiquín</span>
+            <i class="fa-solid fa-chevron-down nav-main__chevron"></i>
+          </button>
+          <div class="nav-main__dropdown">
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-suitcase-medical"></i> Inventario
+              </span>
+              <a class="nav-main__dropdown-item" (click)="irBotiquin()">
+                <i class="fa-solid fa-list"></i> Ver Inventario
+              </a>
+              <a class="nav-main__dropdown-item" (click)="agregarBotiquin()">
+                <i class="fa-solid fa-plus"></i> Agregar Producto
+              </a>
+            </div>
+            <div class="nav-main__dropdown-divider"></div>
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-file-signature"></i> Actas
+              </span>
+              <a class="nav-main__dropdown-item" (click)="crearActaBotiquin()">
+                <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+              </a>
+              <a class="nav-main__dropdown-item" (click)="verActasBotiquin()">
+                <i class="fa-solid fa-folder-open"></i> Ver Actas
+              </a>
+            </div>
+          </div>
+        </li>
+
+        <!-- Desechables -->
+        <li class="nav-main__item nav-main__item--dropdown">
+          <button class="nav-main__link" (click)="toggleDropdown($event)">
+            <i class="fa-solid fa-recycle"></i>
+            <span>Desechables</span>
+            <i class="fa-solid fa-chevron-down nav-main__chevron"></i>
+          </button>
+          <div class="nav-main__dropdown">
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-box-open"></i> Inventario
+              </span>
+              <a class="nav-main__dropdown-item" (click)="irDesechables()">
+                <i class="fa-solid fa-list"></i> Ver Inventario
+              </a>
+              <a class="nav-main__dropdown-item" (click)="agregarDesechable()">
+                <i class="fa-solid fa-plus"></i> Agregar Producto
+              </a>
+            </div>
+            <div class="nav-main__dropdown-divider"></div>
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-file-signature"></i> Actas
+              </span>
+              <a
+                class="nav-main__dropdown-item"
+                (click)="crearActaDesechables()"
+              >
+                <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+              </a>
+              <a
+                class="nav-main__dropdown-item"
+                (click)="verActasDesechables()"
+              >
+                <i class="fa-solid fa-folder-open"></i> Ver Actas
+              </a>
+            </div>
+          </div>
+        </li>
+
+        <!-- Dotación -->
+        <li class="nav-main__item nav-main__item--dropdown">
+          <button class="nav-main__link" (click)="toggleDropdown($event)">
+            <i class="fa-solid fa-shirt"></i>
+            <span>Dotación</span>
+            <i class="fa-solid fa-chevron-down nav-main__chevron"></i>
+          </button>
+          <div class="nav-main__dropdown">
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-vest"></i> Inventario
+              </span>
+              <a class="nav-main__dropdown-item" (click)="irDotacion()">
+                <i class="fa-solid fa-list"></i> Ver Inventario
+              </a>
+              <a class="nav-main__dropdown-item" (click)="agregarDotacion()">
+                <i class="fa-solid fa-plus"></i> Agregar Producto
+              </a>
+            </div>
+            <div class="nav-main__dropdown-divider"></div>
+            <div class="nav-main__dropdown-section">
+              <span class="nav-main__dropdown-label">
+                <i class="fa-solid fa-file-signature"></i> Actas
+              </span>
+              <a class="nav-main__dropdown-item" (click)="crearActaDotacion()">
+                <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+              </a>
+              <a class="nav-main__dropdown-item" (click)="verActasDotacion()">
+                <i class="fa-solid fa-folder-open"></i> Ver Actas
+              </a>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ═══ RIGHT SECTION ═══ -->
+    <div class="nav-main__right">
+      <div class="nav-main__connection">
       </div>
 
-      <!-- Offcanvas Body -->
-      <div class="offcanvas-body">
-        <ul class="navbar-nav ms-auto justify-content-end flex-grow-1 pe-3">
-          <!-- Dropdown Tecnología -->
-          <li class="nav-item dropdown">
-            <button
-              class="nav-btn nav-btn-tech dropdown-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i class="fa-solid fa-laptop"></i>
-              <span>Tecnología</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-custom">
-              <li class="dropdown-header">Inventario</li>
-              <li>
-                <a class="dropdown-item" (click)="irInventario()">
-                  <i class="fa-solid fa-boxes-stacked"></i>Ver Inventario
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="agregarDispositivo()">
-                  <i class="fa-solid fa-plus"></i>Agregar Dispositivo
-                </a>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li class="dropdown-header">Actas de Entrega</li>
-              <li>
-                <a class="dropdown-item" (click)="crearActa()">
-                  <i class="fa-solid fa-file-signature"></i>Nueva Acta Entrega
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="verActas()">
-                  <i class="fa-solid fa-folder-open"></i>Ver Actas Entrega
-                </a>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li class="dropdown-header">Devoluciones</li>
-              <li>
-                <a class="dropdown-item" (click)="crearDevolucion()">
-                  <i class="fa-solid fa-undo-alt"></i>Nueva Devolución
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="verActasDevolucion()">
-                  <i class="fa-solid fa-folder-open"></i>Ver Devoluciones
-                </a>
-              </li>
-            </ul>
-          </li>
+      <div class="nav-main__separator"></div>
 
-          <!-- Dropdown Mobiliario -->
-          <li class="nav-item dropdown">
-            <button
-              class="nav-btn nav-btn-furniture dropdown-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i class="fa-solid fa-chair"></i>
-              <span>Mobiliario</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-custom">
-              <li class="dropdown-header">Inventario</li>
-              <li>
-                <a class="dropdown-item" (click)="irMobiliario()">
-                  <i class="fa-solid fa-couch"></i>Ver Inventario
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="agregarMobiliario()">
-                  <i class="fa-solid fa-plus"></i>Agregar Mueble
-                </a>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li class="dropdown-header">Actas de Entrega</li>
-              <li>
-                <a class="dropdown-item" (click)="crearActaMobiliario()">
-                  <i class="fa-solid fa-file-signature"></i>Nueva Acta Entrega
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="verActasMobiliario()">
-                  <i class="fa-solid fa-folder-open"></i>Ver Actas Entrega
-                </a>
-              </li>
-            </ul>
-          </li>
+      <button class="nav-main__logout" (click)="logOut()">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        <span>Salir</span>
+      </button>
 
-          <!-- Dropdown Aseo -->
-          <li class="nav-item dropdown">
-            <button
-              class="nav-btn nav-btn-cleaning dropdown-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i class="fa-solid fa-broom"></i>
-              <span>Aseo</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-custom">
-              <li class="dropdown-header">Inventario</li>
-              <li>
-                <a class="dropdown-item" (click)="irAseo()">
-                  <i class="fa-solid fa-boxes-stacked"></i>Ver Inventario
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="agregarAseo()">
-                  <i class="fa-solid fa-plus"></i>Agregar Producto
-                </a>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li class="dropdown-header">Actas de Entrega</li>
-              <li>
-                <a class="dropdown-item" (click)="crearActaAseo()">
-                  <i class="fa-solid fa-file-signature"></i>Nueva Acta Entrega
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="verActasAseo()">
-                  <i class="fa-solid fa-folder-open"></i>Ver Actas Entrega
-                </a>
-              </li>
-            </ul>
-          </li>
-
-          <!-- Dropdown Papelería -->
-          <li class="nav-item dropdown">
-            <button
-              class="nav-btn nav-btn-stationery dropdown-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i class="fa-solid fa-paperclip"></i>
-              <span>Papelería</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-custom">
-              <li class="dropdown-header">Inventario</li>
-              <li>
-                <a class="dropdown-item" (click)="irPapeleria()">
-                  <i class="fa-solid fa-boxes-stacked"></i>Ver Inventario
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="agregarPapeleria()">
-                  <i class="fa-solid fa-plus"></i>Agregar Producto
-                </a>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li class="dropdown-header">Actas de Entrega</li>
-              <li>
-                <a class="dropdown-item" (click)="crearActaPapeleria()">
-                  <i class="fa-solid fa-file-signature"></i>Nueva Acta Entrega
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="verActasPapeleria()">
-                  <i class="fa-solid fa-folder-open"></i>Ver Actas Entrega
-                </a>
-              </li>
-            </ul>
-          </li>
-
-          <!-- Dropdown Botiquín -->
-          <li class="nav-item dropdown">
-            <button
-              class="nav-btn nav-btn-firstaid dropdown-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i class="fa-solid fa-kit-medical"></i>
-              <span>Botiquín</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-custom">
-              <li class="dropdown-header">Inventario</li>
-              <li>
-                <a class="dropdown-item" (click)="irBotiquin()">
-                  <i class="fa-solid fa-boxes-stacked"></i>Ver Inventario
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="agregarBotiquin()">
-                  <i class="fa-solid fa-plus"></i>Agregar Producto
-                </a>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li class="dropdown-header">Actas de Entrega</li>
-              <li>
-                <a class="dropdown-item" (click)="crearActaBotiquin()">
-                  <i class="fa-solid fa-file-signature"></i>Nueva Acta Entrega
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="verActasBotiquin()">
-                  <i class="fa-solid fa-folder-open"></i>Ver Actas Entrega
-                </a>
-              </li>
-            </ul>
-          </li>
-
-          <!-- Dropdown Desechables -->
-          <li class="nav-item dropdown">
-            <button
-              class="nav-btn nav-btn-disposable dropdown-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i class="fa-solid fa-trash-can"></i>
-              <span>Desechables</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-custom">
-              <li class="dropdown-header">Inventario</li>
-              <li>
-                <a class="dropdown-item" (click)="irDesechables()">
-                  <i class="fa-solid fa-boxes-stacked"></i>Ver Inventario
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="agregarDesechable()">
-                  <i class="fa-solid fa-plus"></i>Agregar Producto
-                </a>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li class="dropdown-header">Actas de Entrega</li>
-              <li>
-                <a class="dropdown-item" (click)="crearActaDesechables()">
-                  <i class="fa-solid fa-file-signature"></i>Nueva Acta Entrega
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="verActasDesechables()">
-                  <i class="fa-solid fa-folder-open"></i>Ver Actas Entrega
-                </a>
-              </li>
-            </ul>
-          </li>
-
-          <!-- Dropdown Dotación -->
-          <li class="nav-item dropdown">
-            <button
-              class="nav-btn nav-btn-dotacion dropdown-toggle"
-              type="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i class="fa-solid fa-shirt"></i>
-              <span>Dotación</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-custom">
-              <li class="dropdown-header">Inventario</li>
-              <li>
-                <a class="dropdown-item" (click)="irDotacion()">
-                  <i class="fa-solid fa-boxes-stacked"></i>Ver Inventario
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="agregarDotacion()">
-                  <i class="fa-solid fa-plus"></i>Agregar Producto
-                </a>
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li class="dropdown-header">Actas de Entrega</li>
-              <li>
-                <a class="dropdown-item" (click)="crearActaDotacion()">
-                  <i class="fa-solid fa-file-signature"></i>Nueva Acta Entrega
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="verActasDotacion()">
-                  <i class="fa-solid fa-folder-open"></i>Ver Actas Entrega
-                </a>
-              </li>
-            </ul>
-          </li>
-
-          <!-- Separador visual -->
-          <li class="nav-divider"></li>
-
-          <!-- Botón Cerrar Sesión -->
-          <li class="nav-item">
-            <button
-              class="nav-btn nav-btn-logout"
-              type="button"
-              (click)="logOut()"
-            >
-              <i class="fa-solid fa-arrow-right-from-bracket"></i>
-              <span>Cerrar sesión</span>
-            </button>
-          </li>
-
-          <!-- Indicador de conexión WebSocket -->
-          <li class="nav-item nav-item-indicator">
-            <app-connection-indicator></app-connection-indicator>
-          </li>
-        </ul>
-      </div>
+      <!-- Mobile Toggler -->
+      <button class="nav-main__toggler" (click)="toggleMobileMenu()">
+        <span class="nav-main__toggler-bar"></span>
+        <span class="nav-main__toggler-bar"></span>
+        <span class="nav-main__toggler-bar"></span>
+      </button>
     </div>
   </div>
+
+  <!-- ═══ MOBILE OVERLAY ═══ -->
+  <div
+    class="nav-mobile-overlay"
+    [class.nav-mobile-overlay--active]="mobileMenuOpen"
+    (click)="closeMobileMenu()"
+  ></div>
+
+  <!-- ═══ MOBILE DRAWER ═══ -->
+  <aside class="nav-mobile" [class.nav-mobile--open]="mobileMenuOpen">
+    <div class="nav-mobile__header">
+      <div class="nav-mobile__brand">
+        <div class="nav-mobile__logo">
+          <img src="/LogoBlanco.png" alt="Logo" />
+        </div>
+        <span>Menú Principal</span>
+      </div>
+      <button class="nav-mobile__close" (click)="closeMobileMenu()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="nav-mobile__body">
+      <!-- Tecnología -->
+      <div class="nav-mobile__group">
+        <button
+          class="nav-mobile__group-toggle"
+          (click)="toggleMobileGroup('tech')"
+        >
+          <div class="nav-mobile__group-left">
+            <i class="fa-solid fa-laptop"></i>
+            <span>Tecnología</span>
+          </div>
+          <i
+            class="fa-solid fa-chevron-down nav-mobile__group-chevron"
+            [class.nav-mobile__group-chevron--open]="mobileGroups['tech']"
+          ></i>
+        </button>
+        <div
+          class="nav-mobile__group-items"
+          [class.nav-mobile__group-items--open]="mobileGroups['tech']"
+        >
+          <a
+            class="nav-mobile__item"
+            (click)="irInventario(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-list"></i> Ver Inventario
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="agregarDispositivo(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-plus"></i> Agregar Dispositivo
+          </a>
+          <a class="nav-mobile__item" (click)="crearActa(); closeMobileMenu()">
+            <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta Entrega
+          </a>
+          <a class="nav-mobile__item" (click)="verActas(); closeMobileMenu()">
+            <i class="fa-solid fa-folder-open"></i> Ver Actas Entrega
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="crearDevolucion(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-rotate-left"></i> Nueva Devolución
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="verActasDevolucion(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-folder-open"></i> Ver Devoluciones
+          </a>
+        </div>
+      </div>
+
+      <!-- Mobiliario -->
+      <div class="nav-mobile__group">
+        <button
+          class="nav-mobile__group-toggle"
+          (click)="toggleMobileGroup('furniture')"
+        >
+          <div class="nav-mobile__group-left">
+            <i class="fa-solid fa-chair"></i>
+            <span>Mobiliario</span>
+          </div>
+          <i
+            class="fa-solid fa-chevron-down nav-mobile__group-chevron"
+            [class.nav-mobile__group-chevron--open]="mobileGroups['furniture']"
+          ></i>
+        </button>
+        <div
+          class="nav-mobile__group-items"
+          [class.nav-mobile__group-items--open]="mobileGroups['furniture']"
+        >
+          <a
+            class="nav-mobile__item"
+            (click)="irMobiliario(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-list"></i> Ver Inventario
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="agregarMobiliario(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-plus"></i> Agregar Mueble
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="crearActaMobiliario(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="verActasMobiliario(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-folder-open"></i> Ver Actas
+          </a>
+        </div>
+      </div>
+
+      <!-- Aseo -->
+      <div class="nav-mobile__group">
+        <button
+          class="nav-mobile__group-toggle"
+          (click)="toggleMobileGroup('cleaning')"
+        >
+          <div class="nav-mobile__group-left">
+            <i class="fa-solid fa-broom"></i>
+            <span>Aseo</span>
+          </div>
+          <i
+            class="fa-solid fa-chevron-down nav-mobile__group-chevron"
+            [class.nav-mobile__group-chevron--open]="mobileGroups['cleaning']"
+          ></i>
+        </button>
+        <div
+          class="nav-mobile__group-items"
+          [class.nav-mobile__group-items--open]="mobileGroups['cleaning']"
+        >
+          <a class="nav-mobile__item" (click)="irAseo(); closeMobileMenu()">
+            <i class="fa-solid fa-list"></i> Ver Inventario
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="agregarAseo(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-plus"></i> Agregar Producto
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="crearActaAseo(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="verActasAseo(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-folder-open"></i> Ver Actas
+          </a>
+        </div>
+      </div>
+
+      <!-- Papelería -->
+      <div class="nav-mobile__group">
+        <button
+          class="nav-mobile__group-toggle"
+          (click)="toggleMobileGroup('stationery')"
+        >
+          <div class="nav-mobile__group-left">
+            <i class="fa-solid fa-paperclip"></i>
+            <span>Papelería</span>
+          </div>
+          <i
+            class="fa-solid fa-chevron-down nav-mobile__group-chevron"
+            [class.nav-mobile__group-chevron--open]="mobileGroups['stationery']"
+          ></i>
+        </button>
+        <div
+          class="nav-mobile__group-items"
+          [class.nav-mobile__group-items--open]="mobileGroups['stationery']"
+        >
+          <a
+            class="nav-mobile__item"
+            (click)="irPapeleria(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-list"></i> Ver Inventario
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="agregarPapeleria(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-plus"></i> Agregar Producto
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="crearActaPapeleria(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="verActasPapeleria(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-folder-open"></i> Ver Actas
+          </a>
+        </div>
+      </div>
+
+      <!-- Botiquín -->
+      <div class="nav-mobile__group">
+        <button
+          class="nav-mobile__group-toggle"
+          (click)="toggleMobileGroup('firstaid')"
+        >
+          <div class="nav-mobile__group-left">
+            <i class="fa-solid fa-kit-medical"></i>
+            <span>Botiquín</span>
+          </div>
+          <i
+            class="fa-solid fa-chevron-down nav-mobile__group-chevron"
+            [class.nav-mobile__group-chevron--open]="mobileGroups['firstaid']"
+          ></i>
+        </button>
+        <div
+          class="nav-mobile__group-items"
+          [class.nav-mobile__group-items--open]="mobileGroups['firstaid']"
+        >
+          <a class="nav-mobile__item" (click)="irBotiquin(); closeMobileMenu()">
+            <i class="fa-solid fa-list"></i> Ver Inventario
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="agregarBotiquin(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-plus"></i> Agregar Producto
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="crearActaBotiquin(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="verActasBotiquin(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-folder-open"></i> Ver Actas
+          </a>
+        </div>
+      </div>
+
+      <!-- Desechables -->
+      <div class="nav-mobile__group">
+        <button
+          class="nav-mobile__group-toggle"
+          (click)="toggleMobileGroup('disposable')"
+        >
+          <div class="nav-mobile__group-left">
+            <i class="fa-solid fa-recycle"></i>
+            <span>Desechables</span>
+          </div>
+          <i
+            class="fa-solid fa-chevron-down nav-mobile__group-chevron"
+            [class.nav-mobile__group-chevron--open]="mobileGroups['disposable']"
+          ></i>
+        </button>
+        <div
+          class="nav-mobile__group-items"
+          [class.nav-mobile__group-items--open]="mobileGroups['disposable']"
+        >
+          <a
+            class="nav-mobile__item"
+            (click)="irDesechables(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-list"></i> Ver Inventario
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="agregarDesechable(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-plus"></i> Agregar Producto
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="crearActaDesechables(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="verActasDesechables(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-folder-open"></i> Ver Actas
+          </a>
+        </div>
+      </div>
+
+      <!-- Dotación -->
+      <div class="nav-mobile__group">
+        <button
+          class="nav-mobile__group-toggle"
+          (click)="toggleMobileGroup('dotacion')"
+        >
+          <div class="nav-mobile__group-left">
+            <i class="fa-solid fa-shirt"></i>
+            <span>Dotación</span>
+          </div>
+          <i
+            class="fa-solid fa-chevron-down nav-mobile__group-chevron"
+            [class.nav-mobile__group-chevron--open]="mobileGroups['dotacion']"
+          ></i>
+        </button>
+        <div
+          class="nav-mobile__group-items"
+          [class.nav-mobile__group-items--open]="mobileGroups['dotacion']"
+        >
+          <a class="nav-mobile__item" (click)="irDotacion(); closeMobileMenu()">
+            <i class="fa-solid fa-list"></i> Ver Inventario
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="agregarDotacion(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-plus"></i> Agregar Producto
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="crearActaDotacion(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-file-circle-plus"></i> Nueva Acta
+          </a>
+          <a
+            class="nav-mobile__item"
+            (click)="verActasDotacion(); closeMobileMenu()"
+          >
+            <i class="fa-solid fa-folder-open"></i> Ver Actas
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Footer -->
+    <div class="nav-mobile__footer">
+      <button class="nav-mobile__logout-btn" (click)="logOut()">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        <span>Cerrar Sesión</span>
+      </button>
+    </div>
+  </aside>
 </nav>

@@ -101,6 +101,13 @@ export class DevolucionService {
     return this.http.post<{ msg: string; correo: string }>(`${this.apiUrl}api/actas-devolucion/reenviar-firma/${actaId}`, {});
   }
 
+  /**
+   * Eliminar acta de devolución
+   */
+  eliminarActaDevolucion(id: number): Observable<{ msg: string }> {
+    return this.http.delete<{ msg: string }>(`${this.apiUrl}api/actas-devolucion/${id}`);
+  }
+
   // ==========================================
   // Métodos públicos (sin autenticación)
   // ==========================================
