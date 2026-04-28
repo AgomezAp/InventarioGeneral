@@ -56,7 +56,25 @@
       </span>
     </div>
   </div>
-
+  <div
+    class="stock-alert stock-alert--info"
+    *ngIf="!permiteSustraccionStock"
+    style="animation-delay: 0.04s"
+  >
+    <div class="stock-alert__header">
+      <div class="stock-alert__icon stock-alert__icon--info">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <span class="stock-alert__title">Inventario protegido</span>
+    </div>
+    <div class="stock-alert__tags">
+      <span class="stock-alert__description">
+        Las salidas de stock de botiquín solo se pueden realizar mediante
+        <strong>Actas de Entrega</strong> para mantener el control y
+        trazabilidad del inventario.
+      </span>
+    </div>
+  </div>
   <!-- ═══ KPI CARDS ═══ -->
   <section class="kpi-grid">
     <div class="kpi-card" style="animation-delay: 0.03s">
@@ -259,17 +277,33 @@
               </td>
               <td data-label="Acciones" class="td-acciones">
                 <div class="quick-stock">
+                  <!-- Botón RESTAR: deshabilitado y oculto visualmente para botiquín -->
                   <button
                     class="quick-stock__btn quick-stock__btn--minus"
                     (click)="restarStockRapido(consumible, $event)"
-                    [disabled]="esSinStock(consumible) || operacionEnProceso"
+                    [disabled]="
+                      esSinStock(consumible) ||
+                      operacionEnProceso ||
+                      !permiteSustraccionStock
+                    "
                     [class.quick-stock__btn--animando]="
                       getTipoActualizacion(consumible.id!) === 'restando'
                     "
-                    title="Retirar 1 unidad"
+                    [class.quick-stock__btn--blocked]="!permiteSustraccionStock"
+                    [title]="
+                      permiteSustraccionStock
+                        ? 'Retirar 1 unidad'
+                        : 'Retiros no permitidos — use actas de entrega'
+                    "
                   >
-                    <i class="fa-solid fa-minus"></i>
+                    <i
+                      class="fa-solid"
+                      [ngClass]="
+                        permiteSustraccionStock ? 'fa-minus' : 'fa-lock'
+                      "
+                    ></i>
                   </button>
+
                   <span
                     class="quick-stock__display"
                     [class.quick-stock__display--animando]="
@@ -284,6 +318,7 @@
                   >
                     {{ consumible.stockActual }}
                   </span>
+
                   <button
                     class="quick-stock__btn quick-stock__btn--plus"
                     (click)="agregarStockRapido(consumible, $event)"
@@ -304,13 +339,27 @@
                   >
                     <i class="fa-solid fa-edit"></i>
                   </button>
+
+                  <!-- Botón de ajuste de stock: solo visible si permite sustracción -->
                   <button
+                    *ngIf="permiteSustraccionStock"
                     class="btn-action btn-action--info"
                     (click)="abrirModalStock(consumible, 'ajuste')"
                     title="Ajustar stock"
                   >
                     <i class="fa-solid fa-sliders"></i>
                   </button>
+
+                  <!-- Para botiquín: solo mostrar botón de entrada de stock -->
+                  <button
+                    *ngIf="!permiteSustraccionStock"
+                    class="btn-action btn-action--success"
+                    (click)="abrirModalStock(consumible, 'entrada')"
+                    title="Agregar stock"
+                  >
+                    <i class="fa-solid fa-arrow-down"></i>
+                  </button>
+
                   <button
                     class="btn-action btn-action--default"
                     (click)="verHistorial(consumible.id!)"
@@ -467,26 +516,42 @@
               >
                 Devolución
               </option>
-              <option *ngIf="tipoOperacionStock === 'salida'" value="entrega">
+              <option
+                *ngIf="
+                  tipoOperacionStock === 'salida' && permiteSustraccionStock
+                "
+                value="entrega"
+              >
                 Entrega
               </option>
               <option
-                *ngIf="tipoOperacionStock === 'salida'"
+                *ngIf="
+                  tipoOperacionStock === 'salida' && permiteSustraccionStock
+                "
                 value="vencimiento"
               >
                 Vencimiento
               </option>
-              <option *ngIf="tipoOperacionStock === 'salida'" value="perdida">
+              <option
+                *ngIf="
+                  tipoOperacionStock === 'salida' && permiteSustraccionStock
+                "
+                value="perdida"
+              >
                 Pérdida
               </option>
               <option
-                *ngIf="tipoOperacionStock === 'ajuste'"
+                *ngIf="
+                  tipoOperacionStock === 'ajuste' && permiteSustraccionStock
+                "
                 value="ajuste_inventario"
               >
                 Ajuste de inventario
               </option>
               <option
-                *ngIf="tipoOperacionStock === 'ajuste'"
+                *ngIf="
+                  tipoOperacionStock === 'ajuste' && permiteSustraccionStock
+                "
                 value="correccion"
               >
                 Corrección

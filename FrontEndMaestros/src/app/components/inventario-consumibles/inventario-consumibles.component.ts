@@ -1,13 +1,32 @@
-import { Component, OnInit, OnDestroy, Input, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  Input,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, BehaviorSubject, merge } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged, tap, switchMap, catchError, finalize } from 'rxjs/operators';
+import {
+  takeUntil,
+  debounceTime,
+  distinctUntilChanged,
+  tap,
+  switchMap,
+  catchError,
+  finalize,
+} from 'rxjs/operators';
 import { ConsumibleService } from '../../services/consumible.service';
 import { MobiliarioService } from '../../services/mobiliario.service';
 import { WebsocketService } from '../../services/websocket.service';
-import { Consumible, EstadisticasConsumibles, TipoInventario } from '../../interfaces/mobiliario-consumible';
+import {
+  Consumible,
+  EstadisticasConsumibles,
+  TipoInventario,
+} from '../../interfaces/mobiliario-consumible';
 import { NavbarComponent } from '../navbar/navbar.component';
 
 @Component({
@@ -16,11 +35,16 @@ import { NavbarComponent } from '../navbar/navbar.component';
   imports: [CommonModule, FormsModule, NavbarComponent],
   templateUrl: './inventario-consumibles.component.html',
   styleUrl: './inventario-consumibles.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
-  @Input() tipoInventarioCodigo: 'aseo' | 'papeleria' | 'botiquin' | 'desechables' | 'dotacion' = 'aseo';
-  
+  @Input() tipoInventarioCodigo:
+    | 'aseo'
+    | 'papeleria'
+    | 'botiquin'
+    | 'desechables'
+    | 'dotacion' = 'aseo';
+
   tipoInventario: TipoInventario | null = null;
   consumibles: Consumible[] = [];
   consumiblesFiltrados: Consumible[] = [];
@@ -36,17 +60,53 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
 
   // Subject para debounce en búsqueda
   private searchSubject$ = new Subject<string>();
-  
+
   // Paginación
   paginaActual = 1;
   itemsPorPagina = 10;
 
   // Categorías según tipo
-  categoriasAseo = ['limpieza', 'desinfección', 'higiene', 'ambientador', 'otro'];
-  categoriasPapeleria = ['escritura', 'archivo', 'impresión', 'adhesivos', 'otro'];
-  categoriasBotiquin = ['medicamentos', 'vendajes', 'antisépticos', 'instrumentos', 'otro'];
-  categoriasDesechables = ['vasos y platos', 'cubiertos', 'bolsas', 'servilletas', 'guantes', 'tapabocas', 'otro'];
-  categoriasDotacion = ['camisas y camisetas', 'pantalones', 'chaquetas y chalecos', 'calzado', 'implementos de seguridad', 'gorras y cascos', 'guantes de trabajo', 'overoles', 'otro'];
+  categoriasAseo = [
+    'limpieza',
+    'desinfección',
+    'higiene',
+    'ambientador',
+    'otro',
+  ];
+  categoriasPapeleria = [
+    'escritura',
+    'archivo',
+    'impresión',
+    'adhesivos',
+    'otro',
+  ];
+  categoriasBotiquin = [
+    'medicamentos',
+    'vendajes',
+    'antisépticos',
+    'instrumentos',
+    'otro',
+  ];
+  categoriasDesechables = [
+    'vasos y platos',
+    'cubiertos',
+    'bolsas',
+    'servilletas',
+    'guantes',
+    'tapabocas',
+    'otro',
+  ];
+  categoriasDotacion = [
+    'camisas y camisetas',
+    'pantalones',
+    'chaquetas y chalecos',
+    'calzado',
+    'implementos de seguridad',
+    'gorras y cascos',
+    'guantes de trabajo',
+    'overoles',
+    'otro',
+  ];
 
   // Modal de stock
   mostrarModalStock = false;
@@ -70,7 +130,7 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
     stockMaximo: 0,
     proveedor: '',
     precioUnitario: 0,
-    observaciones: ''
+    observaciones: '',
   };
 
   // Modal de eliminación
@@ -84,7 +144,7 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
 
   // Subject de destrucción para takeUntil
   private destroy$ = new Subject<void>();
-  
+
   // Estado de optimistic updates
   private pendingUpdates = new Map<number, Consumible>();
 
@@ -94,22 +154,20 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
     private websocketService: WebsocketService,
     private router: Router,
     private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     // Detectar si viene por ruta
-    this.route.data
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(data => {
-        if (data['tipoInventario']) {
-          this.tipoInventarioCodigo = data['tipoInventario'];
-        }
-      });
-    
+    this.route.data.pipe(takeUntil(this.destroy$)).subscribe((data) => {
+      if (data['tipoInventario']) {
+        this.tipoInventarioCodigo = data['tipoInventario'];
+      }
+    });
+
     // Restaurar filtros de sessionStorage
     this.restaurarFiltros();
-    
+
     this.cargarTipoInventario();
     this.conectarWebSocket();
     this.suscribirseEventosWebSocket();
@@ -121,18 +179,16 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
     this.websocketService.leaveRoom('consumibles');
   }
-
+  get permiteSustraccionStock(): boolean {
+    return this.tipoInventarioCodigo !== 'botiquin';
+  }
   /**
    * Configurar debounce para el campo de búsqueda (300ms de delay)
    */
   private configurarBusquedaDebounce(): void {
     this.searchSubject$
-      .pipe(
-        takeUntil(this.destroy$),
-        debounceTime(300),
-        distinctUntilChanged()
-      )
-      .subscribe(termino => {
+      .pipe(takeUntil(this.destroy$), debounceTime(300), distinctUntilChanged())
+      .subscribe((termino) => {
         this.filtroBusqueda = termino;
         this.aplicarFiltros();
         this.cdr.markForCheck();
@@ -156,7 +212,8 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
    */
   private suscribirseEventosWebSocket(): void {
     // Cuando se crea un nuevo consumible
-    this.websocketService.onConsumibleCreated()
+    this.websocketService
+      .onConsumibleCreated()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
         console.log('🔄 Nuevo consumible detectado, recargando lista...');
@@ -166,7 +223,8 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
       });
 
     // Cuando se actualiza un consumible
-    this.websocketService.onConsumibleUpdated()
+    this.websocketService
+      .onConsumibleUpdated()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
         console.log('🔄 Consumible actualizado, recargando lista...');
@@ -175,7 +233,8 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
       });
 
     // Cuando se elimina un consumible
-    this.websocketService.onConsumibleDeleted()
+    this.websocketService
+      .onConsumibleDeleted()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
         console.log('🔄 Consumible eliminado, recargando lista...');
@@ -185,12 +244,13 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
       });
 
     // Cuando se actualiza el stock de un consumible
-    this.websocketService.onConsumibleStockUpdated()
+    this.websocketService
+      .onConsumibleStockUpdated()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
         console.log('📊 Stock actualizado:', data);
         // Actualizar solo el consumible afectado en la lista local (optimistic update)
-        const index = this.consumibles.findIndex(c => c.id === data.id);
+        const index = this.consumibles.findIndex((c) => c.id === data.id);
         if (index !== -1) {
           this.consumibles[index].stockActual = data.stockActual;
           this.aplicarFiltros();
@@ -204,7 +264,8 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
       });
 
     // Suscribirse a actualizaciones de actas de consumibles
-    this.websocketService.onActaConsumibleCreated()
+    this.websocketService
+      .onActaConsumibleCreated()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
         console.log('📄 Acta consumible creada, actualizando stock...');
@@ -213,7 +274,8 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
         this.cargarAlertas();
       });
 
-    this.websocketService.onActaConsumibleRejected()
+    this.websocketService
+      .onActaConsumibleRejected()
       .pipe(takeUntil(this.destroy$))
       .subscribe((data) => {
         console.log('📄 Acta consumible rechazada, stock devuelto...');
@@ -224,29 +286,31 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
   }
 
   cargarTipoInventario(): void {
-    this.mobiliarioService.obtenerTipoPorCodigo(this.tipoInventarioCodigo)
+    this.mobiliarioService
+      .obtenerTipoPorCodigo(this.tipoInventarioCodigo)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-      next: (tipo) => {
-        this.tipoInventario = tipo;
-        this.cargarConsumibles();
-        this.cargarEstadisticas();
-        this.cargarAlertas();
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.error = 'Error al cargar el tipo de inventario';
-        console.error(err);
-        this.cdr.markForCheck();
-      }
-    });
+        next: (tipo) => {
+          this.tipoInventario = tipo;
+          this.cargarConsumibles();
+          this.cargarEstadisticas();
+          this.cargarAlertas();
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          this.error = 'Error al cargar el tipo de inventario';
+          console.error(err);
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   cargarConsumibles(): void {
     this.loading = true;
     this.cdr.markForCheck();
-    
-    this.consumibleService.obtenerConsumiblesPorTipo(this.tipoInventarioCodigo)
+
+    this.consumibleService
+      .obtenerConsumiblesPorTipo(this.tipoInventarioCodigo)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
@@ -260,14 +324,15 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
           this.loading = false;
           console.error(err);
           this.cdr.markForCheck();
-        }
+        },
       });
   }
 
   cargarEstadisticas(): void {
     if (!this.tipoInventario) return;
-    
-    this.consumibleService.obtenerEstadisticas(this.tipoInventario.id)
+
+    this.consumibleService
+      .obtenerEstadisticas(this.tipoInventario.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
@@ -276,14 +341,15 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error al cargar estadísticas:', err);
-        }
+        },
       });
   }
 
   cargarAlertas(): void {
     if (!this.tipoInventario) return;
-    
-    this.consumibleService.obtenerAlertasStock(this.tipoInventario.id)
+
+    this.consumibleService
+      .obtenerAlertasStock(this.tipoInventario.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
@@ -292,23 +358,29 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error al cargar alertas:', err);
-        }
+        },
       });
   }
 
   get categorias(): string[] {
     if (this.tipoInventarioCodigo === 'aseo') return this.categoriasAseo;
-    if (this.tipoInventarioCodigo === 'papeleria') return this.categoriasPapeleria;
-    if (this.tipoInventarioCodigo === 'botiquin') return this.categoriasBotiquin;
-    if (this.tipoInventarioCodigo === 'desechables') return this.categoriasDesechables;
+    if (this.tipoInventarioCodigo === 'papeleria')
+      return this.categoriasPapeleria;
+    if (this.tipoInventarioCodigo === 'botiquin')
+      return this.categoriasBotiquin;
+    if (this.tipoInventarioCodigo === 'desechables')
+      return this.categoriasDesechables;
     return this.categoriasDotacion;
   }
 
   get tituloInventario(): string {
     if (this.tipoInventarioCodigo === 'aseo') return 'Inventario de Aseo';
-    if (this.tipoInventarioCodigo === 'papeleria') return 'Inventario de Papelería';
-    if (this.tipoInventarioCodigo === 'botiquin') return 'Inventario de Botiquín';
-    if (this.tipoInventarioCodigo === 'desechables') return 'Inventario de Desechables';
+    if (this.tipoInventarioCodigo === 'papeleria')
+      return 'Inventario de Papelería';
+    if (this.tipoInventarioCodigo === 'botiquin')
+      return 'Inventario de Botiquín';
+    if (this.tipoInventarioCodigo === 'desechables')
+      return 'Inventario de Desechables';
     return 'Inventario de Dotación';
   }
 
@@ -332,18 +404,19 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
     let resultado = [...this.consumibles];
 
     if (this.filtroCategoria !== 'todas') {
-      resultado = resultado.filter(c => c.categoria === this.filtroCategoria);
+      resultado = resultado.filter((c) => c.categoria === this.filtroCategoria);
     }
 
     if (this.filtroStockBajo) {
-      resultado = resultado.filter(c => c.stockActual <= c.stockMinimo);
+      resultado = resultado.filter((c) => c.stockActual <= c.stockMinimo);
     }
 
     if (this.filtroBusqueda.trim()) {
       const busqueda = this.filtroBusqueda.toLowerCase().trim();
-      resultado = resultado.filter(c =>
-        c.nombre.toLowerCase().includes(busqueda) ||
-        c.descripcion?.toLowerCase().includes(busqueda)
+      resultado = resultado.filter(
+        (c) =>
+          c.nombre.toLowerCase().includes(busqueda) ||
+          c.descripcion?.toLowerCase().includes(busqueda),
       );
     }
 
@@ -392,7 +465,7 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     }).format(precio);
   }
 
@@ -401,7 +474,9 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
   }
 
   irAEntrega(): void {
-    this.router.navigate([`/crear-acta-consumible/${this.tipoInventarioCodigo}`]);
+    this.router.navigate([
+      `/crear-acta-consumible/${this.tipoInventarioCodigo}`,
+    ]);
   }
 
   verDetalle(id: number): void {
@@ -409,7 +484,21 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
   }
 
   // Modal de gestión de stock
-  abrirModalStock(consumible: Consumible, tipo: 'entrada' | 'salida' | 'ajuste'): void {
+  abrirModalStock(
+    consumible: Consumible,
+    tipo: 'entrada' | 'salida' | 'ajuste',
+  ): void {
+    // Bloquear salidas y ajustes para botiquín
+    if (
+      !this.permiteSustraccionStock &&
+      (tipo === 'salida' || tipo === 'ajuste')
+    ) {
+      this.error =
+        'El inventario de botiquín no permite salidas ni ajustes manuales. Use actas de entrega para retirar productos.';
+      this.cdr.markForCheck();
+      return;
+    }
+
     this.consumibleSeleccionado = consumible;
     this.tipoOperacionStock = tipo;
     this.cantidadStock = 0;
@@ -442,7 +531,9 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
     }
 
     // Aplicar optimistic update a la UI
-    const index = this.consumibles.findIndex(c => c.id === this.consumibleSeleccionado?.id);
+    const index = this.consumibles.findIndex(
+      (c) => c.id === this.consumibleSeleccionado?.id,
+    );
     if (index !== -1) {
       this.consumibles[index].stockActual = stockEstimado;
       this.aplicarFiltros();
@@ -450,72 +541,81 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
     }
 
     if (this.tipoOperacionStock === 'entrada') {
-      this.consumibleService.agregarStock(this.consumibleSeleccionado.id!, {
-        cantidad: this.cantidadStock,
-        motivo: this.motivoStock || 'compra',
-        descripcion: this.descripcionStock,
-        numeroDocumento: this.numeroDocumentoStock,
-        Uid
-      }).pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res) => {
-          this.cerrarModalStock();
-          this.cargarEstadisticas();
-          this.cargarAlertas();
-        },
-        error: (err) => {
-          // Revertir optimistic update si falla
-          if (index !== -1) {
-            this.consumibles[index].stockActual = consumibleOriginal.stockActual;
-            this.aplicarFiltros();
-            this.cdr.markForCheck();
-          }
-        }
-      });
+      this.consumibleService
+        .agregarStock(this.consumibleSeleccionado.id!, {
+          cantidad: this.cantidadStock,
+          motivo: this.motivoStock || 'compra',
+          descripcion: this.descripcionStock,
+          numeroDocumento: this.numeroDocumentoStock,
+          Uid,
+        })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (res) => {
+            this.cerrarModalStock();
+            this.cargarEstadisticas();
+            this.cargarAlertas();
+          },
+          error: (err) => {
+            // Revertir optimistic update si falla
+            if (index !== -1) {
+              this.consumibles[index].stockActual =
+                consumibleOriginal.stockActual;
+              this.aplicarFiltros();
+              this.cdr.markForCheck();
+            }
+          },
+        });
     } else if (this.tipoOperacionStock === 'salida') {
-      this.consumibleService.retirarStock(this.consumibleSeleccionado.id!, {
-        cantidad: this.cantidadStock,
-        motivo: this.motivoStock || 'entrega',
-        descripcion: this.descripcionStock,
-        Uid
-      }).pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res) => {
-          this.cerrarModalStock();
-          this.cargarEstadisticas();
-          this.cargarAlertas();
-        },
-        error: (err) => {
-          // Revertir optimistic update si falla
-          if (index !== -1) {
-            this.consumibles[index].stockActual = consumibleOriginal.stockActual;
-            this.aplicarFiltros();
-            this.cdr.markForCheck();
-          }
-        }
-      });
+      this.consumibleService
+        .retirarStock(this.consumibleSeleccionado.id!, {
+          cantidad: this.cantidadStock,
+          motivo: this.motivoStock || 'entrega',
+          descripcion: this.descripcionStock,
+          Uid,
+        })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (res) => {
+            this.cerrarModalStock();
+            this.cargarEstadisticas();
+            this.cargarAlertas();
+          },
+          error: (err) => {
+            // Revertir optimistic update si falla
+            if (index !== -1) {
+              this.consumibles[index].stockActual =
+                consumibleOriginal.stockActual;
+              this.aplicarFiltros();
+              this.cdr.markForCheck();
+            }
+          },
+        });
     } else if (this.tipoOperacionStock === 'ajuste') {
-      this.consumibleService.ajustarStock(this.consumibleSeleccionado.id!, {
-        nuevoStock: this.cantidadStock,
-        motivo: this.motivoStock || 'ajuste_inventario',
-        descripcion: this.descripcionStock,
-        Uid
-      }).pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res) => {
-          this.cerrarModalStock();
-          this.cargarEstadisticas();
-          this.cargarAlertas();
-        },
-        error: (err) => {
-          // Revertir optimistic update si falla
-          if (index !== -1) {
-            this.consumibles[index].stockActual = consumibleOriginal.stockActual;
-            this.aplicarFiltros();
-            this.cdr.markForCheck();
-          }
-        }
-      });
+      this.consumibleService
+        .ajustarStock(this.consumibleSeleccionado.id!, {
+          nuevoStock: this.cantidadStock,
+          motivo: this.motivoStock || 'ajuste_inventario',
+          descripcion: this.descripcionStock,
+          Uid,
+        })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (res) => {
+            this.cerrarModalStock();
+            this.cargarEstadisticas();
+            this.cargarAlertas();
+          },
+          error: (err) => {
+            // Revertir optimistic update si falla
+            if (index !== -1) {
+              this.consumibles[index].stockActual =
+                consumibleOriginal.stockActual;
+              this.aplicarFiltros();
+              this.cdr.markForCheck();
+            }
+          },
+        });
     }
   }
 
@@ -537,7 +637,7 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
       stockMaximo: consumible.stockMaximo || 0,
       proveedor: consumible.proveedor || '',
       precioUnitario: consumible.precioUnitario || 0,
-      observaciones: consumible.observaciones || ''
+      observaciones: consumible.observaciones || '',
     };
     this.mostrarModalEdicion = true;
   }
@@ -554,7 +654,7 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     this.cdr.markForCheck();
-    
+
     const datosActualizados = {
       nombre: this.formularioEdicion.nombre.trim(),
       categoria: this.formularioEdicion.categoria,
@@ -565,10 +665,11 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
       stockMaximo: this.formularioEdicion.stockMaximo || undefined,
       proveedor: this.formularioEdicion.proveedor?.trim(),
       precioUnitario: this.formularioEdicion.precioUnitario,
-      observaciones: this.formularioEdicion.observaciones?.trim()
+      observaciones: this.formularioEdicion.observaciones?.trim(),
     };
 
-    this.consumibleService.actualizarConsumible(this.consumibleEditando.id, datosActualizados)
+    this.consumibleService
+      .actualizarConsumible(this.consumibleEditando.id, datosActualizados)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
@@ -582,7 +683,7 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
           this.error = err.error?.msg || 'Error al actualizar el producto';
           this.loading = false;
           this.cdr.markForCheck();
-        }
+        },
       });
   }
 
@@ -596,7 +697,7 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
     const filtros = {
       categoria: this.filtroCategoria,
       stockBajo: this.filtroStockBajo,
-      busqueda: this.filtroBusqueda
+      busqueda: this.filtroBusqueda,
     };
     sessionStorage.setItem(this.getStorageKey(), JSON.stringify(filtros));
   }
@@ -638,30 +739,46 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
     consumible.stockActual += 1;
     this.cdr.markForCheck();
 
-    this.consumibleService.agregarStock(consumible.id, {
-      cantidad: 1,
-      motivo: 'compra',
-      descripcion: 'Adición rápida de stock',
-      Uid
-    }).pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: () => {
-        this.finalizarOperacionStock(consumible.id!);
-        this.cargarEstadisticas();
-        this.cargarAlertas();
-      },
-      error: (err) => {
-        // Revertir
-        consumible.stockActual = stockAnterior;
-        this.finalizarOperacionStock(consumible.id!);
-        console.error('Error al agregar stock:', err);
-      }
-    });
+    this.consumibleService
+      .agregarStock(consumible.id, {
+        cantidad: 1,
+        motivo: 'compra',
+        descripcion: 'Adición rápida de stock',
+        Uid,
+      })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.finalizarOperacionStock(consumible.id!);
+          this.cargarEstadisticas();
+          this.cargarAlertas();
+        },
+        error: (err) => {
+          // Revertir
+          consumible.stockActual = stockAnterior;
+          this.finalizarOperacionStock(consumible.id!);
+          console.error('Error al agregar stock:', err);
+        },
+      });
   }
 
   restarStockRapido(consumible: Consumible, event: Event): void {
     event.stopPropagation();
-    if (this.operacionEnProceso || !consumible.id || consumible.stockActual <= 0) return;
+
+    // Bloquear sustracción rápida para botiquín
+    if (!this.permiteSustraccionStock) {
+      this.error =
+        'El inventario de botiquín no permite retiros rápidos. Use actas de entrega para retirar productos.';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    if (
+      this.operacionEnProceso ||
+      !consumible.id ||
+      consumible.stockActual <= 0
+    )
+      return;
 
     this.operacionEnProceso = true;
     this.stockActualizando.set(consumible.id, 'restando');
@@ -674,25 +791,26 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
     consumible.stockActual -= 1;
     this.cdr.markForCheck();
 
-    this.consumibleService.retirarStock(consumible.id, {
-      cantidad: 1,
-      motivo: 'entrega',
-      descripcion: 'Retiro rápido de stock',
-      Uid
-    }).pipe(takeUntil(this.destroy$))
-    .subscribe({
-      next: () => {
-        this.finalizarOperacionStock(consumible.id!);
-        this.cargarEstadisticas();
-        this.cargarAlertas();
-      },
-      error: (err) => {
-        // Revertir
-        consumible.stockActual = stockAnterior;
-        this.finalizarOperacionStock(consumible.id!);
-        console.error('Error al retirar stock:', err);
-      }
-    });
+    this.consumibleService
+      .retirarStock(consumible.id, {
+        cantidad: 1,
+        motivo: 'entrega',
+        descripcion: 'Retiro rápido de stock',
+        Uid,
+      })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.finalizarOperacionStock(consumible.id!);
+          this.cargarEstadisticas();
+          this.cargarAlertas();
+        },
+        error: (err) => {
+          consumible.stockActual = stockAnterior;
+          this.finalizarOperacionStock(consumible.id!);
+          console.error('Error al retirar stock:', err);
+        },
+      });
   }
 
   private finalizarOperacionStock(id: number): void {
@@ -733,7 +851,12 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
 
     const Uid = this.getUserId();
 
-    this.consumibleService.desactivarConsumible(this.consumibleAEliminar.id, this.motivoEliminacion, Uid)
+    this.consumibleService
+      .desactivarConsumible(
+        this.consumibleAEliminar.id,
+        this.motivoEliminacion,
+        Uid,
+      )
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
@@ -749,7 +872,7 @@ export class InventarioConsumiblesComponent implements OnInit, OnDestroy {
           this.error = err.error?.msg || 'Error al eliminar el producto';
           this.loading = false;
           this.cdr.markForCheck();
-        }
+        },
       });
   }
 

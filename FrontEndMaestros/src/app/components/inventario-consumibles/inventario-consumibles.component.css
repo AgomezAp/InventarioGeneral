@@ -2194,3 +2194,52 @@
     background: transparent !important;
   }
 }
+/* ═══ BOTÓN BLOQUEADO (botiquín) ═══ */
+.quick-stock__btn--blocked {
+  opacity: 0.4;
+  cursor: not-allowed !important;
+  background-color: #6c757d !important;
+  border-color: #6c757d !important;
+  color: #fff !important;
+}
+
+.quick-stock__btn--blocked:hover {
+  opacity: 0.4 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ═══ ALERTA INFORMATIVA (botiquín) ═══ */
+.stock-alert--info {
+  background: linear-gradient(
+    135deg,
+    rgba(13, 110, 253, 0.08),
+    rgba(13, 110, 253, 0.03)
+  );
+  border: 1px solid rgba(13, 110, 253, 0.2);
+  border-left: 4px solid #0d6efd;
+}
+
+.stock-alert__icon--info {
+  color: #0d6efd;
+}
+
+.stock-alert__description {
+  font-size: 0.875rem;
+  color: #495057;
+  line-height: 1.5;
+}
+
+.stock-alert__description strong {
+  color: #0d6efd;
+}
+
+/* ═══ BOTÓN DE ACCIÓN SUCCESS ═══ */
+.btn-action--success {
+  color: #198754;
+}
+
+.btn-action--success:hover {
+  background-color: rgba(25, 135, 84, 0.1);
+  color: #146c43;
+}
